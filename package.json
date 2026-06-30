@@ -1,0 +1,86 @@
+{
+  "name": "front-backbone-rest",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start-dev:win": "node server.js",
+    "build": "ng build",
+    "build:ssr": "ng build --configuration production",
+    "watch": "ng build --watch --configuration development",
+    "watch:ssr": "ng build --watch --configuration development",
+    "dev": "concurrently \"npm run watch\" \"npm run serve:ssr\"",
+    "serve:ssr": "node server.js",
+    "serve:ssr:front-backbone-rest": "node dist/front-backbone-rest/server/server.mjs",
+    "test": "ng test",
+    "test:headless": "ng test --no-watch --browsers=ChromeHeadlessNoSandbox"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "^22.0.4",
+    "@angular/compiler": "^22.0.4",
+    "@angular/core": "^22.0.4",
+    "@angular/forms": "^22.0.4",
+    "@angular/platform-browser": "^22.0.4",
+    "@angular/platform-server": "^22.0.4",
+    "@angular/router": "^22.0.4",
+    "@angular/ssr": "^22.0.4",
+    "@ngrx/effects": "^21.1.1",
+    "@ngrx/operators": "^21.1.1",
+    "@ngrx/store": "^21.1.1",
+    "@ngrx/store-devtools": "^21.1.1",
+    "@ngx-translate/core": "^18.0.0",
+    "@ngx-translate/http-loader": "^18.0.0",
+    "@tailwindcss/postcss": "^4.3.1",
+    "autoprefixer": "^10.4.27",
+    "axios": "^1.18.1",
+    "compression": "^1.8.1",
+    "cookie-session": "^2.1.1",
+    "cors": "^2.8.6",
+    "crypto-js": "^4.2.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "jsonwebtoken": "^9.0.3",
+    "logform": "^2.7.0",
+    "multer": "^2.2.0",
+    "postcss": "^8.5.16",
+    "redis": "^6.0.1",
+    "rxjs": "~7.8.2",
+    "tailwindcss": "^4.3.1",
+    "tslib": "^2.8.1",
+    "winston": "^3.19.0",
+    "zone.js": "~0.16.2"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.0.4",
+    "@angular/cli": "^22.0.4",
+    "@angular/compiler-cli": "^22.0.4",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jasmine": "~6.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^26.0.1",
+    "concurrently": "^10.0.3",
+    "jasmine-core": "~6.3.0",
+    "karma": "~6.4.4",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.1",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.2.0",
+    "typescript": "~6.0.3"
+  },
+  "packageManager": "pnpm@11.9.0+sha512.bd682d5d03fe525ef7c9fd6780c6884d1e756ac4c9c9fe00c538782824310dcf90e3ddc4f53835f06dfaebd5085e41855e0bcbb3b60de2ac5bbab89e5036f03b"
+}

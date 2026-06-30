@@ -1,0 +1,54 @@
+import { Routes } from '@angular/router';
+import { authGuard } from '@core/guards/auth.guard';
+
+export const routes: Routes = [
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  {
+    path: 'auth',
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.authRoutes),
+  },
+  {
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+  },
+  {
+    path: 'users',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/users/users.routes').then((m) => m.usersRoutes),
+  },
+  {
+    path: 'roles',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/roles/roles.routes').then((m) => m.rolesRoutes),
+  },
+  {
+    path: 'people',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/people/people.routes').then((m) => m.peopleRoutes),
+  },
+  {
+    path: 'contacts',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/contacts/contacts.routes').then((m) => m.contactsRoutes),
+  },
+  {
+    path: 'features-mgmt',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/features-mgmt/features-mgmt.routes').then((m) => m.featuresMgmtRoutes),
+  },
+  {
+    path: 'audit',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/audit/audit.routes').then((m) => m.auditRoutes),
+  },
+  {
+    path: 'forbidden',
+    loadComponent: () =>
+      import('./features/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
+  },
+  { path: '**', redirectTo: 'dashboard' },
+];

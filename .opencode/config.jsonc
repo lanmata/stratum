@@ -1,0 +1,115 @@
+{
+  // front-backbone-rest — OpenCode Configuration
+  // Angular 20 + Express.js BFF for the backbone-rest backoffice API
+  "project_name": "front-backbone-rest",
+  "description": "Angular 20 + Express.js BFF frontend for the backbone-rest backoffice API. Manages users, roles, people, contacts, features, and audit events via a proxy layer.",
+  "tech_stack": [
+    "Angular 20",
+    "TypeScript 5.9",
+    "NgRx 20",
+    "Tailwind CSS v4",
+    "Express.js 5",
+    "Node.js",
+    "Redis",
+    "Jasmine",
+    "Karma",
+    "ngx-translate"
+  ],
+
+  "agent": "developer",
+
+  "agents": {
+    "developer": {
+      "description": "Primary development agent for Angular components, BFF routes, and services",
+      "file": ".opencode/agents/developer.md"
+    },
+    "reviewer": {
+      "description": "Read-only code review agent — diff analysis, convention checks, security scan",
+      "file": ".opencode/agents/reviewer.md"
+    },
+    "tester": {
+      "description": "Test authoring agent — Jasmine unit tests for Angular components and services",
+      "file": ".opencode/agents/tester.md"
+    },
+    "security": {
+      "description": "Read-only security audit agent — OWASP Top-10, auth flow, session handling",
+      "file": ".opencode/agents/security.md"
+    },
+    "api": {
+      "description": "BFF API design agent — REST conventions, proxy route mapping, API constants",
+      "file": ".opencode/agents/api.md"
+    }
+  },
+
+  "skills": {
+    "implement-feature": {
+      "file": ".opencode/skills/implement-feature.md"
+    },
+    "security-audit": {
+      "file": ".opencode/skills/security-audit.md"
+    }
+  },
+
+  "mcp": {
+    "servers": [
+      {
+        // Symbol index and call graph across Angular + BFF source.
+        // Used by: developer, reviewer, tester, api.
+        // Requires: no credentials. Indexes the current working directory automatically.
+        // Setup: none — runs via npx on demand.
+        "name": "codegraph",
+        "command": "npx",
+        "args": ["-y", "@opencode-ai/plugin", "codegraph"]
+      },
+      {
+        // Git history, blame, log, and diff queries within this repo.
+        // Used by: reviewer, security (read-only diff and blame).
+        // Requires: no credentials — operates on the current repo.
+        "name": "git",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-git", "--repository", "."]
+      },
+      {
+        // GitHub PR, issue, and check queries for this repository.
+        // Used by: developer (PR context), reviewer (check CI status).
+        // Requires: GITHUB_TOKEN env-var (Personal Access Token with repo scope).
+        // Setup: export GITHUB_TOKEN=<your-pat> before starting OpenCode.
+        "name": "github",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"],
+        "env": {
+          "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+        }
+      },
+      {
+        // Fetches external URLs inline (Angular docs, backbone-rest API spec, etc.).
+        // Used by: developer (reading upstream API docs), api (cross-referencing REST contracts).
+        // Requires: no credentials.
+        "name": "fetch",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-fetch"]
+      },
+      {
+        // Persistent cross-session memory for team conventions and architectural decisions.
+        // Used by: developer, reviewer.
+        // Requires: no credentials.
+        "name": "memory",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-memory"]
+      }
+    ]
+  },
+
+  "hooks": {
+    "before_edit": ".opencode/hooks/before-edit.sh",
+    "after_session": ".opencode/hooks/after-session.sh"
+  },
+
+  "keybindings": {
+    "ctrl+shift+d": "developer",
+    "ctrl+shift+r": "reviewer",
+    "ctrl+shift+t": "tester",
+    "ctrl+shift+s": "security",
+    "ctrl+shift+a": "api"
+  }
+}
