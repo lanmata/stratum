@@ -1,4 +1,7 @@
 export const API = {
+  APPLICATION: {
+    ID: '0cfae22b-2c3c-417b-9649-ac9fc3027275'
+  },
   SESSION: {
     ROOT: '/v1/session',
     TOKEN: '/v1/session/token',

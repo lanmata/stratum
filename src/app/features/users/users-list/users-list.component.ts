@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UserService } from '@core/services/user.service';
 import { UserTO } from '@shared/models/user.model';
+import {API} from "@shared/constants/api.constants";
 
 @Component({
   selector: 'app-users-list',
@@ -66,10 +67,11 @@ export class UsersListComponent implements OnInit {
   protected readonly users = signal<UserTO[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+  private readonly applicationId = API.APPLICATION.ID;
 
   ngOnInit(): void {
     // TODO: replace placeholder applicationId with real value from store/route
-    this.userService.getByApplication('00000000-0000-0000-0000-000000000000').subscribe({
+    this.userService.getByApplication(this.applicationId).subscribe({
       next: (data) => {
         this.users.set(data);
         this.loading.set(false);

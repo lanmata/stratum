@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
+import {API} from "@shared/constants/api.constants";
 
 @Component({
   selector: 'app-login',
@@ -52,6 +53,7 @@ export class LoginComponent {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly applicationId = API.APPLICATION.ID;
 
   protected readonly error = signal<string | null>(null);
 
@@ -64,7 +66,7 @@ export class LoginComponent {
     if (this.form.invalid) return;
     this.error.set(null);
     const { alias, password } = this.form.getRawValue();
-    this.auth.loginWithAlias({ alias, password }).subscribe((ok) => {
+    this.auth.loginWithAlias({ alias, password, applicationId: this.applicationId }).subscribe((ok) => {
       if (ok) {
         this.router.navigate(['/dashboard']);
       } else {
