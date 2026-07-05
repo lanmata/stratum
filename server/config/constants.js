@@ -3,6 +3,7 @@
 module.exports = {
   BACKBONE_BASE_URL: process.env['BACKBONE_BASE_URL'] || 'http://localhost:8443',
   SESSION_HEADER: 'session-token',
+  AUTHORIZATION: 'Authorization',
   PORT: parseInt(process.env['PORT'] || '4000', 10),
   NODE_ENV: process.env['NODE_ENV'] || 'development',
   CORS_ORIGIN: process.env['CORS_ORIGIN'] || '*',

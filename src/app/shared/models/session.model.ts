@@ -1,6 +1,7 @@
 export interface SessionRequest {
   alias: string;
   password: string;
+  applicationId: string;
 }
 
 export interface SessionEmailRequest {

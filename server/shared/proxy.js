@@ -1,8 +1,11 @@
 'use strict';
 
+const https = require('node:https');
 const axios = require('axios');
 const logger = require('../config/logger');
-const { BACKBONE_BASE_URL, SESSION_HEADER } = require('../config/constants');
+const { BACKBONE_BASE_URL, SESSION_HEADER, AUTHORIZATION } = require('../config/constants');
+
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 /**
  * Forward a request to backbone-rest and pipe the response back.
@@ -20,7 +23,7 @@ async function proxyToBackbone(req, res, backendPath, overrides = {}) {
     'Content-Type': 'application/json',
     Accept: 'application/json',
     host: backboneHost,
-    ...(sessionToken ? { [SESSION_HEADER]: sessionToken } : {}),
+    ...(sessionToken ? { [AUTHORIZATION]: `Bearer ${sessionToken}` } : {}),
   };
 
   try {
@@ -31,6 +34,7 @@ async function proxyToBackbone(req, res, backendPath, overrides = {}) {
       params: req.query,
       data: ['POST', 'PUT', 'PATCH'].includes(req.method) ? req.body : undefined,
       validateStatus: () => true,
+      ...(httpsAgent ? { httpsAgent } : {}),
       ...overrides,
     });
 
