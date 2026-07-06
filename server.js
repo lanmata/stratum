@@ -1,11 +1,16 @@
 'use strict';
 
+// Allow localhost by default; set NG_ALLOWED_HOSTS in production to the real hostname.
+if (!process.env['NG_ALLOWED_HOSTS']) {
+  process.env['NG_ALLOWED_HOSTS'] = 'localhost';
+}
+
 const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
-const { existsSync } = require('fs');
+const path = require('node:path');
+const { existsSync } = require('node:fs');
 
 const logger = require('./server/config/logger');
 const { PORT, CORS_ORIGIN, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX, NODE_ENV } = require('./server/config/constants');
@@ -16,6 +21,7 @@ const rolesRoutes = require('./server/routes/roles.routes');
 const featuresRoutes = require('./server/routes/features.routes');
 const peopleRoutes = require('./server/routes/people.routes');
 const contactsRoutes = require('./server/routes/contacts.routes');
+const contactTypesRoutes = require('./server/routes/contact-types.routes');
 const auditRoutes = require('./server/routes/audit.routes');
 
 const app = express();
@@ -48,6 +54,7 @@ app.use('/api/v1/roles', rolesRoutes);
 app.use('/api/v1/features', featuresRoutes);
 app.use('/api/v1/people', peopleRoutes);
 app.use('/api/v1/contacts', contactsRoutes);
+app.use('/api/v1/contact-types', contactTypesRoutes);
 app.use('/api/v1/iam/audit', auditRoutes);
 
 // ── Angular SSR ─────────────────────────────────────────────────────────────
