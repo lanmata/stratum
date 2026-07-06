@@ -3,12 +3,13 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "start": "ng serve",
     "start-dev:win": "node server.js",
     "build": "ng build",
     "build:ssr": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "watch:ssr": "ng build --watch --configuration development",
-    "dev": "concurrently \"npm run watch\" \"npm run serve:ssr\"",
+    "dev": "concurrently \"pnpm run watch\" \"pnpm run serve:ssr\"",
     "serve:ssr": "node server.js",
     "serve:ssr:front-backbone-rest": "node dist/front-backbone-rest/server/server.mjs",
     "test": "ng test",
@@ -82,5 +83,5 @@
     "karma-jasmine-html-reporter": "~2.2.0",
     "typescript": "~6.0.3"
   },
-  "packageManager": "pnpm@11.9.0+sha512.bd682d5d03fe525ef7c9fd6780c6884d1e756ac4c9c9fe00c538782824310dcf90e3ddc4f53835f06dfaebd5085e41855e0bcbb3b60de2ac5bbab89e5036f03b"
+  "packageManager": "pnpm@11.10.0+sha512.0b7f8b98060031904c017e3a41eb187a16d40eeb829b95c4f8cb03681761fc4ab53dd219115b9b447f4dce1a05a214764461e7d3703392a9f32f9511ce8c86c8"
 }

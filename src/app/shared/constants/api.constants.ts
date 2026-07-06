@@ -45,6 +45,11 @@ export const API = {
   AUDIT: {
     EVENTS: '/v1/iam/audit/events',
   },
+  CONTACT_TYPES: {
+    ROOT: '/v1/contact-types',
+    LIST_ALL: '/v1/contact-types/list-all',
+    BY_ID: (id: string) => `/v1/contact-types/${id}`,
+  },
 } as const;
 
 export const SESSION_TOKEN_HEADER = 'session-token';

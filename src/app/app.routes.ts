@@ -50,5 +50,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
   },
+  {
+    path: 'contact-types',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/contact-types/contact-types.routes').then((m) => m.contactTypesRoutes),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];
