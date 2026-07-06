@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); if echo \"$file\" | grep -qE '\\.ts$' && ! echo \"$file\" | grep -qE '\\.spec\\.ts$'; then echo \"[hook] TypeScript file edited — running tsc --noEmit\"; npx tsc --noEmit 2>&1 | tail -20; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); if echo \"$file\" | grep -qE '\\.ts$' && ! echo \"$file\" | grep -qE '\\.spec\\.ts$'; then echo \"[hook] TypeScript file written — running tsc --noEmit\"; npx tsc --noEmit 2>&1 | tail -20; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('command',''))\" 2>/dev/null); if echo \"$cmd\" | grep -q 'HttpClient' && ! echo \"$cmd\" | grep -q 'HttpService'; then echo \"[hook] WARNING: Direct HttpClient usage detected. Use HttpService from @core/services/http.service.ts instead.\"; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"\\n[stratum session checklist]\\n- [ ] npx tsc --noEmit (type-check)\\n- [ ] npm run build:ssr (production build)\\n- [ ] npm run test:headless (unit tests)\\n- [ ] No hardcoded URLs (all API.* constants)\\n- [ ] BFF routes are one-liners (no logic)\\n- [ ] All new routes have canActivate: [authGuard]\""
+          }
+        ]
+      }
+    ]
+  }
+}

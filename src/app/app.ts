@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LoadingService } from '@core/services/loading.service';
+import { ToastComponent } from '@shared/components/toast/toast.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, ToastComponent],
   template: `
     @if (loading.isLoading()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
@@ -13,6 +14,7 @@ import { LoadingService } from '@core/services/loading.service';
       </div>
     }
     <router-outlet />
+    <app-toast />
   `,
 })
 export class App {
