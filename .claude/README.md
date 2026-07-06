@@ -7,7 +7,7 @@
 | Name | front-backbone-rest |
 | Framework | Angular 20 (`@angular/core` ^22.0.4), standalone components, new control flow |
 | Language | TypeScript 5.9 strict (`typescript ~6.0.3`) |
-| Package manager | npm |
+| Package manager | pnpm (pinned via `package.json#packageManager`) |
 | BFF | Express 5 (`express` ^5.2.1) — `server.js` + `server/routes/` |
 | State management | NgRx 20 (session only) + Angular Signals (component state) |
 | Styling | Tailwind CSS v4 |
