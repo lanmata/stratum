@@ -6,5 +6,13 @@ export interface Feature {
 }
 
 export interface FeatureRequest {
-  feature: Feature;
+  feature: {
+    id?: string;
+    name: string;
+    description?: string;
+    active: boolean;
+  };
+  dateTime?: string;
+  appName?: string;
+  appToken?: string | null;
 }

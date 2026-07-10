@@ -30,8 +30,10 @@ export const API = {
     UPDATE: (id: string) => `/v1/roles/${id}`,
   },
   FEATURES: {
+    ROOT: '/v1/features',
     WITH_INACTIVE: (include: boolean) => `/v1/features/${include}`,
     BY_ID: (id: string) => `/v1/features/find/${id}`,
+    UPDATE: (id: string) => `/v1/features/${id}`,
   },
   CONTACTS: {
     ROOT: '/v1/contacts',
