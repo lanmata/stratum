@@ -17,10 +17,10 @@ export class FeatureService {
   }
 
   create(req: FeatureRequest): Observable<Feature> {
-    return this.http.post<Feature>(`/v1/features/`, req);
+    return this.http.post<Feature>(API.FEATURES.ROOT, req);
   }
 
   update(featureId: string, req: FeatureRequest): Observable<Feature> {
-    return this.http.put<Feature>(`/v1/features/${featureId}`, req);
+    return this.http.put<Feature>(API.FEATURES.UPDATE(featureId), req);
   }
 }

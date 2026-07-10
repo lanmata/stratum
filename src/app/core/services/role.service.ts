@@ -12,6 +12,10 @@ export class RoleService {
     return this.http.get<Role[]>(API.ROLES.ROOT);
   }
 
+  getAllWithFeatures(): Observable<Role[]> {
+    return this.http.get<Role[]>(API.ROLES.WITH_INACTIVE(true));
+  }
+
   getById(roleId: string): Observable<Role> {
     return this.http.get<Role>(API.ROLES.BY_ID(roleId));
   }

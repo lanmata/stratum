@@ -1,23 +1,20 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
 import { FeatureService } from '@core/services/feature.service';
-import { RoleService } from '@core/services/role.service';
 import { ToastService } from '@core/services/toast.service';
-import { Feature } from '@shared/models/feature.model';
 import { environment } from '@env/environment';
 
 @Component({
-  selector: 'app-role-form',
+  selector: 'app-feature-form',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   template: `
     <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6">
-        <a routerLink="/roles" class="text-sm text-blue-600 hover:underline">← Roles</a>
+        <a routerLink="/features-mgmt" class="text-sm text-blue-600 hover:underline">← Features</a>
         <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
-          {{ isEdit() ? 'Editar Rol' : 'Nuevo Rol' }}
+          {{ isEdit() ? 'Editar Feature' : 'Nueva Feature' }}
         </h1>
       </div>
 
@@ -36,7 +33,7 @@ import { environment } from '@env/environment';
                   formControlName="name"
                   type="text"
                   maxlength="128"
-                  placeholder="Nombre del rol"
+                  placeholder="Nombre de la feature"
                   class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                   [class.border-red-400]="form.controls.name.invalid && form.controls.name.touched"
                 />
@@ -71,47 +68,15 @@ import { environment } from '@env/environment';
                   ></span>
                 </button>
                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ form.controls.active.value ? 'Activo' : 'Inactivo' }}
+                  {{ form.controls.active.value ? 'Activa' : 'Inactiva' }}
                 </span>
-              </div>
-
-              <!-- Features -->
-              <div>
-                <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Funcionalidades</p>
-                @if (allFeatures().length === 0) {
-                  <p class="text-xs text-gray-400 dark:text-gray-500">No hay features disponibles.</p>
-                } @else {
-                  <div class="max-h-48 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-600">
-                    @for (feature of allFeatures(); track feature.id) {
-                      <label
-                        class="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/40"
-                        [class.opacity-50]="!feature.active"
-                      >
-                        <input
-                          type="checkbox"
-                          [checked]="selectedFeatureIds().has(feature.id)"
-                          (change)="toggleFeature(feature.id)"
-                          [disabled]="!feature.active"
-                          class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-500"
-                        />
-                        <span class="flex-1 text-sm text-gray-800 dark:text-gray-200">{{ feature.name }}</span>
-                        @if (!feature.active) {
-                          <span class="text-xs text-gray-400 dark:text-gray-500">Inactiva</span>
-                        }
-                      </label>
-                    }
-                  </div>
-                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {{ selectedFeatureIds().size }} feature(s) seleccionada(s)
-                  </p>
-                }
               </div>
 
             </div>
 
             <div class="mt-6 flex justify-end gap-3">
               <a
-                routerLink="/roles"
+                routerLink="/features-mgmt"
                 class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 Cancelar
@@ -121,7 +86,7 @@ import { environment } from '@env/environment';
                 [disabled]="form.invalid || saving()"
                 class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {{ saving() ? 'Guardando…' : isEdit() ? 'Guardar cambios' : 'Crear rol' }}
+                {{ saving() ? 'Guardando…' : isEdit() ? 'Guardar cambios' : 'Crear feature' }}
               </button>
             </div>
           </form>
@@ -130,20 +95,17 @@ import { environment } from '@env/environment';
     </div>
   `,
 })
-export class RoleFormComponent implements OnInit {
+export class FeatureFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly roleService = inject(RoleService);
   private readonly featureService = inject(FeatureService);
   private readonly toast = inject(ToastService);
 
   protected readonly isEdit = signal(false);
-  protected readonly loading = signal(true);
+  protected readonly loading = signal(false);
   protected readonly saving = signal(false);
-  protected readonly allFeatures = signal<Feature[]>([]);
-  protected readonly selectedFeatureIds = signal<Set<string>>(new Set());
-  private roleId: string | null = null;
+  private featureId: string | null = null;
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(128)]],
@@ -152,51 +114,29 @@ export class RoleFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.roleId = this.route.snapshot.paramMap.get('roleId');
-
-    if (this.roleId) {
+    this.featureId = this.route.snapshot.paramMap.get('featureId');
+    if (this.featureId) {
       this.isEdit.set(true);
-      forkJoin({
-        role: this.roleService.getById(this.roleId),
-        features: this.featureService.getAll(true),
-      }).subscribe({
-        next: ({ role, features }) => {
-          this.allFeatures.set(features);
-          this.form.patchValue({
-            name: role.name,
-            description: role.description ?? '',
-            active: role.active,
-          });
-          this.selectedFeatureIds.set(new Set((role.features ?? []).map((f) => f.id)));
-          this.loading.set(false);
-        },
-        error: () => {
-          this.toast.error('Error al cargar el rol');
-          this.router.navigate(['/roles']);
-        },
-      });
-    } else {
-      this.featureService.getAll(true).subscribe({
-        next: (features) => {
-          this.allFeatures.set(features);
-          this.loading.set(false);
-        },
-        error: () => {
-          this.loading.set(false);
-        },
-      });
+      this.loadForEdit(this.featureId);
     }
   }
 
-  protected toggleFeature(id: string): void {
-    this.selectedFeatureIds.update((set) => {
-      const next = new Set(set);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
+  private loadForEdit(id: string): void {
+    this.loading.set(true);
+    this.featureService.getById(id).subscribe({
+      next: (feature) => {
+        this.form.patchValue({
+          name: feature.name,
+          description: feature.description ?? '',
+          active: feature.active,
+        });
+        this.loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Error al cargar la feature');
+        this.loading.set(false);
+        this.router.navigate(['/features-mgmt']);
+      },
     });
   }
 
@@ -205,49 +145,34 @@ export class RoleFormComponent implements OnInit {
     this.saving.set(true);
 
     const { name, description, active } = this.form.getRawValue();
-    const selectedIds = this.selectedFeatureIds();
-    const features = this.allFeatures()
-      .filter((f) => selectedIds.has(f.id))
-      .map((f) => ({ id: f.id, name: f.name, description: f.description, active: f.active }));
-
     const d = new Date();
-    const dateTime = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+    const now = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
 
     const req = {
-      role: {
-        ...(this.isEdit() && this.roleId ? { id: this.roleId } : {}),
+      feature: {
+        ...(this.isEdit() && this.featureId ? { id: this.featureId } : {}),
         name,
         description,
         active,
-        features,
       },
-      dateTime,
+      dateTime: now,
       appName: environment.appName,
       appToken: null,
     };
 
-    if (this.isEdit() && this.roleId) {
-      this.roleService.update(this.roleId, req).subscribe({
-        next: () => {
-          this.toast.success('Rol actualizado correctamente');
-          this.router.navigate(['/roles']);
-        },
-        error: () => {
-          this.toast.error('Error al actualizar el rol');
-          this.saving.set(false);
-        },
-      });
-    } else {
-      this.roleService.create(req).subscribe({
-        next: () => {
-          this.toast.success('Rol creado correctamente');
-          this.router.navigate(['/roles']);
-        },
-        error: () => {
-          this.toast.error('Error al crear el rol');
-          this.saving.set(false);
-        },
-      });
-    }
+    const call = this.isEdit() && this.featureId
+      ? this.featureService.update(this.featureId, req)
+      : this.featureService.create(req);
+
+    call.subscribe({
+      next: () => {
+        this.toast.success(this.isEdit() ? 'Feature actualizada correctamente' : 'Feature creada correctamente');
+        this.router.navigate(['/features-mgmt']);
+      },
+      error: () => {
+        this.toast.error(this.isEdit() ? 'Error al actualizar la feature' : 'Error al crear la feature');
+        this.saving.set(false);
+      },
+    });
   }
 }

@@ -25,7 +25,6 @@ type StatusFilter = 'all' | 'active' | 'inactive';
         </a>
       </div>
 
-      <!-- Filters -->
       <div class="mb-4 flex flex-wrap gap-3">
         <input
           type="text"
@@ -63,6 +62,7 @@ type StatusFilter = 'all' | 'active' | 'inactive';
           <table class="w-full text-sm">
             <thead class="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-700/50 dark:text-gray-400">
               <tr>
+                <th class="w-8 px-3 py-3"></th>
                 <th class="px-4 py-3">Nombre</th>
                 <th class="px-4 py-3">Descripción</th>
                 <th class="px-4 py-3">Estado</th>
@@ -71,8 +71,33 @@ type StatusFilter = 'all' | 'active' | 'inactive';
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
               @for (role of paginated(); track role.id) {
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ role.name }}</td>
+                <!-- Role row -->
+                <tr
+                  class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                  (click)="toggleExpand(role.id)"
+                >
+                  <td class="px-3 py-3 text-center text-gray-400 dark:text-gray-500">
+                    @let hasFeatures = (role.features?.length ?? 0) > 0;
+                    @if (hasFeatures) {
+                      <svg
+                        class="inline-block h-4 w-4 transition-transform"
+                        [class.rotate-90]="expandedIds().has(role.id)"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    } @else {
+                      <span class="text-xs text-gray-300 dark:text-gray-600">—</span>
+                    }
+                  </td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                    {{ role.name }}
+                    @if ((role.features?.length ?? 0) > 0) {
+                      <span class="ml-2 rounded-full bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                        {{ role.features!.length }}
+                      </span>
+                    }
+                  </td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ role.description }}</td>
                   <td class="px-4 py-3">
                     <span
@@ -82,7 +107,7 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                       {{ role.active ? 'Activo' : 'Inactivo' }}
                     </span>
                   </td>
-                  <td class="px-4 py-3">
+                  <td class="px-4 py-3" (click)="$event.stopPropagation()">
                     <a
                       [routerLink]="['/roles', role.id, 'edit']"
                       class="text-sm font-medium text-blue-600 hover:underline"
@@ -91,16 +116,49 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                     </a>
                   </td>
                 </tr>
+
+                <!-- Feature child rows (tree) -->
+                @if (expandedIds().has(role.id) && (role.features?.length ?? 0) > 0) {
+                  @for (feature of role.features!; track feature.id; let last = $last) {
+                    <tr class="bg-gray-50/60 dark:bg-gray-700/20">
+                      <td class="px-3 py-2"></td>
+                      <td class="py-2 pl-8 pr-4" colspan="1">
+                        <div class="flex items-center gap-2">
+                          <!-- Tree connector -->
+                          <span class="flex flex-col items-center self-stretch">
+                            <span class="w-px flex-1 bg-gray-300 dark:bg-gray-600"></span>
+                            <span class="mt-0 h-px w-3 bg-gray-300 dark:bg-gray-600"></span>
+                            @if (!last) {
+                              <span class="w-px flex-1 bg-gray-300 dark:bg-gray-600"></span>
+                            } @else {
+                              <span class="w-px flex-1"></span>
+                            }
+                          </span>
+                          <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ feature.name }}</span>
+                        </div>
+                      </td>
+                      <td class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">{{ feature.description ?? '—' }}</td>
+                      <td class="px-4 py-2">
+                        <span
+                          class="rounded-full px-2 py-0.5 text-xs font-medium"
+                          [class]="feature.active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+                        >
+                          {{ feature.active ? 'Activa' : 'Inactiva' }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-2"></td>
+                    </tr>
+                  }
+                }
               } @empty {
                 <tr>
-                  <td colspan="4" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No se encontraron roles</td>
+                  <td colspan="5" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No se encontraron roles</td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
 
-        <!-- Pagination -->
         @if (totalPages() > 1) {
           <div class="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
             <span>{{ firstItem() }}–{{ lastItem() }} de {{ filtered().length }} roles</span>
@@ -132,6 +190,7 @@ export class RolesListComponent implements OnInit {
 
   protected readonly loading = signal(true);
   private readonly allRoles = signal<Role[]>([]);
+  protected readonly expandedIds = signal<Set<string>>(new Set());
 
   protected readonly searchName = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
@@ -168,12 +227,24 @@ export class RolesListComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.roleService.getAll().subscribe({
+    this.roleService.getAllWithFeatures().subscribe({
       next: (data) => {
         this.allRoles.set(data);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+  }
+
+  protected toggleExpand(roleId: string): void {
+    this.expandedIds.update((set) => {
+      const next = new Set(set);
+      if (next.has(roleId)) {
+        next.delete(roleId);
+      } else {
+        next.add(roleId);
+      }
+      return next;
     });
   }
 
