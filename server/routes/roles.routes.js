@@ -5,6 +5,7 @@ const { proxyToBackbone } = require('../shared/proxy');
 
 const router = Router();
 
+router.get('/', (req, res) => proxyToBackbone(req, res, '/api/v1/roles'));
 router.get('/:includeInactive', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/roles/${req.params['includeInactive']}`)
 );

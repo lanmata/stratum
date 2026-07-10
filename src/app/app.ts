@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LoadingService } from '@core/services/loading.service';
+import { ThemeService } from '@core/services/theme.service';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
 @Component({
@@ -17,6 +18,11 @@ import { ToastComponent } from '@shared/components/toast/toast.component';
     <app-toast />
   `,
 })
-export class App {
+export class App implements OnInit {
   protected readonly loading = inject(LoadingService);
+  private readonly theme = inject(ThemeService);
+
+  ngOnInit(): void {
+    this.theme.init();
+  }
 }

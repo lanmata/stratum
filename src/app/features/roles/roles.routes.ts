@@ -6,4 +6,14 @@ export const rolesRoutes: Routes = [
     loadComponent: () =>
       import('./roles-list/roles-list.component').then((m) => m.RolesListComponent),
   },
+  {
+    path: 'new',
+    loadComponent: () =>
+      import('./role-form/role-form.component').then((m) => m.RoleFormComponent),
+  },
+  {
+    path: ':roleId/edit',
+    loadComponent: () =>
+      import('./role-form/role-form.component').then((m) => m.RoleFormComponent),
+  },
 ];

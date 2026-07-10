@@ -1,5 +1,7 @@
 'use strict';
 
+require('dotenv').config();
+
 // Allow localhost by default; set NG_ALLOWED_HOSTS in production to the real hostname.
 if (!process.env['NG_ALLOWED_HOSTS']) {
   process.env['NG_ALLOWED_HOSTS'] = 'localhost';
@@ -12,8 +14,19 @@ const rateLimit = require('express-rate-limit');
 const path = require('node:path');
 const { existsSync } = require('node:fs');
 
+const https = require('node:https');
+const { readFileSync } = require('node:fs');
+
 const logger = require('./server/config/logger');
-const { PORT, CORS_ORIGIN, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX, NODE_ENV } = require('./server/config/constants');
+const {
+  PORT,
+  CORS_ORIGIN,
+  RATE_LIMIT_WINDOW_MS,
+  RATE_LIMIT_MAX,
+  NODE_ENV,
+  SSL_CERT_PATH,
+  SSL_KEY_PATH,
+} = require('./server/config/constants');
 
 const sessionRoutes = require('./server/routes/session.routes');
 const usersRoutes = require('./server/routes/users.routes');
@@ -84,8 +97,13 @@ app.get('*splat', async (req, res) => {
 });
 
 // ── Start ────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  logger.info(`front-backbone-rest BFF running on http://localhost:${PORT} [${NODE_ENV}]`);
+const sslOptions = {
+  key: readFileSync(SSL_KEY_PATH),
+  cert: readFileSync(SSL_CERT_PATH),
+};
+
+https.createServer(sslOptions, app).listen(PORT, () => {
+  logger.info(`front-backbone-rest BFF running on https://localhost:${PORT} [${NODE_ENV}]`);
 });
 
 module.exports = app;

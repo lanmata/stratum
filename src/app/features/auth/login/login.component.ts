@@ -9,32 +9,32 @@ import {API} from "@shared/constants/api.constants";
   standalone: true,
   imports: [ReactiveFormsModule],
   template: `
-    <div class="flex min-h-screen items-center justify-center bg-gray-50">
-      <div class="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 class="mb-6 text-2xl font-semibold text-gray-900">Backoffice</h1>
+    <div class="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div class="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <h1 class="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">Backoffice</h1>
 
         <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">Alias</label>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Alias</label>
             <input
               formControlName="alias"
               type="text"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
               placeholder="your.alias"
             />
           </div>
 
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">Password</label>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
             <input
               formControlName="password"
               type="password"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             />
           </div>
 
           @if (error()) {
-            <p class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{{ error() }}</p>
+            <p class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{{ error() }}</p>
           }
 
           <button

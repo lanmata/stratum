@@ -10,30 +10,30 @@ import { ContactTypeRequest } from '@shared/models/contact.model';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6">
+    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6">
         <a routerLink="/contact-types" class="text-sm text-blue-600 hover:underline">
           ← Tipos de Contacto
         </a>
-        <h1 class="mt-1 text-xl font-semibold text-gray-900">
+        <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
           {{ isEditMode() ? 'Editar Tipo de Contacto' : 'Nuevo Tipo de Contacto' }}
         </h1>
       </div>
 
-      <div class="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div class="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         @if (loadingData()) {
-          <p class="text-sm text-gray-500">Cargando…</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Cargando…</p>
         } @else {
           <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Nombre <span class="text-red-500">*</span>
               </label>
               <input
                 formControlName="name"
                 type="text"
                 maxlength="128"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 [class.border-red-400]="form.controls.name.invalid && form.controls.name.touched"
               />
               @if (form.controls.name.invalid && form.controls.name.touched) {
@@ -42,12 +42,12 @@ import { ContactTypeRequest } from '@shared/models/contact.model';
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700">Descripción</label>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
               <textarea
                 formControlName="description"
                 rows="3"
                 maxlength="512"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               ></textarea>
             </div>
 
@@ -55,16 +55,16 @@ import { ContactTypeRequest } from '@shared/models/contact.model';
               <label class="relative inline-flex cursor-pointer items-center">
                 <input formControlName="active" type="checkbox" class="peer sr-only" />
                 <div
-                  class="peer h-5 w-9 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-blue-600 peer-checked:after:translate-x-full"
+                  class="peer h-5 w-9 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-blue-600 peer-checked:after:translate-x-full dark:bg-gray-600"
                 ></div>
               </label>
-              <span class="text-sm text-gray-700">Activo</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Activo</span>
             </div>
 
             <div class="flex justify-end gap-3 pt-2">
               <a
                 routerLink="/contact-types"
-                class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 Cancelar
               </a>
