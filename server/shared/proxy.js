@@ -27,7 +27,7 @@ async function proxyToBackbone(req, res, backendPath, overrides = {}) {
   };
 
   try {
-    const response = await axios({
+    const response =  await axios({
       method: req.method,
       url,
       headers,

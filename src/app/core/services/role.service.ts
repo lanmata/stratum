@@ -8,8 +8,8 @@ import { Role, RoleRequest } from '@shared/models/role.model';
 export class RoleService {
   private readonly http = inject(HttpService);
 
-  getAll(includeInactive = false): Observable<Role[]> {
-    return this.http.get<Role[]>(API.ROLES.WITH_INACTIVE(includeInactive));
+  getAll(): Observable<Role[]> {
+    return this.http.get<Role[]>(API.ROLES.ROOT);
   }
 
   getById(roleId: string): Observable<Role> {
@@ -25,6 +25,6 @@ export class RoleService {
   }
 
   update(roleId: string, req: RoleRequest): Observable<Role> {
-    return this.http.put<Role>(`${API.ROLES.ROOT}/${roleId}`, req);
+    return this.http.put<Role>(API.ROLES.UPDATE(roleId), req);
   }
 }

@@ -27,6 +27,7 @@ export const API = {
     WITH_INACTIVE: (include: boolean) => `/v1/roles/${include}`,
     BY_ID: (id: string) => `/v1/roles/find/${id}`,
     BY_USER: (userId: string) => `/v1/roles/user/${userId}`,
+    UPDATE: (id: string) => `/v1/roles/${id}`,
   },
   FEATURES: {
     WITH_INACTIVE: (include: boolean) => `/v1/features/${include}`,
@@ -44,6 +45,7 @@ export const API = {
   },
   AUDIT: {
     EVENTS: '/v1/iam/audit/events',
+    EXPORT: '/v1/iam/audit/export',
   },
   CONTACT_TYPES: {
     ROOT: '/v1/contact-types',
