@@ -38,6 +38,8 @@ async function proxyToBackbone(req, res, backendPath, overrides = {}) {
       ...overrides,
     });
 
+    const warning = response.headers['warning'];
+    if (warning) res.setHeader('Warning', warning);
     res.status(response.status).json(response.data);
   } catch (err) {
     logger.error(`Proxy error → ${url}:`, err.message);

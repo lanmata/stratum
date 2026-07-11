@@ -32,6 +32,7 @@ export class ToastComponent {
   protected bgClass(toast: Toast): string {
     if (toast.type === 'success') return 'bg-green-500';
     if (toast.type === 'error') return 'bg-red-500';
+    if (toast.type === 'warning') return 'bg-amber-500';
     return 'bg-blue-500';
   }
 }

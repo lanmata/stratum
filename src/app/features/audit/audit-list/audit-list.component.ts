@@ -1,15 +1,14 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, computed, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuditService } from '@core/services/audit.service';
 import { AuditEvent, AuditQuery } from '@shared/models/audit.model';
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
-
 @Component({
   selector: 'app-audit-list',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule],
   template: `
     <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6 flex items-center justify-between">
@@ -34,8 +33,21 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
         </button>
       </div>
 
+      <div class="mb-4 flex flex-wrap gap-3">
+        <select
+          [ngModel]="pageSize()"
+          (ngModelChange)="onPageSizeChange($event)"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+        >
+          <option [ngValue]="10">10 por página</option>
+          <option [ngValue]="20">20 por página</option>
+          <option [ngValue]="50">50 por página</option>
+          <option [ngValue]="100">100 por página</option>
+        </select>
+      </div>
+
       @if (loading()) {
-        <p class="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Cargando…</p>
       } @else {
         <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <table class="w-full text-sm">
@@ -55,7 +67,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="3" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No events found</td>
+                  <td colspan="3" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No se encontraron eventos</td>
                 </tr>
               }
             </tbody>
@@ -63,37 +75,23 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
         </div>
 
         <div class="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+          <span>{{ firstItem() }}–{{ lastItem() }} eventos</span>
           <div class="flex items-center gap-2">
-            <span>Rows per page:</span>
-            <select
-              class="rounded border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-              [value]="pageSize()"
-              (change)="onSizeChange($event)"
+            <button
+              (click)="prevPage()"
+              [disabled]="currentPage() === 1"
+              class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
             >
-              @for (opt of pageSizeOptions; track opt) {
-                <option [value]="opt">{{ opt }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <span>Page {{ currentPage() + 1 }}</span>
-            <div class="flex gap-1">
-              <button
-                (click)="prevPage()"
-                [disabled]="currentPage() === 0"
-                class="rounded border border-gray-300 bg-white px-3 py-1 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600"
-              >
-                ‹ Prev
-              </button>
-              <button
-                (click)="nextPage()"
-                [disabled]="!hasNextPage()"
-                class="rounded border border-gray-300 bg-white px-3 py-1 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600"
-              >
-                Next ›
-              </button>
-            </div>
+              ← Anterior
+            </button>
+            <span class="px-2">Página {{ currentPage() }}</span>
+            <button
+              (click)="nextPage()"
+              [disabled]="!hasNextPage()"
+              class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
+            >
+              Siguiente →
+            </button>
           </div>
         </div>
       }
@@ -104,28 +102,34 @@ export class AuditListComponent implements OnInit {
   private readonly auditService = inject(AuditService);
   private readonly platformId = inject(PLATFORM_ID);
 
-  protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
-
   protected readonly events = signal<AuditEvent[]>([]);
   protected readonly loading = signal(true);
   protected readonly exporting = signal(false);
-  protected readonly currentPage = signal(0);
+  protected readonly currentPage = signal(1);
   protected readonly pageSize = signal(20);
 
   protected readonly hasNextPage = computed(() => this.events().length === this.pageSize());
+
+  protected readonly firstItem = computed(() =>
+    this.events().length === 0 ? 0 : (this.currentPage() - 1) * this.pageSize() + 1
+  );
+
+  protected readonly lastItem = computed(() =>
+    (this.currentPage() - 1) * this.pageSize() + this.events().length
+  );
 
   ngOnInit(): void {
     this.loadPage();
   }
 
-  protected onSizeChange(event: Event): void {
-    this.pageSize.set(Number((event.target as HTMLSelectElement).value));
-    this.currentPage.set(0);
+  protected onPageSizeChange(value: number): void {
+    this.pageSize.set(Number(value));
+    this.currentPage.set(1);
     this.loadPage();
   }
 
   protected prevPage(): void {
-    if (this.currentPage() > 0) {
+    if (this.currentPage() > 1) {
       this.currentPage.update((p) => p - 1);
       this.loadPage();
     }
@@ -152,7 +156,7 @@ export class AuditListComponent implements OnInit {
 
   private loadPage(): void {
     this.loading.set(true);
-    const query: AuditQuery = { page: this.currentPage(), size: this.pageSize() };
+    const query: AuditQuery = { page: this.currentPage() - 1, size: this.pageSize() };
     this.auditService.getEvents(query).subscribe({
       next: (data) => {
         this.events.set(data);

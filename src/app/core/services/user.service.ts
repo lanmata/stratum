@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HttpService } from './http.service';
 import { API } from '@shared/constants/api.constants';
@@ -8,8 +9,8 @@ import { UserTO, UserCreateRequest, UserCreateResponse, PutUserUpdateRequest } f
 export class UserService {
   private readonly http = inject(HttpService);
 
-  create(req: UserCreateRequest): Observable<UserCreateResponse> {
-    return this.http.post<UserCreateResponse>(API.USERS.ROOT, req);
+  create(req: UserCreateRequest): Observable<HttpResponse<UserCreateResponse>> {
+    return this.http.postWithResponse<UserCreateResponse>(API.USERS.ROOT, req);
   }
 
   getById(userId: string): Observable<UserTO> {

@@ -20,6 +20,10 @@ export class ToastService {
     this.add('info', message, duration);
   }
 
+  warning(message: string, duration = 6000): void {
+    this.add('warning', message, duration);
+  }
+
   dismiss(id: string): void {
     clearTimeout(this.timers.get(id));
     this.timers.delete(id);

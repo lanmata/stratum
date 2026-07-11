@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { retry } from 'rxjs/operators';
 import { environment } from '@env/environment';
@@ -37,6 +37,13 @@ export class HttpService {
 
   post<T>(path: string, body: unknown): Observable<T> {
     return this.http.post<T>(`${this.base}${path}`, body, { headers: this.headers() });
+  }
+
+  postWithResponse<T>(path: string, body: unknown): Observable<HttpResponse<T>> {
+    return this.http.post<T>(`${this.base}${path}`, body, {
+      headers: this.headers(),
+      observe: 'response',
+    });
   }
 
   put<T>(path: string, body: unknown): Observable<T> {
