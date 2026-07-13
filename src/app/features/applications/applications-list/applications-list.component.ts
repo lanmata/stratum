@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApplicationService } from '@core/services/application.service';
 import { ApplicationEditState } from '@core/services/application-edit.state';
+import { ApplicationDirectoryService } from '@core/services/application-directory.service';
 import { ToastService } from '@core/services/toast.service';
 import { Application } from '@shared/models/application.model';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
@@ -83,7 +84,9 @@ function formatLocalDate(d: Date): string {
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
               @for (app of paginated(); track app.id) {
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ app.name }}</td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                    <a [routerLink]="['/applications', app.id]" class="hover:underline">{{ app.name }}</a>
+                  </td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ app.description ?? '—' }}</td>
                   <td class="px-4 py-3">
                     @if (app.active) {
@@ -172,6 +175,7 @@ function formatLocalDate(d: Date): string {
 export class ApplicationsListComponent implements OnInit {
   private readonly applicationService = inject(ApplicationService);
   private readonly editState = inject(ApplicationEditState);
+  private readonly directory = inject(ApplicationDirectoryService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
@@ -255,6 +259,7 @@ export class ApplicationsListComponent implements OnInit {
     this.applicationService.getAll().subscribe({
       next: (apps) => {
         this.allApplications.set(apps);
+        this.directory.setAll(apps);
         this.loading.set(false);
       },
       error: () => {

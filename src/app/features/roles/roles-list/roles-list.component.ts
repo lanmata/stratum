@@ -111,15 +111,26 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                     }
                   </td>
                   <td class="px-4 py-3" (click)="$event.stopPropagation()">
-                    <a
-                      [routerLink]="['/roles', role.id, 'edit']"
-                      title="Editar"
-                      class="inline-flex rounded-lg p-1.5 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                      </svg>
-                    </a>
+                    <div class="flex items-center gap-1">
+                      <a
+                        [routerLink]="['/roles', role.id, 'edit']"
+                        title="Editar"
+                        class="inline-flex rounded-lg p-1.5 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                        </svg>
+                      </a>
+                      <a
+                        [routerLink]="['/roles', role.id, 'features']"
+                        title="Features"
+                        class="inline-flex rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M6 6V4.75C6 3.784 6.784 3 7.75 3h4.5c.966 0 1.75.784 1.75 1.75V6h1.25c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0115.25 18H4.75A1.75 1.75 0 013 16.25v-8.5C3 6.784 3.784 6 4.75 6H6zm1.5-1.25V6h5V4.75a.25.25 0 00-.25-.25h-4.5a.25.25 0 00-.25.25z" clip-rule="evenodd"/>
+                        </svg>
+                      </a>
+                    </div>
                   </td>
                 </tr>
 

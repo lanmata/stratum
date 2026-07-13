@@ -1,3 +1,6 @@
+import { Role } from './role.model';
+import { UserTO } from './user.model';
+
 export interface Application {
   id: string;
   name: string;
@@ -6,8 +9,8 @@ export interface Application {
   createdDate?: string;
   lastUpdate?: string;
   serviceTypeId?: string;
-  userList?: string[];
-  roleList?: string[];
+  userList?: UserTO[];
+  roleList?: Role[];
 }
 
 export interface ApplicationCreateRequest {

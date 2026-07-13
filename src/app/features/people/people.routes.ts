@@ -6,4 +6,8 @@ export const peopleRoutes: Routes = [
     loadComponent: () =>
       import('./people-list/people-list.component').then((m) => m.PeopleListComponent),
   },
+  {
+    path: ':personId/addresses',
+    loadChildren: () => import('../addresses/addresses.routes').then((m) => m.addressesRoutes),
+  },
 ];

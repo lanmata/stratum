@@ -1,11 +1,10 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { UserTO } from '@shared/models/user.model';
-import { API } from '@shared/constants/api.constants';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -17,11 +16,11 @@ type StatusFilter = 'all' | 'active' | 'inactive';
     <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
+          <a [routerLink]="['/applications', applicationId]" class="text-sm text-blue-600 hover:underline">← Aplicación</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Usuarios</h1>
         </div>
         <a
-          routerLink="/users/new"
+          [routerLink]="['/applications', applicationId, 'users', 'new']"
           class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Nuevo Usuario
@@ -106,7 +105,7 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                   <td class="px-4 py-3">
                     <div class="flex items-center gap-1">
                       <a
-                        [routerLink]="['/users', user.id, 'edit']"
+                        [routerLink]="['/applications', applicationId, 'users', user.id, 'edit']"
                         title="Editar"
                         class="rounded-lg p-1.5 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                       >
@@ -178,7 +177,8 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 export class UsersListComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly toast = inject(ToastService);
-  private readonly appId = API.APPLICATION.ID;
+  private readonly route = inject(ActivatedRoute);
+  protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
 
   protected readonly loading = signal(true);
   private readonly allUsers = signal<UserTO[]>([]);
@@ -229,7 +229,7 @@ export class UsersListComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.userService.getByApplication(this.appId).subscribe({
+    this.userService.getByApplication(this.applicationId).subscribe({
       next: (data) => {
         this.allUsers.set(data);
         this.loading.set(false);
@@ -244,7 +244,7 @@ export class UsersListComponent implements OnInit {
   protected confirmDelete(): void {
     const user = this.deleteTarget();
     if (!user) return;
-    this.userService.delete(this.appId, user.id).subscribe({
+    this.userService.delete(this.applicationId, user.id).subscribe({
       next: () => {
         this.allUsers.update((list) => list.filter((u) => u.id !== user.id));
         this.deleteTarget.set(null);

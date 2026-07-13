@@ -13,11 +13,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
-  {
-    path: 'users',
-    canActivate: [authGuard],
-    loadChildren: () => import('./features/users/users.routes').then((m) => m.usersRoutes),
-  },
+  { path: 'users', redirectTo: 'applications', pathMatch: 'full' },
   {
     path: 'roles',
     canActivate: [authGuard],
@@ -67,6 +63,20 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadChildren: () =>
       import('./features/service-types/service-types.routes').then((m) => m.serviceTypesRoutes),
+  },
+  {
+    path: 'identification-documents',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/identification-documents/identification-documents.routes').then(
+        (m) => m.identificationDocumentsRoutes,
+      ),
+  },
+  {
+    path: 'notice-types',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/notice-types/notice-types.routes').then((m) => m.noticeTypesRoutes),
   },
   { path: '**', redirectTo: 'dashboard' },
 ];

@@ -67,14 +67,15 @@ export class DashboardComponent {
   protected readonly theme = inject(ThemeService);
 
   protected readonly navItems = [
-    { path: '/users', icon: '👤', label: 'Users', description: 'Manage user accounts' },
+    { path: '/applications', icon: '🏢', label: 'Aplicaciones', description: 'Gestionar aplicaciones, sus usuarios y roles' },
     { path: '/roles', icon: '🔑', label: 'Roles', description: 'Define access roles' },
     { path: '/people', icon: '🧑', label: 'People', description: 'Manage person records' },
     { path: '/contacts', icon: '📇', label: 'Contacts', description: 'Contact information' },
     { path: '/features-mgmt', icon: '⚙️', label: 'Features', description: 'Feature flags' },
     { path: '/audit', icon: '📋', label: 'Audit', description: 'Event log' },
-    { path: '/applications', icon: '🏢', label: 'Aplicaciones', description: 'Registrar aplicaciones del sistema' },
     { path: '/contact-types', icon: '🏷️', label: 'Tipos de Contacto', description: 'Catálogo de tipos de contacto' },
     { path: '/service-types', icon: '🔧', label: 'Tipos de Servicio', description: 'Catálogo de tipos de servicio' },
+    { path: '/identification-documents', icon: '🪪', label: 'Tipos de Documento', description: 'Catálogo de tipos de documento de identificación' },
+    { path: '/notice-types', icon: '🔔', label: 'Tipos de Aviso', description: 'Catálogo de tipos de aviso' },
   ];
 }

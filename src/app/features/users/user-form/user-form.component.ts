@@ -16,7 +16,6 @@ import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
 import { Role } from '@shared/models/role.model';
 import { UserTO } from '@shared/models/user.model';
-import { API } from '@shared/constants/api.constants';
 
 @Component({
   selector: 'app-user-form',
@@ -25,7 +24,7 @@ import { API } from '@shared/constants/api.constants';
   template: `
     <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6">
-        <a routerLink="/users" class="text-sm text-blue-600 hover:underline">← Usuarios</a>
+        <a [routerLink]="['/applications', applicationId, 'users']" class="text-sm text-blue-600 hover:underline">← Usuarios</a>
         <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
           {{ isEdit() ? 'Editar Usuario' : 'Nuevo Usuario' }}
         </h1>
@@ -362,7 +361,7 @@ import { API } from '@shared/constants/api.constants';
           <!-- Acciones -->
           <div class="flex justify-end gap-3">
             <a
-              routerLink="/users"
+              [routerLink]="['/applications', applicationId, 'users']"
               class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               Cancelar
@@ -389,7 +388,7 @@ export class UserFormComponent implements OnInit {
   private readonly roleService = inject(RoleService);
   private readonly toast = inject(ToastService);
 
-  private readonly appId = API.APPLICATION.ID;
+  protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
   private userId: string | null = null;
 
   protected readonly isEdit = signal(false);
@@ -439,7 +438,7 @@ export class UserFormComponent implements OnInit {
         },
         error: () => {
           this.toast.error('Error al cargar el usuario');
-          this.router.navigate(['/users']);
+          this.router.navigate(['/applications', this.applicationId, 'users']);
         },
       });
     } else {
@@ -516,7 +515,7 @@ export class UserFormComponent implements OnInit {
         notificationSms: v.notificationSms,
         privacyDataOutActive: v.privacyDataOutActive,
         roleId: v.roleId,
-        applicationId: this.appId,
+        applicationId: this.applicationId,
         person: {
           firstName: v.firstName,
           lastName: v.lastName,
@@ -540,7 +539,7 @@ export class UserFormComponent implements OnInit {
             this.toast.warning(warnings);
           }
           this.toast.success(`Usuario creado con ID: ${response.body!.id}`);
-          this.router.navigate(['/users']);
+          this.router.navigate(['/applications', this.applicationId, 'users']);
         },
         error: (err: HttpErrorResponse) => {
           const warningHeader = err.headers?.get('Warning');
@@ -579,7 +578,7 @@ export class UserFormComponent implements OnInit {
         ...(v.gender ? { gender: v.gender } : {}),
         ...(v.birthdate ? { birthdate: v.birthdate } : {}),
         ...(v.password ? { password: v.password } : {}),
-        application: this.appId,
+        application: this.applicationId,
       })
       .pipe(
         switchMap(() => {
@@ -597,7 +596,7 @@ export class UserFormComponent implements OnInit {
       .subscribe({
         next: () => {
           this.toast.success('Usuario actualizado correctamente');
-          this.router.navigate(['/users']);
+          this.router.navigate(['/applications', this.applicationId, 'users']);
         },
         error: () => {
           this.toast.error('Error al actualizar el usuario');
@@ -611,7 +610,7 @@ export class UserFormComponent implements OnInit {
       const value = control.value as string;
       if (!value || value.length < 2) return of(null);
       return timer(400).pipe(
-        switchMap(() => this.userService.checkAlias(value, this.appId)),
+        switchMap(() => this.userService.checkAlias(value, this.applicationId)),
         map(() => null),
         catchError((err: HttpErrorResponse) =>
           of(err.status === 404 ? { aliasUnavailable: true } : null)
@@ -625,7 +624,7 @@ export class UserFormComponent implements OnInit {
       const value = control.value as string;
       if (!value || !value.includes('@')) return of(null);
       return timer(400).pipe(
-        switchMap(() => this.userService.checkEmail(value, this.appId)),
+        switchMap(() => this.userService.checkEmail(value, this.applicationId)),
         map(() => null),
         catchError((err: HttpErrorResponse) =>
           of(err.status === 404 ? { emailUnavailable: true } : null)

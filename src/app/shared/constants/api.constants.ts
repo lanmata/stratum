@@ -63,6 +63,37 @@ export const API = {
     LIST_ALL: '/v1/service-types/list-all',
     BY_ID: (id: string) => `/v1/service-types/${id}`,
   },
+  ADDRESSES: {
+    ROOT: '/v1/addresses',
+    BY_ID: (id: string) => `/v1/addresses/${id}`,
+    BY_PERSON: (personId: string) => `/v1/addresses/person/${personId}`,
+  },
+  IDENTIFICATION_DOCUMENTS: {
+    ROOT: '/v1/identification-documents',
+    LIST_ALL: '/v1/identification-documents/list-all',
+    BY_ID: (id: string) => `/v1/identification-documents/${id}`,
+  },
+  NOTICE_TYPES: {
+    ROOT: '/v1/notice-types',
+    LIST_ALL: '/v1/notice-types/list-all',
+    BY_ID: (id: string) => `/v1/notice-types/${id}`,
+  },
+  NOTICES: {
+    ROOT: '/v1/notices',
+    BY_ID: (id: string) => `/v1/notices/${id}`,
+    BY_APPLICATION: (applicationId: string) => `/v1/notices/application/${applicationId}`,
+  },
+  APPLICATION_ROLE_USER: {
+    ROOT: '/v1/application-role-user',
+    BY_ID: (id: string) => `/v1/application-role-user/${id}`,
+    BY_APPLICATION: (applicationId: string) => `/v1/application-role-user/application/${applicationId}`,
+    BY_USER: (userId: string) => `/v1/application-role-user/user/${userId}`,
+  },
+  ROLE_FEATURES: {
+    ROOT: '/v1/role-features',
+    BY_ID: (id: string) => `/v1/role-features/${id}`,
+    BY_ROLE: (roleId: string) => `/v1/role-features/role/${roleId}`,
+  },
 } as const;
 
 export const SESSION_TOKEN_HEADER = 'session-token';
