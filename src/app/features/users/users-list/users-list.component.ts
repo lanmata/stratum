@@ -1,11 +1,10 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { UserTO } from '@shared/models/user.model';
-import { API } from '@shared/constants/api.constants';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -17,11 +16,11 @@ type StatusFilter = 'all' | 'active' | 'inactive';
     <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
+          <a [routerLink]="['/applications', applicationId]" class="text-sm text-blue-600 hover:underline">← Aplicación</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Usuarios</h1>
         </div>
         <a
-          routerLink="/users/new"
+          [routerLink]="['/applications', applicationId, 'users', 'new']"
           class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Nuevo Usuario
@@ -93,27 +92,36 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                     }
                   </td>
                   <td class="px-4 py-3">
-                    <span
-                      class="rounded-full px-2 py-0.5 text-xs font-medium"
-                      [class]="user.active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
-                    >
-                      {{ user.active ? 'Activo' : 'Inactivo' }}
-                    </span>
+                    @if (user.active) {
+                      <svg title="Activo" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                      </svg>
+                    } @else {
+                      <svg title="Inactivo" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                      </svg>
+                    }
                   </td>
                   <td class="px-4 py-3">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1">
                       <a
-                        [routerLink]="['/users', user.id, 'edit']"
-                        class="text-sm font-medium text-blue-600 hover:underline"
+                        [routerLink]="['/applications', applicationId, 'users', user.id, 'edit']"
+                        title="Editar"
+                        class="rounded-lg p-1.5 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                       >
-                        Editar
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                        </svg>
                       </a>
                       <button
                         type="button"
+                        title="Eliminar"
                         (click)="deleteTarget.set(user)"
-                        class="text-sm font-medium text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        class="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                       >
-                        Eliminar
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
                       </button>
                     </div>
                   </td>
@@ -169,7 +177,8 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 export class UsersListComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly toast = inject(ToastService);
-  private readonly appId = API.APPLICATION.ID;
+  private readonly route = inject(ActivatedRoute);
+  protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
 
   protected readonly loading = signal(true);
   private readonly allUsers = signal<UserTO[]>([]);
@@ -220,7 +229,7 @@ export class UsersListComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.userService.getByApplication(this.appId).subscribe({
+    this.userService.getByApplication(this.applicationId).subscribe({
       next: (data) => {
         this.allUsers.set(data);
         this.loading.set(false);
@@ -235,7 +244,7 @@ export class UsersListComponent implements OnInit {
   protected confirmDelete(): void {
     const user = this.deleteTarget();
     if (!user) return;
-    this.userService.delete(this.appId, user.id).subscribe({
+    this.userService.delete(this.applicationId, user.id).subscribe({
       next: () => {
         this.allUsers.update((list) => list.filter((u) => u.id !== user.id));
         this.deleteTarget.set(null);

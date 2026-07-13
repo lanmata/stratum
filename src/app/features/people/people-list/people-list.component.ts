@@ -25,6 +25,7 @@ import { Person } from '@shared/models/person.model';
                 <th class="px-4 py-3">Last Name</th>
                 <th class="px-4 py-3">Gender</th>
                 <th class="px-4 py-3">Birthdate</th>
+                <th class="px-4 py-3">Acciones</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -34,10 +35,18 @@ import { Person } from '@shared/models/person.model';
                   <td class="px-4 py-3 text-gray-800 dark:text-gray-200">{{ person.lastName }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ person.gender ?? '—' }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ person.birthdate ?? '—' }}</td>
+                  <td class="px-4 py-3">
+                    <a
+                      [routerLink]="['/people', person.id, 'addresses']"
+                      class="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      Direcciones
+                    </a>
+                  </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="4" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No records found</td>
+                  <td colspan="5" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No records found</td>
                 </tr>
               }
             </tbody>

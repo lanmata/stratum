@@ -100,20 +100,37 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                   </td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ role.description }}</td>
                   <td class="px-4 py-3">
-                    <span
-                      class="rounded-full px-2 py-0.5 text-xs font-medium"
-                      [class]="role.active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
-                    >
-                      {{ role.active ? 'Activo' : 'Inactivo' }}
-                    </span>
+                    @if (role.active) {
+                      <svg title="Activo" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                      </svg>
+                    } @else {
+                      <svg title="Inactivo" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                      </svg>
+                    }
                   </td>
                   <td class="px-4 py-3" (click)="$event.stopPropagation()">
-                    <a
-                      [routerLink]="['/roles', role.id, 'edit']"
-                      class="text-sm font-medium text-blue-600 hover:underline"
-                    >
-                      Editar
-                    </a>
+                    <div class="flex items-center gap-1">
+                      <a
+                        [routerLink]="['/roles', role.id, 'edit']"
+                        title="Editar"
+                        class="inline-flex rounded-lg p-1.5 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                        </svg>
+                      </a>
+                      <a
+                        [routerLink]="['/roles', role.id, 'features']"
+                        title="Features"
+                        class="inline-flex rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M6 6V4.75C6 3.784 6.784 3 7.75 3h4.5c.966 0 1.75.784 1.75 1.75V6h1.25c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0115.25 18H4.75A1.75 1.75 0 013 16.25v-8.5C3 6.784 3.784 6 4.75 6H6zm1.5-1.25V6h5V4.75a.25.25 0 00-.25-.25h-4.5a.25.25 0 00-.25.25z" clip-rule="evenodd"/>
+                        </svg>
+                      </a>
+                    </div>
                   </td>
                 </tr>
 
@@ -139,12 +156,15 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                       </td>
                       <td class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">{{ feature.description ?? '—' }}</td>
                       <td class="px-4 py-2">
-                        <span
-                          class="rounded-full px-2 py-0.5 text-xs font-medium"
-                          [class]="feature.active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
-                        >
-                          {{ feature.active ? 'Activa' : 'Inactiva' }}
-                        </span>
+                        @if (feature.active) {
+                          <svg title="Activa" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                          </svg>
+                        } @else {
+                          <svg title="Inactiva" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                          </svg>
+                        }
                       </td>
                       <td class="px-4 py-2"></td>
                     </tr>
