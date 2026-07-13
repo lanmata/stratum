@@ -1,12 +1,12 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ContactTypeService } from '@core/services/contact-type.service';
+import { ServiceTypeService } from '@core/services/service-type.service';
 import { ToastService } from '@core/services/toast.service';
-import { ContactType } from '@shared/models/contact.model';
+import { ServiceType } from '@shared/models/service-type.model';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
-  selector: 'app-contact-types-list',
+  selector: 'app-service-types-list',
   standalone: true,
   imports: [RouterLink, ConfirmDialogComponent],
   template: `
@@ -14,13 +14,13 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
       <div class="mb-6 flex items-center justify-between">
         <div>
           <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
-          <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Tipos de Contacto</h1>
+          <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Tipos de Servicio</h1>
         </div>
         <a
-          routerLink="/contact-types/new"
+          routerLink="/service-types/new"
           class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          Nuevo Tipo de Contacto
+          Nuevo Tipo de Servicio
         </a>
       </div>
 
@@ -40,12 +40,12 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-              @for (ct of contactTypes(); track ct.id) {
+              @for (st of serviceTypes(); track st.id) {
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ ct.name }}</td>
-                  <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ ct.description ?? '—' }}</td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ st.name }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ st.description ?? '—' }}</td>
                   <td class="px-4 py-3">
-                    @if (ct.active) {
+                    @if (st.active) {
                       <svg title="Activo" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                       </svg>
@@ -58,7 +58,7 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
                   <td class="px-4 py-3">
                     <div class="flex items-center gap-1">
                       <a
-                        [routerLink]="['/contact-types', ct.id, 'edit']"
+                        [routerLink]="['/service-types', st.id, 'edit']"
                         title="Editar"
                         class="inline-flex rounded-lg p-1.5 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                       >
@@ -69,7 +69,7 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
                       <button
                         type="button"
                         title="Eliminar"
-                        (click)="onDeleteClick(ct)"
+                        (click)="onDeleteClick(st)"
                         class="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -82,7 +82,7 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
               } @empty {
                 <tr>
                   <td colspan="4" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
-                    No hay tipos de contacto
+                    No hay tipos de servicio registrados
                   </td>
                 </tr>
               }
@@ -94,18 +94,18 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
 
     @if (showConfirm()) {
       <app-confirm-dialog
-        message="¿Eliminar este tipo de contacto? Esta acción no se puede deshacer."
+        message="¿Eliminar este tipo de servicio? Esta acción no se puede deshacer."
         (confirmed)="onConfirmed()"
         (cancelled)="showConfirm.set(false)"
       />
     }
   `,
 })
-export class ContactTypesListComponent implements OnInit {
-  private readonly service = inject(ContactTypeService);
+export class ServiceTypesListComponent implements OnInit {
+  private readonly service = inject(ServiceTypeService);
   private readonly toast = inject(ToastService);
 
-  protected readonly contactTypes = signal<ContactType[]>([]);
+  protected readonly serviceTypes = signal<ServiceType[]>([]);
   protected readonly loading = signal(true);
   protected readonly showConfirm = signal(false);
   private readonly pendingId = signal<string | null>(null);
@@ -114,8 +114,8 @@ export class ContactTypesListComponent implements OnInit {
     this.load();
   }
 
-  protected onDeleteClick(ct: ContactType): void {
-    this.pendingId.set(ct.id);
+  protected onDeleteClick(st: ServiceType): void {
+    this.pendingId.set(st.id);
     this.showConfirm.set(true);
   }
 
@@ -125,10 +125,10 @@ export class ContactTypesListComponent implements OnInit {
     this.showConfirm.set(false);
     this.service.delete(id).subscribe({
       next: () => {
-        this.toast.success('Tipo de contacto eliminado');
+        this.toast.success('Tipo de servicio eliminado');
         this.load();
       },
-      error: () => this.toast.error('Error al eliminar el tipo de contacto'),
+      error: () => this.toast.error('Error al eliminar el tipo de servicio'),
     });
   }
 
@@ -136,11 +136,11 @@ export class ContactTypesListComponent implements OnInit {
     this.loading.set(true);
     this.service.getAll().subscribe({
       next: (data) => {
-        this.contactTypes.set(data);
+        this.serviceTypes.set(data);
         this.loading.set(false);
       },
       error: () => {
-        this.toast.error('Error al cargar los tipos de contacto');
+        this.toast.error('Error al cargar los tipos de servicio');
         this.loading.set(false);
       },
     });

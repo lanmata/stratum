@@ -73,5 +73,8 @@ export class DashboardComponent {
     { path: '/contacts', icon: '📇', label: 'Contacts', description: 'Contact information' },
     { path: '/features-mgmt', icon: '⚙️', label: 'Features', description: 'Feature flags' },
     { path: '/audit', icon: '📋', label: 'Audit', description: 'Event log' },
+    { path: '/applications', icon: '🏢', label: 'Aplicaciones', description: 'Registrar aplicaciones del sistema' },
+    { path: '/contact-types', icon: '🏷️', label: 'Tipos de Contacto', description: 'Catálogo de tipos de contacto' },
+    { path: '/service-types', icon: '🔧', label: 'Tipos de Servicio', description: 'Catálogo de tipos de servicio' },
   ];
 }

@@ -54,6 +54,15 @@ export const API = {
     LIST_ALL: '/v1/contact-types/list-all',
     BY_ID: (id: string) => `/v1/contact-types/${id}`,
   },
+  APPLICATIONS: {
+    ROOT: '/v1/applications',
+    BY_ID: (id: string) => `/v1/applications/${id}`,
+  },
+  SERVICE_TYPES: {
+    ROOT: '/v1/service-types',
+    LIST_ALL: '/v1/service-types/list-all',
+    BY_ID: (id: string) => `/v1/service-types/${id}`,
+  },
 } as const;
 
 export const SESSION_TOKEN_HEADER = 'session-token';

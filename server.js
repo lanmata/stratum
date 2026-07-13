@@ -36,6 +36,8 @@ const peopleRoutes = require('./server/routes/people.routes');
 const contactsRoutes = require('./server/routes/contacts.routes');
 const contactTypesRoutes = require('./server/routes/contact-types.routes');
 const auditRoutes = require('./server/routes/audit.routes');
+const applicationsRoutes = require('./server/routes/applications.routes');
+const serviceTypesRoutes = require('./server/routes/service-types.routes');
 
 const app = express();
 
@@ -69,6 +71,8 @@ app.use('/api/v1/people', peopleRoutes);
 app.use('/api/v1/contacts', contactsRoutes);
 app.use('/api/v1/contact-types', contactTypesRoutes);
 app.use('/api/v1/iam/audit', auditRoutes);
+app.use('/api/v1/applications', applicationsRoutes);
+app.use('/api/v1/service-types', serviceTypesRoutes);
 
 // ── Angular SSR ─────────────────────────────────────────────────────────────
 const distPath = path.join(__dirname, 'dist/front-backbone-rest/browser');

@@ -56,5 +56,17 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/contact-types/contact-types.routes').then((m) => m.contactTypesRoutes),
   },
+  {
+    path: 'applications',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/applications/applications.routes').then((m) => m.applicationsRoutes),
+  },
+  {
+    path: 'service-types',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/service-types/service-types.routes').then((m) => m.serviceTypesRoutes),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];
