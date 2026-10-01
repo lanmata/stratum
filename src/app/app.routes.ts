@@ -48,5 +48,11 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/service-types/service-types.routes').then((m) => m.serviceTypesRoutes),
   },
+  {
+    path: 'notice-types',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/notice-types/notice-types.routes').then((m) => m.noticeTypesRoutes),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];

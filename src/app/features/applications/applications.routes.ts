@@ -45,6 +45,13 @@ export const applicationsRoutes: Routes = [
             (m) => m.ApplicationManagedClientsComponent,
           ),
       },
+      {
+        path: 'notices',
+        loadComponent: () =>
+          import('./application-notices/application-notices.component').then(
+            (m) => m.ApplicationNoticesComponent,
+          ),
+      },
     ],
   },
 ];

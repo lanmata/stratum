@@ -72,5 +72,6 @@ export class DashboardComponent {
     { path: '/audit', icon: '📋', label: 'Auditoría', description: 'Registro de eventos' },
     { path: '/contact-types', icon: '🏷️', label: 'Tipos de Contacto', description: 'Catálogo de tipos de contacto' },
     { path: '/service-types', icon: '🔧', label: 'Tipos de Servicio', description: 'Catálogo de tipos de servicio' },
+    { path: '/notice-types', icon: '📢', label: 'Tipos de Aviso', description: 'Catálogo de tipos de aviso' },
   ];
 }
