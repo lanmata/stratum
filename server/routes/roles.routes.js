@@ -15,6 +15,9 @@ router.get('/find/:roleId', (req, res) =>
 router.get('/user/:userId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/roles/user/${req.params['userId']}`)
 );
+router.get('/application/:applicationId', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/roles/application/${req.params['applicationId']}`)
+);
 router.post('/', (req, res) => proxyToBackbone(req, res, '/api/v1/roles/'));
 router.put('/:roleId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/roles/${req.params['roleId']}`)

@@ -14,7 +14,11 @@ export class ApplicationService {
   private readonly http = inject(HttpService);
 
   getAll(): Observable<Application[]> {
-    return this.http.get<Application[]>(API.APPLICATIONS.ROOT);
+    return this.http.getList<Application>(API.APPLICATIONS.ROOT);
+  }
+
+  getById(id: string): Observable<Application> {
+    return this.http.get<Application>(API.APPLICATIONS.BY_ID(id));
   }
 
   create(req: ApplicationCreateRequest): Observable<ApplicationCreateResponse> {

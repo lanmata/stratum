@@ -14,27 +14,11 @@ export const routes: Routes = [
       import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
   { path: 'users', redirectTo: 'applications', pathMatch: 'full' },
-  {
-    path: 'roles',
-    canActivate: [authGuard],
-    loadChildren: () => import('./features/roles/roles.routes').then((m) => m.rolesRoutes),
-  },
+  { path: 'roles', redirectTo: 'applications', pathMatch: 'full' },
   {
     path: 'people',
     canActivate: [authGuard],
     loadChildren: () => import('./features/people/people.routes').then((m) => m.peopleRoutes),
-  },
-  {
-    path: 'contacts',
-    canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/contacts/contacts.routes').then((m) => m.contactsRoutes),
-  },
-  {
-    path: 'features-mgmt',
-    canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/features-mgmt/features-mgmt.routes').then((m) => m.featuresMgmtRoutes),
   },
   {
     path: 'audit',
@@ -63,20 +47,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadChildren: () =>
       import('./features/service-types/service-types.routes').then((m) => m.serviceTypesRoutes),
-  },
-  {
-    path: 'identification-documents',
-    canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/identification-documents/identification-documents.routes').then(
-        (m) => m.identificationDocumentsRoutes,
-      ),
-  },
-  {
-    path: 'notice-types',
-    canActivate: [authGuard],
-    loadChildren: () =>
-      import('./features/notice-types/notice-types.routes').then((m) => m.noticeTypesRoutes),
   },
   { path: '**', redirectTo: 'dashboard' },
 ];

@@ -9,11 +9,15 @@ export class FeatureService {
   private readonly http = inject(HttpService);
 
   getAll(includeInactive = false): Observable<Feature[]> {
-    return this.http.get<Feature[]>(API.FEATURES.WITH_INACTIVE(includeInactive));
+    return this.http.getList<Feature>(API.FEATURES.WITH_INACTIVE(includeInactive));
   }
 
   getById(featureId: string): Observable<Feature> {
     return this.http.get<Feature>(API.FEATURES.BY_ID(featureId));
+  }
+
+  getByRole(roleId: string): Observable<Feature[]> {
+    return this.http.getList<Feature>(API.FEATURES.BY_ROLE(roleId));
   }
 
   create(req: FeatureRequest): Observable<Feature> {

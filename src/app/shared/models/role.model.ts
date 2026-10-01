@@ -4,6 +4,7 @@ export interface Role {
   id: string;
   name: string;
   description?: string;
+  applicationId?: string;
   features?: Feature[];
   active: boolean;
 }
@@ -13,6 +14,7 @@ export interface RoleRequest {
     id?: string;
     name: string;
     description?: string;
+    applicationId: string;
     features?: Array<{ id?: string; name: string; description?: string; active: boolean }>;
     active: boolean;
   };

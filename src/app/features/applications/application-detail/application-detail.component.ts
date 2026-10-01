@@ -53,20 +53,12 @@ import { Application } from '@shared/models/application.model';
               Roles
             </a>
             <a
-              routerLink="assignments"
+              routerLink="managed-clients"
               routerLinkActive="border-blue-600 text-blue-600 dark:text-blue-400"
               [routerLinkActiveOptions]="{ exact: false }"
               class="border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              Asignaciones
-            </a>
-            <a
-              routerLink="notices"
-              routerLinkActive="border-blue-600 text-blue-600 dark:text-blue-400"
-              [routerLinkActiveOptions]="{ exact: false }"
-              class="border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              Avisos
+              Clientes M2M
             </a>
           </nav>
         </div>

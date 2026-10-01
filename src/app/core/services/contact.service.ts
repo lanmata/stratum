@@ -21,7 +21,7 @@ export class ContactService {
   }
 
   getByPerson(personId: string): Observable<Contact[]> {
-    return this.http.get<Contact[]>(API.CONTACTS.BY_PERSON(personId));
+    return this.http.getList<Contact>(API.CONTACTS.BY_PERSON(personId));
   }
 
   update(contactId: string, contact: Contact): Observable<Contact> {

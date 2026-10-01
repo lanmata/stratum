@@ -36,23 +36,13 @@ export const applicationsRoutes: Routes = [
       },
       {
         path: 'roles',
-        loadComponent: () =>
-          import('./application-roles/application-roles.component').then(
-            (m) => m.ApplicationRolesComponent,
-          ),
+        loadChildren: () => import('../roles/roles.routes').then((m) => m.rolesRoutes),
       },
       {
-        path: 'notices',
+        path: 'managed-clients',
         loadComponent: () =>
-          import('./application-notices/application-notices.component').then(
-            (m) => m.ApplicationNoticesComponent,
-          ),
-      },
-      {
-        path: 'assignments',
-        loadComponent: () =>
-          import('./application-assignments/application-assignments.component').then(
-            (m) => m.ApplicationAssignmentsComponent,
+          import('./application-managed-clients/application-managed-clients.component').then(
+            (m) => m.ApplicationManagedClientsComponent,
           ),
       },
     ],

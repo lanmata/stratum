@@ -16,9 +16,4 @@ export const rolesRoutes: Routes = [
     loadComponent: () =>
       import('./role-form/role-form.component').then((m) => m.RoleFormComponent),
   },
-  {
-    path: ':roleId/features',
-    loadComponent: () =>
-      import('./role-features/role-features.component').then((m) => m.RoleFeaturesComponent),
-  },
 ];

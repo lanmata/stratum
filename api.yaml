@@ -31,18 +31,6 @@ tags:
     description: "Person management"
   - name: "applications"
     description: "Application (service) management"
-  - name: "addresses"
-    description: "Person address management"
-  - name: "identification-documents"
-    description: "Identification document type catalog"
-  - name: "application-role-user"
-    description: "Application-scoped user/role assignment (forward-looking; does not replace the existing non-app-scoped role link/unlink endpoints)"
-  - name: "role-features"
-    description: "Role-to-feature assignment, with per-assignment active flag"
-  - name: "notice-types"
-    description: "Notice type catalog"
-  - name: "notices"
-    description: "Notice management"
   - name: "profile-image"
     description: "User profile image management"
   - name: "iam-audit"
@@ -55,6 +43,8 @@ tags:
     description: "Document report generation"
   - name: "managed-clients"
     description: "Management Client Authentication Manager — M2M OAuth2 client credential lifecycle"
+  - name: "service-type"
+    description: "Service type catalog management"
 
 paths:
 
@@ -308,15 +298,13 @@ paths:
             format: "uuid"
       responses:
         "200":
-          description: "User list returned"
+          description: "User list returned (empty array if the application has no users)"
           content:
             application/json:
               schema:
                 type: "array"
                 items:
                   $ref: "#/components/schemas/UserTO"
-        "404":
-          description: "Application not found"
 
   /api/v1/users/userByAlias/{alias}/application/{applicationId}:
     get:
@@ -546,7 +534,7 @@ paths:
       tags: ["roles"]
       operationId: "createRole"
       summary: "Create a role"
-      description: "Creates a new role and returns the persisted entity."
+      description: "Creates a new role and returns the persisted entity. The 'features' list may reference existing features by id, or omit the id to create new features inline and link them to this role."
       requestBody:
         required: true
         content:
@@ -562,6 +550,10 @@ paths:
                 $ref: "#/components/schemas/Role"
         "400":
           description: "Invalid role payload"
+        "404":
+          description: "Application not found, or a referenced feature id does not exist"
+        "409":
+          description: "A new inline feature has a name that already exists"
 
   /api/v1/roles/find/{roleId}:
     get:
@@ -691,6 +683,30 @@ paths:
         "404":
           description: "User not found"
 
+  /api/v1/roles/application/{applicationId}:
+    get:
+      tags: ["roles"]
+      operationId: "listRolesByApplication"
+      summary: "List roles by application"
+      parameters:
+        - name: "applicationId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Role list returned"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Role"
+        "404":
+          description: "No roles found for the given application"
+
   # ── Features ──────────────────────────────────────────────────────────────────
 
   /api/v1/features/find/{featureId}:
@@ -773,6 +789,7 @@ paths:
       tags: ["features"]
       operationId: "createFeature"
       summary: "Create a feature"
+      description: "Creates a new feature. 'roleIds' is optional and links the new feature to one or more already-existing roles."
       requestBody:
         required: true
         content:
@@ -786,6 +803,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Feature"
+        "404":
+          description: "A referenced role id does not exist"
         "406":
           description: "Feature creation not acceptable"
 
@@ -817,80 +836,11 @@ paths:
         "406":
           description: "Feature is not registered"
 
-  # ── Role Features ─────────────────────────────────────────────────────────────
-  # NOTE: complements the existing embedded Role.features array (RoleRequest),
-  # which has no per-assignment `active` flag distinct from Feature.active itself.
-
-  /api/v1/role-features:
-    post:
-      tags: ["role-features"]
-      operationId: "createRoleFeature"
-      summary: "Assign a feature to a role"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RoleFeatureRequest"
-      responses:
-        "201":
-          description: "Assignment created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RoleFeature"
-        "400":
-          description: "Invalid request body"
-
-  /api/v1/role-features/{roleFeatureId}:
-    put:
-      tags: ["role-features"]
-      operationId: "updateRoleFeature"
-      summary: "Update a role-feature assignment (toggle active)"
-      parameters:
-        - name: "roleFeatureId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RoleFeatureRequest"
-      responses:
-        "200":
-          description: "Assignment updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RoleFeature"
-        "404":
-          description: "Assignment not found"
-    delete:
-      tags: ["role-features"]
-      operationId: "deleteRoleFeature"
-      summary: "Remove a role-feature assignment"
-      parameters:
-        - name: "roleFeatureId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Assignment removed"
-        "404":
-          description: "Assignment not found"
-
-  /api/v1/role-features/role/{roleId}:
+  /api/v1/features/role/{roleId}:
     get:
-      tags: ["role-features"]
-      operationId: "listRoleFeaturesByRole"
-      summary: "List feature assignments for a role"
+      tags: ["features"]
+      operationId: "listFeaturesByRole"
+      summary: "List features by role"
       parameters:
         - name: "roleId"
           in: "path"
@@ -900,15 +850,15 @@ paths:
             format: "uuid"
       responses:
         "200":
-          description: "Assignment list returned"
+          description: "Feature list returned"
           content:
             application/json:
               schema:
                 type: "array"
                 items:
-                  $ref: "#/components/schemas/RoleFeature"
+                  $ref: "#/components/schemas/Feature"
         "404":
-          description: "Role not found"
+          description: "No features found for the given role"
 
   # ── Contacts ──────────────────────────────────────────────────────────────────
 
@@ -1286,228 +1236,6 @@ paths:
         "400":
           description: "Invalid personId or request"
 
-  # ── Addresses ─────────────────────────────────────────────────────────────────
-
-  /api/v1/addresses:
-    post:
-      tags: ["addresses"]
-      operationId: "createAddress"
-      summary: "Create an address"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddressRequest"
-      responses:
-        "201":
-          description: "Address created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Address"
-        "400":
-          description: "Invalid request body"
-
-  /api/v1/addresses/{addressId}:
-    get:
-      tags: ["addresses"]
-      operationId: "findAddressById"
-      summary: "Find address by ID"
-      parameters:
-        - name: "addressId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Address found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Address"
-        "404":
-          description: "Address not found"
-    put:
-      tags: ["addresses"]
-      operationId: "updateAddress"
-      summary: "Update an address"
-      parameters:
-        - name: "addressId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddressRequest"
-      responses:
-        "200":
-          description: "Address updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Address"
-        "404":
-          description: "Address not found"
-    delete:
-      tags: ["addresses"]
-      operationId: "deleteAddress"
-      summary: "Delete an address"
-      parameters:
-        - name: "addressId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Address deleted"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Address"
-        "404":
-          description: "Address not found"
-
-  /api/v1/addresses/person/{personId}:
-    get:
-      tags: ["addresses"]
-      operationId: "listAddressesByPerson"
-      summary: "List addresses by person"
-      description: "Business rule: a person has one or more addresses."
-      parameters:
-        - name: "personId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Address list returned"
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/Address"
-        "404":
-          description: "Person not found"
-
-  # ── Identification Documents ─────────────────────────────────────────────────
-
-  /api/v1/identification-documents/:
-    post:
-      tags: ["identification-documents"]
-      operationId: "createIdentificationDocument"
-      summary: "Create an identification document type"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/IdentificationDocumentRequest"
-      responses:
-        "201":
-          description: "Identification document type created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/IdentificationDocument"
-        "400":
-          description: "Invalid request body"
-
-  /api/v1/identification-documents/{identificationDocumentId}:
-    get:
-      tags: ["identification-documents"]
-      operationId: "findIdentificationDocumentById"
-      summary: "Find identification document type by ID"
-      parameters:
-        - name: "identificationDocumentId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Identification document type found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/IdentificationDocument"
-        "404":
-          description: "Identification document type not found"
-    put:
-      tags: ["identification-documents"]
-      operationId: "updateIdentificationDocument"
-      summary: "Update an identification document type"
-      parameters:
-        - name: "identificationDocumentId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/IdentificationDocumentRequest"
-      responses:
-        "200":
-          description: "Identification document type updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/IdentificationDocument"
-        "404":
-          description: "Identification document type not found"
-    delete:
-      tags: ["identification-documents"]
-      operationId: "deleteIdentificationDocument"
-      summary: "Delete an identification document type"
-      parameters:
-        - name: "identificationDocumentId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Identification document type deleted"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/IdentificationDocument"
-        "404":
-          description: "Identification document type not found"
-
-  /api/v1/identification-documents/list-all:
-    get:
-      tags: ["identification-documents"]
-      operationId: "listAllIdentificationDocuments"
-      summary: "List all identification document types"
-      responses:
-        "200":
-          description: "Identification document type list returned"
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/IdentificationDocument"
-
   # ── Applications ──────────────────────────────────────────────────────────────
 
   /api/v1/applications:
@@ -1549,85 +1277,14 @@ paths:
         "500":
           description: "Internal server error"
 
-  # ── Application Role User (forward-looking) ───────────────────────────────────
-  # NOTE: ternary join (application + role + user). Does not replace the existing
-  # non-app-scoped PUT /api/v1/users/link/user/{userId}/role/{roleId} and
-  # PUT /api/v1/users/unlink/user/{userId}/role/{roleId} endpoints, which are left
-  # untouched by this addition.
-
-  /api/v1/application-role-user:
-    post:
-      tags: ["application-role-user"]
-      operationId: "createApplicationRoleUser"
-      summary: "Assign a role to a user within an application"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ApplicationRoleUserRequest"
-      responses:
-        "201":
-          description: "Assignment created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApplicationRoleUser"
-        "400":
-          description: "Invalid request body"
-
-  /api/v1/application-role-user/{applicationRoleUserId}:
-    put:
-      tags: ["application-role-user"]
-      operationId: "updateApplicationRoleUser"
-      summary: "Update an assignment (e.g. toggle active, change profileImageRef)"
-      parameters:
-        - name: "applicationRoleUserId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ApplicationRoleUserRequest"
-      responses:
-        "200":
-          description: "Assignment updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApplicationRoleUser"
-        "404":
-          description: "Assignment not found"
-    delete:
-      tags: ["application-role-user"]
-      operationId: "deleteApplicationRoleUser"
-      summary: "Remove an assignment"
-      parameters:
-        - name: "applicationRoleUserId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Assignment removed"
-        "404":
-          description: "Assignment not found"
-
-  /api/v1/application-role-user/application/{applicationId}:
+  /api/v1/applications/{id}:
     get:
-      tags: ["application-role-user"]
-      operationId: "listApplicationRoleUserByApplication"
-      summary: "List user/role assignments for an application"
-      description: "Intended to eventually back an app-scoped roles/users view, replacing the current roleList/userList embedded-field workaround on Application."
+      tags: ["applications"]
+      operationId: "findApplicationById"
+      summary: "Find application by ID"
+      description: "Returns the application matching the given UUID."
       parameters:
-        - name: "applicationId"
+        - name: "id"
           in: "path"
           required: true
           schema:
@@ -1635,23 +1292,53 @@ paths:
             format: "uuid"
       responses:
         "200":
-          description: "Assignment list returned"
+          description: "Application found"
           content:
             application/json:
               schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/ApplicationRoleUser"
+                $ref: "#/components/schemas/Application"
         "404":
           description: "Application not found"
-
-  /api/v1/application-role-user/user/{userId}:
-    get:
-      tags: ["application-role-user"]
-      operationId: "listApplicationRoleUserByUser"
-      summary: "List application/role assignments for a user"
+        "401":
+          description: "Unauthorized"
+    put:
+      tags: ["applications"]
+      operationId: "updateApplication"
+      summary: "Update an application"
+      description: "Updates the application identified by the given UUID."
       parameters:
-        - name: "userId"
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationUpdateRequest"
+      responses:
+        "200":
+          description: "Application updated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+        "400":
+          description: "Invalid request body"
+        "404":
+          description: "Application not found"
+        "401":
+          description: "Unauthorized"
+    delete:
+      tags: ["applications"]
+      operationId: "deleteApplication"
+      summary: "Delete an application"
+      description: "Deletes the application identified by the given UUID."
+      parameters:
+        - name: "id"
           in: "path"
           required: true
           schema:
@@ -1659,15 +1346,40 @@ paths:
             format: "uuid"
       responses:
         "200":
-          description: "Assignment list returned"
+          description: "Application deleted"
+        "404":
+          description: "Application not found"
+        "401":
+          description: "Unauthorized"
+
+  /api/v1/applications/by-ids:
+    get:
+      tags: ["applications"]
+      operationId: "listApplicationsByIds"
+      summary: "List applications by IDs"
+      description: "Returns applications matching the provided comma-separated UUIDs."
+      parameters:
+        - name: "ids"
+          in: "query"
+          required: true
+          schema:
+            type: "array"
+            items:
+              type: "string"
+              format: "uuid"
+      responses:
+        "200":
+          description: "Applications returned"
           content:
             application/json:
               schema:
                 type: "array"
                 items:
-                  $ref: "#/components/schemas/ApplicationRoleUser"
+                  $ref: "#/components/schemas/Application"
         "404":
-          description: "User not found"
+          description: "No applications found for the given IDs"
+        "401":
+          description: "Unauthorized"
 
   # ── Profile Image ─────────────────────────────────────────────────────────────
 
@@ -1774,254 +1486,6 @@ paths:
           description: "Reference not found"
         "500":
           description: "Server error"
-
-  # ── Notice Types ──────────────────────────────────────────────────────────────
-
-  /api/v1/notice-types/:
-    post:
-      tags: ["notice-types"]
-      operationId: "createNoticeType"
-      summary: "Create a notice type"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NoticeTypeRequest"
-      responses:
-        "201":
-          description: "Notice type created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NoticeType"
-        "400":
-          description: "Invalid request body"
-
-  /api/v1/notice-types/{noticeTypeId}:
-    get:
-      tags: ["notice-types"]
-      operationId: "findNoticeTypeById"
-      summary: "Find notice type by ID"
-      parameters:
-        - name: "noticeTypeId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Notice type found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NoticeType"
-        "404":
-          description: "Notice type not found"
-    put:
-      tags: ["notice-types"]
-      operationId: "updateNoticeType"
-      summary: "Update a notice type"
-      parameters:
-        - name: "noticeTypeId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NoticeTypeRequest"
-      responses:
-        "200":
-          description: "Notice type updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NoticeType"
-        "404":
-          description: "Notice type not found"
-    delete:
-      tags: ["notice-types"]
-      operationId: "deleteNoticeType"
-      summary: "Delete a notice type"
-      parameters:
-        - name: "noticeTypeId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Notice type deleted"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NoticeType"
-        "404":
-          description: "Notice type not found"
-
-  /api/v1/notice-types/list-all:
-    get:
-      tags: ["notice-types"]
-      operationId: "listAllNoticeTypes"
-      summary: "List all notice types"
-      responses:
-        "200":
-          description: "Notice type list returned"
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/NoticeType"
-
-  # ── Notices ───────────────────────────────────────────────────────────────────
-  # NOTE: field set below is inferred from the table name only — the notice/
-  # notice_type columns were not part of the supplied business rules. Confirm
-  # with the backbone-rest team before implementation.
-
-  /api/v1/notices:
-    post:
-      tags: ["notices"]
-      operationId: "createNotice"
-      summary: "Create a notice"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NoticeRequest"
-      responses:
-        "201":
-          description: "Notice created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Notice"
-        "400":
-          description: "Invalid request body"
-
-  /api/v1/notices/{noticeId}:
-    get:
-      tags: ["notices"]
-      operationId: "findNoticeById"
-      summary: "Find notice by ID"
-      parameters:
-        - name: "noticeId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Notice found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Notice"
-        "404":
-          description: "Notice not found"
-    put:
-      tags: ["notices"]
-      operationId: "updateNotice"
-      summary: "Update a notice"
-      parameters:
-        - name: "noticeId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NoticeRequest"
-      responses:
-        "200":
-          description: "Notice updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Notice"
-        "404":
-          description: "Notice not found"
-    delete:
-      tags: ["notices"]
-      operationId: "deleteNotice"
-      summary: "Delete a notice"
-      parameters:
-        - name: "noticeId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Notice deleted"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Notice"
-        "404":
-          description: "Notice not found"
-
-  /api/v1/notices/application/{applicationId}:
-    get:
-      tags: ["notices"]
-      operationId: "listNoticesByApplication"
-      summary: "List notices by application"
-      parameters:
-        - name: "applicationId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Notice list returned"
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/Notice"
-        "404":
-          description: "Application not found"
-
-  /api/v1/notices/person/{personId}:
-    get:
-      tags: ["notices"]
-      operationId: "listNoticesByPerson"
-      summary: "List notices by person"
-      parameters:
-        - name: "personId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Notice list returned"
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  $ref: "#/components/schemas/Notice"
-        "404":
-          description: "Person not found"
 
   # ── IAM — Audit ───────────────────────────────────────────────────────────────
 
@@ -2476,6 +1940,130 @@ paths:
               schema:
                 $ref: '#/components/schemas/ManagedClientErrorResponse'
 
+  # ── Service Type ─────────────────────────────────────────────────────────────
+
+  /api/v1/service-types:
+    get:
+      tags: ["service-type"]
+      operationId: "listAllServiceTypes"
+      summary: "List all service types"
+      description: "Returns every registered service type."
+      responses:
+        "200":
+          description: "Service type list returned"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceType"
+        "404":
+          description: "No service types found"
+
+  /api/v1/service-types/{active}:
+    get:
+      tags: ["service-type"]
+      operationId: "listServiceTypesByStatus"
+      summary: "List service types by active status"
+      description: "Returns service types filtered by active flag."
+      parameters:
+        - name: active
+          in: path
+          required: true
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: "Service type list returned"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceType"
+        "404":
+          description: "No service types found"
+
+  /api/v1/service-types/find/{serviceTypeId}:
+    get:
+      tags: ["service-type"]
+      operationId: "findServiceTypeById"
+      summary: "Find service type by ID"
+      description: "Returns a single service type by its UUID."
+      parameters:
+        - name: serviceTypeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Service type found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceType"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "Service type not found"
+
+  /api/v1/service-types/:
+    post:
+      tags: ["service-type"]
+      operationId: "createServiceType"
+      summary: "Create a service type"
+      description: "Creates a new service type."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceTypeRequest"
+      responses:
+        "201":
+          description: "Service type created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceType"
+        "400":
+          description: "Invalid request body"
+        "409":
+          description: "Service type name already in use"
+
+  /api/v1/service-types/{serviceTypeId}:
+    put:
+      tags: ["service-type"]
+      operationId: "updateServiceType"
+      summary: "Update a service type"
+      description: "Updates an existing service type by its UUID."
+      parameters:
+        - name: serviceTypeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceTypeRequest"
+      responses:
+        "202":
+          description: "Service type updated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceType"
+        "400":
+          description: "Invalid request"
+        "404":
+          description: "Service type not found"
+
 # ── Components ──────────────────────────────────────────────────────────────────
 
 components:
@@ -2721,65 +2309,6 @@ components:
         appToken:
           type: ["string", "null"]
 
-    Address:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        personId:
-          type: "string"
-          format: "uuid"
-        address:
-          type: "string"
-        zipcode:
-          type: ["string", "null"]
-
-    AddressRequest:
-      type: "object"
-      properties:
-        address:
-          $ref: "#/components/schemas/Address"
-        dateTime:
-          type: ["string", "null"]
-          format: "date-time"
-        appName:
-          type: ["string", "null"]
-        appToken:
-          type: ["string", "null"]
-
-    IdentificationDocument:
-      type: "object"
-      description: |
-        Catalog of identification-document TYPES (e.g. "Cédula de Ciudadanía",
-        "Pasaporte") shared across multiple people — per business rules 11/12
-        (a person has one document type; a document type can be held by many
-        people). Not a per-person document instance/number. Confirm this
-        interpretation with the backbone-rest team before implementation.
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        name:
-          type: "string"
-        description:
-          type: ["string", "null"]
-        active:
-          type: "boolean"
-
-    IdentificationDocumentRequest:
-      type: "object"
-      properties:
-        identificationDocument:
-          $ref: "#/components/schemas/IdentificationDocument"
-        dateTime:
-          type: ["string", "null"]
-          format: "date-time"
-        appName:
-          type: ["string", "null"]
-        appToken:
-          type: ["string", "null"]
-
     Contact:
       type: "object"
       properties:
@@ -2807,6 +2336,12 @@ components:
           type: ["string", "null"]
         active:
           type: "boolean"
+        roleIds:
+          type: "array"
+          description: "Existing role ids to link this feature to. Only used on creation."
+          items:
+            type: "string"
+            format: "uuid"
 
     FeatureRequest:
       type: "object"
@@ -2843,38 +2378,6 @@ components:
       properties:
         role:
           $ref: "#/components/schemas/Role"
-        dateTime:
-          type: ["string", "null"]
-          format: "date-time"
-        appName:
-          type: ["string", "null"]
-        appToken:
-          type: ["string", "null"]
-
-    RoleFeature:
-      type: "object"
-      description: |
-        Join role+feature carrying its own assignment-level `active` flag,
-        distinct from Feature.active (the feature's own status). Complements
-        the existing embedded Role.features array.
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        roleId:
-          type: "string"
-          format: "uuid"
-        featureId:
-          type: "string"
-          format: "uuid"
-        active:
-          type: "boolean"
-
-    RoleFeatureRequest:
-      type: "object"
-      properties:
-        roleFeature:
-          $ref: "#/components/schemas/RoleFeature"
         dateTime:
           type: ["string", "null"]
           format: "date-time"
@@ -2926,43 +2429,15 @@ components:
         appToken:
           type: ["string", "null"]
 
-    ApplicationRoleUser:
+    ApplicationUpdateRequest:
       type: "object"
-      description: |
-        Ternary join application+role+user (business rules 1-4). Forward-looking —
-        does not replace the existing non-app-scoped
-        PUT /api/v1/users/link/user/{userId}/role/{roleId} /
-        PUT /api/v1/users/unlink/user/{userId}/role/{roleId} endpoints.
+      required: ["application"]
       properties:
-        id:
-          type: "string"
-          format: "uuid"
-        applicationId:
-          type: "string"
-          format: "uuid"
-        roleId:
-          type: "string"
-          format: "uuid"
-        userId:
-          type: "string"
-          format: "uuid"
-        active:
-          type: "boolean"
-        profileImageRef:
-          type: ["string", "null"]
-
-    ApplicationRoleUserRequest:
-      type: "object"
-      properties:
-        applicationRoleUser:
-          $ref: "#/components/schemas/ApplicationRoleUser"
+        application:
+          $ref: "#/components/schemas/Application"
         dateTime:
           type: ["string", "null"]
           format: "date-time"
-        appName:
-          type: ["string", "null"]
-        appToken:
-          type: ["string", "null"]
 
     User:
       type: "object"
@@ -3194,76 +2669,6 @@ components:
           type: "string"
           format: "uuid"
 
-    # ── Notices ──────────────────────────────────────────────────────────────
-
-    NoticeType:
-      type: "object"
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        name:
-          type: "string"
-        description:
-          type: ["string", "null"]
-        active:
-          type: "boolean"
-        createdAt:
-          type: ["string", "null"]
-          format: "date-time"
-        updatedAt:
-          type: ["string", "null"]
-          format: "date-time"
-
-    NoticeTypeRequest:
-      type: "object"
-      properties:
-        noticeType:
-          $ref: "#/components/schemas/NoticeType"
-        dateTime:
-          type: ["string", "null"]
-          format: "date-time"
-        appName:
-          type: ["string", "null"]
-        appToken:
-          type: ["string", "null"]
-
-    Notice:
-      type: "object"
-      description: |
-        Field set inferred from the table name only — the notice/notice_type
-        columns were not part of the supplied business rules. Confirm with the
-        backbone-rest team before implementation.
-      properties:
-        id:
-          type: "string"
-          format: "uuid"
-        createdAt:
-          type: ["string", "null"]
-          format: "date-time"
-        userId:
-          type: "string"
-          format: "uuid"
-        applicationId:
-          type: "string"
-          format: "uuid"
-        noticeTypeId:
-          type: "string"
-          format: "uuid"
-
-    NoticeRequest:
-      type: "object"
-      properties:
-        notice:
-          $ref: "#/components/schemas/Notice"
-        dateTime:
-          type: ["string", "null"]
-          format: "date-time"
-        appName:
-          type: ["string", "null"]
-        appToken:
-          type: ["string", "null"]
-
     # ── Legacy / Report ──────────────────────────────────────────────────────
 
     Void:
@@ -3477,3 +2882,24 @@ components:
           type: string
         clientId:
           type: string
+
+    ServiceType:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 128
+        description:
+          type: string
+          maxLength: 512
+        active:
+          type: boolean
+
+    ServiceTypeRequest:
+      type: object
+      properties:
+        serviceType:
+          $ref: "#/components/schemas/ServiceType"

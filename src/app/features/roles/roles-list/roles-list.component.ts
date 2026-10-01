@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { RoleService } from '@core/services/role.service';
 import { Role } from '@shared/models/role.model';
 
@@ -14,11 +14,11 @@ type StatusFilter = 'all' | 'active' | 'inactive';
     <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
+          <a [routerLink]="['/applications', applicationId]" class="text-sm text-blue-600 hover:underline">← Aplicación</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Roles</h1>
         </div>
         <a
-          routerLink="/roles/new"
+          [routerLink]="['/applications', applicationId, 'roles', 'new']"
           class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Nuevo Rol
@@ -113,21 +113,12 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                   <td class="px-4 py-3" (click)="$event.stopPropagation()">
                     <div class="flex items-center gap-1">
                       <a
-                        [routerLink]="['/roles', role.id, 'edit']"
+                        [routerLink]="['/applications', applicationId, 'roles', role.id, 'edit']"
                         title="Editar"
                         class="inline-flex rounded-lg p-1.5 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                        </svg>
-                      </a>
-                      <a
-                        [routerLink]="['/roles', role.id, 'features']"
-                        title="Features"
-                        class="inline-flex rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M6 6V4.75C6 3.784 6.784 3 7.75 3h4.5c.966 0 1.75.784 1.75 1.75V6h1.25c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0115.25 18H4.75A1.75 1.75 0 013 16.25v-8.5C3 6.784 3.784 6 4.75 6H6zm1.5-1.25V6h5V4.75a.25.25 0 00-.25-.25h-4.5a.25.25 0 00-.25.25z" clip-rule="evenodd"/>
                         </svg>
                       </a>
                     </div>
@@ -207,7 +198,9 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 })
 export class RolesListComponent implements OnInit {
   private readonly roleService = inject(RoleService);
+  private readonly route = inject(ActivatedRoute);
 
+  protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
   protected readonly loading = signal(true);
   private readonly allRoles = signal<Role[]>([]);
   protected readonly expandedIds = signal<Set<string>>(new Set());
@@ -247,9 +240,9 @@ export class RolesListComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.roleService.getAllWithFeatures().subscribe({
-      next: (data) => {
-        this.allRoles.set(data);
+    this.roleService.getByApplication(this.applicationId).subscribe({
+      next: (roles) => {
+        this.allRoles.set(roles);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

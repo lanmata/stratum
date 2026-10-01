@@ -3,6 +3,7 @@ export interface Feature {
   name: string;
   description?: string;
   active: boolean;
+  roleIds?: string[];
 }
 
 export interface FeatureRequest {
@@ -11,6 +12,7 @@ export interface FeatureRequest {
     name: string;
     description?: string;
     active: boolean;
+    roleIds?: string[];
   };
   dateTime?: string;
   appName?: string;

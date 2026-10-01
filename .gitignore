@@ -19,3 +19,6 @@ npm-debug.log*
 # Environment
 .env
 .env.local
+
+# Local TLS material — never commit private keys
+ssl/

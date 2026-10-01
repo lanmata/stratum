@@ -9,11 +9,11 @@ export class ServiceTypeService {
   private readonly http = inject(HttpService);
 
   getAll(): Observable<ServiceType[]> {
-    return this.http.get<ServiceType[]>(API.SERVICE_TYPES.LIST_ALL);
+    return this.http.getList<ServiceType>(API.SERVICE_TYPES.LIST_ALL);
   }
 
   getById(id: string): Observable<ServiceType> {
-    return this.http.get<ServiceType>(API.SERVICE_TYPES.BY_ID(id));
+    return this.http.get<ServiceType>(API.SERVICE_TYPES.FIND_BY_ID(id));
   }
 
   create(req: ServiceTypeRequest): Observable<ServiceType> {
@@ -22,9 +22,5 @@ export class ServiceTypeService {
 
   update(id: string, req: ServiceTypeRequest): Observable<ServiceType> {
     return this.http.put<ServiceType>(API.SERVICE_TYPES.BY_ID(id), req);
-  }
-
-  delete(id: string): Observable<ServiceType> {
-    return this.http.delete<ServiceType>(API.SERVICE_TYPES.BY_ID(id));
   }
 }

@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { ApplicationService } from './application.service';
 import { Application } from '@shared/models/application.model';
 
@@ -14,12 +14,16 @@ export class ApplicationDirectoryService {
     this._all.set(apps);
   }
 
+  upsert(app: Application): void {
+    this._all.update((list) => [...list.filter((a) => a.id !== app.id), app]);
+  }
+
   resolve(applicationId: string): Observable<Application | undefined> {
     const cached = this._all().find((a) => a.id === applicationId);
     if (cached) return of(cached);
-    return this.applicationService.getAll().pipe(
-      tap((list) => this._all.set(list)),
-      map((list) => list.find((a) => a.id === applicationId)),
+    return this.applicationService.getById(applicationId).pipe(
+      tap((app) => this._all.update((list) => [...list.filter((a) => a.id !== app.id), app])),
+      catchError(() => of(undefined)),
     );
   }
 }

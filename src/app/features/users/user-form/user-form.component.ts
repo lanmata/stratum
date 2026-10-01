@@ -13,8 +13,10 @@ import { forkJoin, Observable, of, timer } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { RoleService } from '@core/services/role.service';
 import { UserService } from '@core/services/user.service';
+import { ContactService } from '@core/services/contact.service';
 import { ToastService } from '@core/services/toast.service';
 import { Role } from '@shared/models/role.model';
+import { Contact } from '@shared/models/contact.model';
 import { UserTO } from '@shared/models/user.model';
 
 @Component({
@@ -51,7 +53,8 @@ import { UserTO } from '@shared/models/user.model';
                   <input
                     formControlName="alias"
                     type="text"
-                    maxlength="64"
+                    minlength="5"
+                    maxlength="12"
                     placeholder="nombre_usuario"
                     class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 dark:disabled:bg-gray-600"
                     [class.border-red-400]="form.controls.alias.invalid && form.controls.alias.touched"
@@ -63,8 +66,11 @@ import { UserTO } from '@shared/models/user.model';
                   @if (form.controls.alias.invalid && form.controls.alias.touched) {
                     @if (form.controls.alias.errors?.['required']) {
                       <p class="mt-1 text-xs text-red-500">El alias es obligatorio.</p>
-                    }
-                    @if (form.controls.alias.errors?.['aliasUnavailable']) {
+                    } @else if (form.controls.alias.errors?.['minlength']) {
+                      <p class="mt-1 text-xs text-red-500">El alias debe tener entre 5 y 12 caracteres.</p>
+                    } @else if (form.controls.alias.errors?.['maxlength']) {
+                      <p class="mt-1 text-xs text-red-500">El alias debe tener entre 5 y 12 caracteres.</p>
+                    } @else if (form.controls.alias.errors?.['aliasUnavailable']) {
                       <p class="mt-1 text-xs text-red-500">Este alias ya está en uso.</p>
                     }
                   }
@@ -358,6 +364,34 @@ import { UserTO } from '@shared/models/user.model';
             }
           </div>
 
+          @if (isEdit()) {
+            <!-- Sección 5: Contactos -->
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Contactos
+              </h2>
+              @if (loadingContacts()) {
+                <p class="text-xs text-gray-400 dark:text-gray-500">Cargando contactos…</p>
+              } @else if (contacts().length === 0) {
+                <p class="text-xs text-gray-400 dark:text-gray-500">Esta persona no tiene contactos registrados.</p>
+              } @else {
+                <ul class="space-y-2">
+                  @for (contact of contacts(); track contact.id) {
+                    <li class="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-600">
+                      <span class="text-gray-800 dark:text-gray-200">
+                        {{ contact.content }}
+                        <span class="ml-2 text-xs text-gray-400 dark:text-gray-500">({{ contact.contactType.name }})</span>
+                      </span>
+                      @if (!contact.active) {
+                        <span class="text-xs text-gray-400 dark:text-gray-500">Inactivo</span>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+
           <!-- Acciones -->
           <div class="flex justify-end gap-3">
             <a
@@ -386,6 +420,7 @@ export class UserFormComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly userService = inject(UserService);
   private readonly roleService = inject(RoleService);
+  private readonly contactService = inject(ContactService);
   private readonly toast = inject(ToastService);
 
   protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
@@ -398,9 +433,11 @@ export class UserFormComponent implements OnInit {
   protected readonly allRoles = signal<Role[]>([]);
   protected readonly selectedRoleIds = signal<Set<string>>(new Set());
   private readonly initialRoleIds = signal<Set<string>>(new Set());
+  protected readonly contacts = signal<Contact[]>([]);
+  protected readonly loadingContacts = signal(false);
 
   protected readonly form = this.fb.nonNullable.group({
-    alias: ['', Validators.required],
+    alias: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(12)]],
     displayName: ['', [Validators.required, Validators.maxLength(256)]],
     email: ['', [Validators.required, Validators.email]],
     password: [''],
@@ -428,13 +465,14 @@ export class UserFormComponent implements OnInit {
 
       forkJoin({
         user: this.userService.getById(this.userId),
-        roles: this.roleService.getAll(),
+        roles: this.roleService.getByApplication(this.applicationId),
       }).subscribe({
         next: ({ user, roles }) => {
           this.allRoles.set(roles);
           this.patchFromUser(user);
           this.loading.set(false);
           this.showPassword.set(false);
+          this.loadContacts(user.person?.id);
         },
         error: () => {
           this.toast.error('Error al cargar el usuario');
@@ -450,7 +488,7 @@ export class UserFormComponent implements OnInit {
       this.form.controls.email.updateValueAndValidity();
       this.showPassword.set(true);
 
-      this.roleService.getAll().subscribe({
+      this.roleService.getByApplication(this.applicationId).subscribe({
         next: (roles) => {
           this.allRoles.set(roles);
           this.loading.set(false);
@@ -477,6 +515,18 @@ export class UserFormComponent implements OnInit {
     const roleIds = new Set((user.roles ?? []).map((r) => r.id));
     this.selectedRoleIds.set(roleIds);
     this.initialRoleIds.set(new Set(roleIds));
+  }
+
+  private loadContacts(personId: string | undefined): void {
+    if (!personId) return;
+    this.loadingContacts.set(true);
+    this.contactService.getByPerson(personId).subscribe({
+      next: (contacts) => {
+        this.contacts.set(contacts);
+        this.loadingContacts.set(false);
+      },
+      error: () => this.loadingContacts.set(false),
+    });
   }
 
   protected toggleRole(roleId: string): void {

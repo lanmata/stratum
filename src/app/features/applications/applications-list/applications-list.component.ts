@@ -74,16 +74,21 @@ function formatLocalDate(d: Date): string {
           <table class="w-full text-sm">
             <thead class="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-700/50 dark:text-gray-400">
               <tr>
+                <th class="px-4 py-3">Id</th>
                 <th class="px-4 py-3">Nombre</th>
                 <th class="px-4 py-3">Descripción</th>
                 <th class="px-4 py-3">Estado</th>
-                <th class="px-4 py-3">ID</th>
+                <th class="px-4 py-3">Fecha de Creación</th>
+                <th class="px-4 py-3">Última Actualización</th>
                 <th class="px-4 py-3">Acciones</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
               @for (app of paginated(); track app.id) {
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                  <td class="px-4 py-3 font-mono text-xs text-gray-400 dark:text-gray-500" [title]="app.id">
+                    {{ app.id.slice(0, 5) }}…
+                  </td>
                   <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
                     <a [routerLink]="['/applications', app.id]" class="hover:underline">{{ app.name }}</a>
                   </td>
@@ -99,7 +104,8 @@ function formatLocalDate(d: Date): string {
                       </svg>
                     }
                   </td>
-                  <td class="px-4 py-3 font-mono text-xs text-gray-400 dark:text-gray-500">{{ app.id }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ app.createdDate ?? '—' }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ app.lastUpdate ?? '—' }}</td>
                   <td class="px-4 py-3">
                     <div class="flex items-center gap-1">
                       <button
@@ -129,7 +135,7 @@ function formatLocalDate(d: Date): string {
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="5" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
+                  <td colspan="7" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
                     No hay aplicaciones registradas todavía
                   </td>
                 </tr>

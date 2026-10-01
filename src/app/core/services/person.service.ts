@@ -9,7 +9,7 @@ export class PersonService {
   private readonly http = inject(HttpService);
 
   getAll(): Observable<Person[]> {
-    return this.http.get<Person[]>(API.PEOPLE.ROOT);
+    return this.http.getList<Person>(API.PEOPLE.ROOT);
   }
 
   getById(personId: string): Observable<Person> {
