@@ -66,6 +66,27 @@ export const API = {
     FIND_BY_ID: (id: string) => `/v1/service-types/find/${id}`,
     BY_ID: (id: string) => `/v1/service-types/${id}`,
   },
+  ADDRESSES: {
+    ROOT: '/v1/addresses',
+    BY_ID: (id: string) => `/v1/addresses/${id}`,
+    BY_PERSON: (personId: string) => `/v1/addresses/person/${personId}`,
+  },
+  IDENTIFICATION_DOCUMENTS: {
+    ROOT: '/v1/identification-documents',
+    BY_ID: (id: string) => `/v1/identification-documents/${id}`,
+    BY_PERSON: (personId: string) => `/v1/identification-documents/person/${personId}`,
+  },
+  NOTICE_TYPES: {
+    ROOT: '/v1/notice-types',
+    LIST_ALL: '/v1/notice-types/list-all',
+    BY_ID: (id: string) => `/v1/notice-types/${id}`,
+  },
+  NOTICES: {
+    ROOT: '/v1/notices',
+    BY_APPLICATION: (applicationId: string) => `/v1/notices/application/${applicationId}`,
+    DELETE: (userId: string, applicationId: string, noticeTypeId: string) =>
+      `/v1/notices/user/${userId}/application/${applicationId}/notice-type/${noticeTypeId}`,
+  },
   MANAGED_CLIENTS: {
     ROOT: '/v1/managed-clients',
     BY_ID: (clientId: string) => `/v1/managed-clients/${clientId}`,

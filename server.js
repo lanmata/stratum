@@ -39,6 +39,10 @@ const auditRoutes = require('./server/routes/audit.routes');
 const applicationsRoutes = require('./server/routes/applications.routes');
 const serviceTypesRoutes = require('./server/routes/service-types.routes');
 const managedClientsRoutes = require('./server/routes/managed-clients.routes');
+const addressesRoutes = require('./server/routes/addresses.routes');
+const identificationDocumentsRoutes = require('./server/routes/identification-documents.routes');
+const noticeTypesRoutes = require('./server/routes/notice-types.routes');
+const noticesRoutes = require('./server/routes/notices.routes');
 
 const app = express();
 
@@ -75,6 +79,10 @@ app.use('/api/v1/iam/audit', auditRoutes);
 app.use('/api/v1/applications', applicationsRoutes);
 app.use('/api/v1/service-types', serviceTypesRoutes);
 app.use('/api/v1/managed-clients', managedClientsRoutes);
+app.use('/api/v1/addresses', addressesRoutes);
+app.use('/api/v1/identification-documents', identificationDocumentsRoutes);
+app.use('/api/v1/notice-types', noticeTypesRoutes);
+app.use('/api/v1/notices', noticesRoutes);
 
 // ── Angular SSR ─────────────────────────────────────────────────────────────
 const distPath = path.join(__dirname, 'dist/front-backbone-rest/browser');

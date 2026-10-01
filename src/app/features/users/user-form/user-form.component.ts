@@ -13,16 +13,23 @@ import { forkJoin, Observable, of, timer } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { RoleService } from '@core/services/role.service';
 import { UserService } from '@core/services/user.service';
-import { ContactService } from '@core/services/contact.service';
 import { ToastService } from '@core/services/toast.service';
 import { Role } from '@shared/models/role.model';
-import { Contact } from '@shared/models/contact.model';
 import { UserTO } from '@shared/models/user.model';
+import { PersonContactsComponent } from '@shared/components/person-contacts/person-contacts.component';
+import { PersonAddressesComponent } from '@shared/components/person-addresses/person-addresses.component';
+import { PersonIdentificationDocumentsComponent } from '@shared/components/person-identification-documents/person-identification-documents.component';
 
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    PersonContactsComponent,
+    PersonAddressesComponent,
+    PersonIdentificationDocumentsComponent,
+  ],
   template: `
     <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6">
@@ -364,32 +371,11 @@ import { UserTO } from '@shared/models/user.model';
             }
           </div>
 
-          @if (isEdit()) {
-            <!-- Sección 5: Contactos -->
-            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-              <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Contactos
-              </h2>
-              @if (loadingContacts()) {
-                <p class="text-xs text-gray-400 dark:text-gray-500">Cargando contactos…</p>
-              } @else if (contacts().length === 0) {
-                <p class="text-xs text-gray-400 dark:text-gray-500">Esta persona no tiene contactos registrados.</p>
-              } @else {
-                <ul class="space-y-2">
-                  @for (contact of contacts(); track contact.id) {
-                    <li class="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-600">
-                      <span class="text-gray-800 dark:text-gray-200">
-                        {{ contact.content }}
-                        <span class="ml-2 text-xs text-gray-400 dark:text-gray-500">({{ contact.contactType.name }})</span>
-                      </span>
-                      @if (!contact.active) {
-                        <span class="text-xs text-gray-400 dark:text-gray-500">Inactivo</span>
-                      }
-                    </li>
-                  }
-                </ul>
-              }
-            </div>
+          @if (isEdit() && personId(); as pid) {
+            <!-- Sección 5: Contactos, direcciones y documentos -->
+            <app-person-contacts [personId]="pid" />
+            <app-person-addresses [personId]="pid" />
+            <app-person-identification-documents [personId]="pid" />
           }
 
           <!-- Acciones -->
@@ -420,7 +406,6 @@ export class UserFormComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly userService = inject(UserService);
   private readonly roleService = inject(RoleService);
-  private readonly contactService = inject(ContactService);
   private readonly toast = inject(ToastService);
 
   protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
@@ -433,8 +418,7 @@ export class UserFormComponent implements OnInit {
   protected readonly allRoles = signal<Role[]>([]);
   protected readonly selectedRoleIds = signal<Set<string>>(new Set());
   private readonly initialRoleIds = signal<Set<string>>(new Set());
-  protected readonly contacts = signal<Contact[]>([]);
-  protected readonly loadingContacts = signal(false);
+  protected readonly personId = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     alias: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(12)]],
@@ -472,7 +456,7 @@ export class UserFormComponent implements OnInit {
           this.patchFromUser(user);
           this.loading.set(false);
           this.showPassword.set(false);
-          this.loadContacts(user.person?.id);
+          this.personId.set(user.person?.id ?? null);
         },
         error: () => {
           this.toast.error('Error al cargar el usuario');
@@ -515,18 +499,6 @@ export class UserFormComponent implements OnInit {
     const roleIds = new Set((user.roles ?? []).map((r) => r.id));
     this.selectedRoleIds.set(roleIds);
     this.initialRoleIds.set(new Set(roleIds));
-  }
-
-  private loadContacts(personId: string | undefined): void {
-    if (!personId) return;
-    this.loadingContacts.set(true);
-    this.contactService.getByPerson(personId).subscribe({
-      next: (contacts) => {
-        this.contacts.set(contacts);
-        this.loadingContacts.set(false);
-      },
-      error: () => this.loadingContacts.set(false),
-    });
   }
 
   protected toggleRole(roleId: string): void {

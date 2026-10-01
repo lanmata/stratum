@@ -68,8 +68,8 @@ export class DashboardComponent {
 
   protected readonly navItems = [
     { path: '/applications', icon: '🏢', label: 'Aplicaciones', description: 'Aplicaciones, sus usuarios, roles y las features de cada rol' },
-    { path: '/people', icon: '🧑', label: 'People', description: 'Manage person records' },
-    { path: '/audit', icon: '📋', label: 'Audit', description: 'Event log' },
+    { path: '/people', icon: '🧑', label: 'Personas', description: 'Personas, contactos, direcciones y documentos de identificación' },
+    { path: '/audit', icon: '📋', label: 'Auditoría', description: 'Registro de eventos' },
     { path: '/contact-types', icon: '🏷️', label: 'Tipos de Contacto', description: 'Catálogo de tipos de contacto' },
     { path: '/service-types', icon: '🔧', label: 'Tipos de Servicio', description: 'Catálogo de tipos de servicio' },
   ];

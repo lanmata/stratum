@@ -53,7 +53,6 @@ export interface PutUserUpdateRequest {
   middleName?: string;
   gender?: string;
   birthdate?: string;
-  contacts?: Contact[];
   roleIds?: string[];
   application?: string;
 }
@@ -61,10 +60,4 @@ export interface PutUserUpdateRequest {
 export interface UserAliasTO {
   alias: string;
   applicationId: string;
-}
-
-export interface Contact {
-  id?: string;
-  value: string;
-  contactTypeId: string;
 }
