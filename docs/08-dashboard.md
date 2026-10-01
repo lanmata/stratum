@@ -1,6 +1,17 @@
 # Dashboard — Requisitos de Implementación
 
-> Actualización de la navegación del dashboard para incluir los tres módulos nuevos: Aplicaciones, Clientes M2M y Tipos de Contacto. Requiere cambios mínimos en dos archivos existentes.
+> ✅ **Implementado**, pero con una estructura distinta a la descrita abajo (este documento describe el plan pre-pivote, antes de que Usuarios/Roles/Clientes M2M se movieran bajo `/applications/:id`). El dashboard real (`src/app/features/dashboard/dashboard.component.ts`) tiene estas tarjetas:
+>
+> | Módulo | Path |
+> |---|---|
+> | Aplicaciones | `/applications` |
+> | Personas | `/people` |
+> | Auditoría | `/audit` |
+> | Tipos de Contacto | `/contact-types` |
+> | Tipos de Servicio | `/service-types` |
+> | Tipos de Aviso | `/notice-types` |
+>
+> No hay tarjetas separadas para Usuarios, Roles ni Clientes M2M — viven dentro de la tarjeta "Aplicaciones" (pestañas de `/applications/:id`). El resto de este documento (secciones 2-7) describe el plan anterior y queda obsoleto; se conserva por contexto histórico.
 
 ---
 

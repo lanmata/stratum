@@ -1,5 +1,7 @@
 # Componentes Compartidos — Requisitos de Implementación
 
+> ✅ **Implementado.** `ConfirmDialogComponent` y `ToastService`/`ToastComponent` existen en `src/app/shared/components/` y `src/app/core/services/toast.service.ts` tal como se describe abajo, y se usan en todos los módulos CRUD del proyecto. Este documento se conserva como referencia del contrato de esos componentes.
+>
 > Infraestructura UI reutilizable requerida por todos los módulos CRUD. Debe implementarse primero — es bloqueante para el resto de los requisitos.
 
 ---

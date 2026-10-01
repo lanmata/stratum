@@ -1,5 +1,7 @@
 # Tipos de Contacto — Requisitos de Implementación
 
+> ✅ **Implementado.** `src/app/features/contact-types/` tiene el CRUD completo descrito abajo. Este módulo sirvió además de patrón de referencia para Tipos de Aviso y para los gestores de Contactos/Direcciones/Documentos de identificación scoped a persona.
+>
 > Módulo completamente nuevo para gestionar el catálogo de tipos de contacto (email, teléfono, dirección, etc.) que usa el sistema. Es el módulo CRUD de referencia más simple — sirve como patrón para los demás.
 
 ---

@@ -1,6 +1,11 @@
 # Usuarios — Requisitos de Implementación
 
-> El módulo más complejo del backoffice. El servicio y el BFF están completamente implementados. Solo falta la capa UI: formularios de creación, edición, eliminación y asignación de roles.
+> ✅ **Implementado**, con estas diferencias respecto al plan original:
+> 1. Usuarios vive bajo `/applications/:applicationId/users` (navegación centrada en aplicación) — ya no existe `API.APPLICATION.ID` como constante fija; `applicationId` siempre viene de la ruta.
+> 2. `PutUserUpdateRequest.application` es un **string UUID**, no el objeto `Application` completo (la sección 3 de este documento tenía esto mal).
+> 3. La sección "Contactos" del formulario de edición ya no es de solo lectura: ahora reutiliza los gestores compartidos `PersonContactsComponent`, `PersonAddressesComponent` y `PersonIdentificationDocumentsComponent` (los mismos que usa el módulo de Personas), con CRUD completo contra sus propios endpoints — no se envían como parte de `PutUserUpdateRequest.contacts` (ese campo se eliminó del modelo, no se usaba).
+>
+> El módulo más complejo del backoffice. El servicio y el BFF están completamente implementados.
 
 ---
 
@@ -43,9 +48,10 @@ export interface UserCreateRequest {
   applicationId: string;   // requerido
 }
 
-// Actualización parcial
+// Actualización parcial — forma real, confirmada contra api.yaml
 export interface PutUserUpdateRequest {
-  application: Application;   // requerido en updates
+  userId: string;
+  application: string;        // UUID de la aplicación, no el objeto completo
   password?: string;
   displayName?: string;
   active?: boolean;
@@ -57,8 +63,11 @@ export interface PutUserUpdateRequest {
   lastName?: string;
   gender?: string;
   birthdate?: string;
-  contacts?: PutUserUpdateContact[];
   roleIds?: string[];
+  // Nota: la API también acepta un campo `contacts` aquí (ver
+  // PutUserUpdateContact en api.yaml), pero Stratum no lo usa — los
+  // contactos de la persona se gestionan vía los endpoints dedicados
+  // /contacts a través de PersonContactsComponent.
 }
 ```
 
@@ -228,7 +237,7 @@ export const usersRoutes: Routes = [
 
 ## 10. Notas Técnicas
 
-- La eliminación usa `userService.delete(applicationId, userId)` donde `applicationId` es `API.APPLICATION.ID` (constante fija).
+- La eliminación usa `userService.delete(applicationId, userId)` donde `applicationId` viene de la ruta (`ActivatedRoute.parent.snapshot.paramMap.get('applicationId')`), no de una constante fija.
 - Las validaciones async de alias/email deben implementarse como `AsyncValidatorFn` de Angular Reactive Forms con `debounceTime(400)` y `distinctUntilChanged()` para evitar llamadas redundantes.
 - En modo edición, las operaciones de link/unlink de roles no usan `update()` con `roleIds[]` — se usan los endpoints dedicados `PUT .../link/...` y `PUT .../unlink/...` para cambios individuales, lo que permite mejor feedback granular.
 - El campo `applicationId` en los requests de update debe ser el objeto `Application` completo (campo requerido en `PutUserUpdateRequest`), no solo el ID.

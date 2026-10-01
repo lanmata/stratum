@@ -1,6 +1,8 @@
 # Clientes Gestionados (M2M) — Requisitos de Implementación
 
-> Módulo completamente nuevo para gestionar clientes OAuth2 machine-to-machine. Es el módulo de mayor esfuerzo: requiere BFF nuevo, servicio nuevo, modelos nuevos y UI compleja que incluye un diálogo especial para mostrar secretos que solo se devuelven una vez.
+> ✅ **Implementado**, con una diferencia respecto al plan original: vive como pestaña "Clientes M2M" dentro de `/applications/:applicationId/managed-clients` (navegación centrada en aplicación), no como módulo top-level `/managed-clients`. El resto de este documento (servicio, modelos, rutas BFF, comportamiento de creación/rotación/revocación) sigue siendo una descripción precisa de lo implementado.
+>
+> Módulo completamente nuevo para gestionar clientes OAuth2 machine-to-machine. Requirió BFF nuevo, servicio nuevo, modelos nuevos y UI compleja que incluye un diálogo especial para mostrar secretos que solo se devuelven una vez.
 
 ---
 

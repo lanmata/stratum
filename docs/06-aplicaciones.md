@@ -1,6 +1,10 @@
 # Aplicaciones — Requisitos de Implementación
 
-> Módulo nuevo con una restricción crítica de API: backbone-rest solo expone `POST /api/v1/applications`. No existe listado, consulta por ID, actualización ni eliminación. El módulo se implementa como **creación únicamente** hasta que la API sea extendida.
+> ✅ **Implementado como CRUD completo** — la restricción descrita abajo (solo `POST`) ya no es cierta. El backend real expone `GET /applications` (lista, con filtro opcional `?ids=`), `GET/PUT/DELETE /applications/{id}` además de `POST /applications`. `src/app/features/applications/` tiene lista, detalle (hub de pestañas Usuarios/Roles/Clientes M2M/Avisos), crear y editar.
+>
+> La UI usa **desactivar** (`PUT` con `active: false`) en vez de `DELETE` real como la acción destructiva desde la lista — es una decisión de producto para preservar el historial de la aplicación, no una limitación de la API; `DELETE /applications/{id}` sí existe si en el futuro se necesita borrado real.
+>
+> El resto de este documento (secciones 3-9) describe el plan original de "solo creación" — queda obsoleto, se conserva por contexto histórico de por qué el módulo se construyó en dos pasos.
 
 ---
 

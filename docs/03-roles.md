@@ -1,6 +1,10 @@
 # Roles — Requisitos de Implementación
 
-> El servicio y el BFF ya están completos. Solo falta la capa de interfaz: formularios de creación y edición. La API no expone DELETE para roles — esta limitación es permanente y debe comunicarse al usuario.
+> ✅ **Implementado**, con dos diferencias respecto al plan original:
+> 1. Roles vive bajo `/applications/:applicationId/roles` (navegación centrada en aplicación), no como módulo top-level `/roles`.
+> 2. Las **features del rol se editan inline dentro de `role-form`** (agregar/editar/desactivar una funcionalidad junto con el rol) — no existe un módulo "Features" independiente ni una pantalla separada de asignación. Ver nota técnica abajo.
+>
+> El servicio y el BFF ya están completos. La API no expone DELETE para roles — esta limitación es permanente y se comunica al usuario (sin botón de eliminar en la lista ni el formulario).
 
 ---
 
@@ -156,4 +160,4 @@ export const rolesRoutes: Routes = [
 - `RoleFormComponent` usa el mismo modo de detección que los demás formularios: `paramMap.get('roleId') !== null` → modo edit.
 - `RoleRequest` envuelve el objeto `Role`. Al hacer `update()`, el objeto role debe incluir el `id` existente además de los campos editados.
 - El formulario usa `FormBuilder.nonNullable.group` siguiendo el patrón del `LoginComponent`.
-- El campo `features[]` del rol **no se edita en este formulario** — la asignación de features a roles es una operación separada que actualmente no tiene endpoint dedicado en la API (los features se asignan a través del rol al crearlo/actualizarlo incluyendo el array).
+- El campo `features[]` del rol **sí se edita en este formulario**, como una lista inline de entradas agregar/editar/desactivar (ver `src/app/features/roles/role-form/role-form.component.ts`). Al crear el rol, las features sin `id` se crean junto con él; al editar, una feature persistida no se puede eliminar (la API no expone `DELETE /features/{id}`) — solo desactivar, para que no reaparezca activa al recargar el rol.
