@@ -1,10 +1,8 @@
-import { Person } from './person.model';
-
 export interface Contact {
   id?: string;
   content: string;
   contactType: ContactType;
-  person: Person;
+  personId: string;
   active: boolean;
 }
 

@@ -201,7 +201,7 @@ export class PersonContactsComponent implements OnChanges {
       id: this.editingId ?? undefined,
       content,
       contactType,
-      person: { id: this.personId(), firstName: '', lastName: '' },
+      personId: this.personId(),
       active,
     };
 
