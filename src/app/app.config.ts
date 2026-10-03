@@ -3,7 +3,12 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
+import {
+  provideRouter,
+  withComponentInputBinding,
+  withRouterConfig,
+  withViewTransitions,
+} from '@angular/router';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideStore } from '@ngrx/store';
@@ -21,7 +26,12 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withComponentInputBinding(), withViewTransitions()),
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      withViewTransitions(),
+      withRouterConfig({ paramsInheritanceStrategy: 'always' }),
+    ),
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, errorInterceptor, loadingInterceptor])),
     provideStore({ session: sessionReducer }),

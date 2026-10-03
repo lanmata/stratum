@@ -27,12 +27,14 @@ export const API = {
     WITH_INACTIVE: (include: boolean) => `/v1/roles/${include}`,
     BY_ID: (id: string) => `/v1/roles/find/${id}`,
     BY_USER: (userId: string) => `/v1/roles/user/${userId}`,
+    BY_APPLICATION: (applicationId: string) => `/v1/roles/application/${applicationId}`,
     UPDATE: (id: string) => `/v1/roles/${id}`,
   },
   FEATURES: {
     ROOT: '/v1/features',
     WITH_INACTIVE: (include: boolean) => `/v1/features/${include}`,
     BY_ID: (id: string) => `/v1/features/find/${id}`,
+    BY_ROLE: (roleId: string) => `/v1/features/role/${roleId}`,
     UPDATE: (id: string) => `/v1/features/${id}`,
   },
   CONTACTS: {
@@ -53,6 +55,43 @@ export const API = {
     ROOT: '/v1/contact-types',
     LIST_ALL: '/v1/contact-types/list-all',
     BY_ID: (id: string) => `/v1/contact-types/${id}`,
+  },
+  APPLICATIONS: {
+    ROOT: '/v1/applications',
+    BY_ID: (id: string) => `/v1/applications/${id}`,
+  },
+  SERVICE_TYPES: {
+    ROOT: '/v1/service-types',
+    LIST_ALL: '/v1/service-types/list-all',
+    FIND_BY_ID: (id: string) => `/v1/service-types/find/${id}`,
+    BY_ID: (id: string) => `/v1/service-types/${id}`,
+  },
+  ADDRESSES: {
+    ROOT: '/v1/addresses',
+    BY_ID: (id: string) => `/v1/addresses/${id}`,
+    BY_PERSON: (personId: string) => `/v1/addresses/person/${personId}`,
+  },
+  IDENTIFICATION_DOCUMENTS: {
+    ROOT: '/v1/identification-documents',
+    BY_ID: (id: string) => `/v1/identification-documents/${id}`,
+    BY_PERSON: (personId: string) => `/v1/identification-documents/person/${personId}`,
+  },
+  NOTICE_TYPES: {
+    ROOT: '/v1/notice-types',
+    LIST_ALL: '/v1/notice-types/list-all',
+    BY_ID: (id: string) => `/v1/notice-types/${id}`,
+  },
+  NOTICES: {
+    ROOT: '/v1/notices',
+    BY_APPLICATION: (applicationId: string) => `/v1/notices/application/${applicationId}`,
+    DELETE: (userId: string, applicationId: string, noticeTypeId: string) =>
+      `/v1/notices/user/${userId}/application/${applicationId}/notice-type/${noticeTypeId}`,
+  },
+  MANAGED_CLIENTS: {
+    ROOT: '/v1/managed-clients',
+    BY_ID: (clientId: string) => `/v1/managed-clients/${clientId}`,
+    ROTATE_SECRET: (clientId: string) => `/v1/managed-clients/${clientId}/rotate-secret`,
+    REVOKE_TOKENS: (clientId: string) => `/v1/managed-clients/${clientId}/tokens`,
   },
 } as const;
 

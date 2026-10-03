@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { RoleService } from '@core/services/role.service';
 import { Role } from '@shared/models/role.model';
 
@@ -14,11 +14,11 @@ type StatusFilter = 'all' | 'active' | 'inactive';
     <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
+          <a [routerLink]="['/applications', applicationId]" class="text-sm text-blue-600 hover:underline">← Aplicación</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Roles</h1>
         </div>
         <a
-          routerLink="/roles/new"
+          [routerLink]="['/applications', applicationId, 'roles', 'new']"
           class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Nuevo Rol
@@ -100,20 +100,28 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                   </td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ role.description }}</td>
                   <td class="px-4 py-3">
-                    <span
-                      class="rounded-full px-2 py-0.5 text-xs font-medium"
-                      [class]="role.active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
-                    >
-                      {{ role.active ? 'Activo' : 'Inactivo' }}
-                    </span>
+                    @if (role.active) {
+                      <svg title="Activo" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                      </svg>
+                    } @else {
+                      <svg title="Inactivo" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                      </svg>
+                    }
                   </td>
                   <td class="px-4 py-3" (click)="$event.stopPropagation()">
-                    <a
-                      [routerLink]="['/roles', role.id, 'edit']"
-                      class="text-sm font-medium text-blue-600 hover:underline"
-                    >
-                      Editar
-                    </a>
+                    <div class="flex items-center gap-1">
+                      <a
+                        [routerLink]="['/applications', applicationId, 'roles', role.id, 'edit']"
+                        title="Editar"
+                        class="inline-flex rounded-lg p-1.5 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                        </svg>
+                      </a>
+                    </div>
                   </td>
                 </tr>
 
@@ -139,12 +147,15 @@ type StatusFilter = 'all' | 'active' | 'inactive';
                       </td>
                       <td class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">{{ feature.description ?? '—' }}</td>
                       <td class="px-4 py-2">
-                        <span
-                          class="rounded-full px-2 py-0.5 text-xs font-medium"
-                          [class]="feature.active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
-                        >
-                          {{ feature.active ? 'Activa' : 'Inactiva' }}
-                        </span>
+                        @if (feature.active) {
+                          <svg title="Activa" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                          </svg>
+                        } @else {
+                          <svg title="Inactiva" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                          </svg>
+                        }
                       </td>
                       <td class="px-4 py-2"></td>
                     </tr>
@@ -187,7 +198,9 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 })
 export class RolesListComponent implements OnInit {
   private readonly roleService = inject(RoleService);
+  private readonly route = inject(ActivatedRoute);
 
+  protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
   protected readonly loading = signal(true);
   private readonly allRoles = signal<Role[]>([]);
   protected readonly expandedIds = signal<Set<string>>(new Set());
@@ -227,9 +240,9 @@ export class RolesListComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.roleService.getAllWithFeatures().subscribe({
-      next: (data) => {
-        this.allRoles.set(data);
+    this.roleService.getByApplication(this.applicationId).subscribe({
+      next: (roles) => {
+        this.allRoles.set(roles);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

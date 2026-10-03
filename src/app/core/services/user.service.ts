@@ -18,7 +18,7 @@ export class UserService {
   }
 
   getByApplication(applicationId: string): Observable<UserTO[]> {
-    return this.http.get<UserTO[]>(API.USERS.BY_APPLICATION(applicationId));
+    return this.http.getList<UserTO>(API.USERS.BY_APPLICATION(applicationId));
   }
 
   getByAlias(alias: string, applicationId: string): Observable<UserTO> {

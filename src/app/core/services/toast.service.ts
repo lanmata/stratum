@@ -16,8 +16,8 @@ export class ToastService {
     this.add('error', message, duration);
   }
 
-  info(message: string, duration = 4000): void {
-    this.add('info', message, duration);
+  info(message: string, duration = 4000, copyValue?: string): void {
+    this.add('info', message, duration, copyValue);
   }
 
   warning(message: string, duration = 6000): void {
@@ -30,9 +30,9 @@ export class ToastService {
     this._toasts.update((toasts) => toasts.filter((t) => t.id !== id));
   }
 
-  private add(type: ToastType, message: string, duration: number): void {
+  private add(type: ToastType, message: string, duration: number, copyValue?: string): void {
     const id = crypto.randomUUID();
-    this._toasts.update((toasts) => [...toasts, { id, type, message, duration }]);
+    this._toasts.update((toasts) => [...toasts, { id, type, message, duration, copyValue }]);
     if (duration > 0) {
       this.timers.set(id, setTimeout(() => this.dismiss(id), duration));
     }

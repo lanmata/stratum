@@ -16,16 +16,24 @@ import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
 import { Role } from '@shared/models/role.model';
 import { UserTO } from '@shared/models/user.model';
-import { API } from '@shared/constants/api.constants';
+import { PersonContactsComponent } from '@shared/components/person-contacts/person-contacts.component';
+import { PersonAddressesComponent } from '@shared/components/person-addresses/person-addresses.component';
+import { PersonIdentificationDocumentsComponent } from '@shared/components/person-identification-documents/person-identification-documents.component';
 
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    PersonContactsComponent,
+    PersonAddressesComponent,
+    PersonIdentificationDocumentsComponent,
+  ],
   template: `
     <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
       <div class="mb-6">
-        <a routerLink="/users" class="text-sm text-blue-600 hover:underline">← Usuarios</a>
+        <a [routerLink]="['/applications', applicationId, 'users']" class="text-sm text-blue-600 hover:underline">← Usuarios</a>
         <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
           {{ isEdit() ? 'Editar Usuario' : 'Nuevo Usuario' }}
         </h1>
@@ -52,7 +60,8 @@ import { API } from '@shared/constants/api.constants';
                   <input
                     formControlName="alias"
                     type="text"
-                    maxlength="64"
+                    minlength="5"
+                    maxlength="12"
                     placeholder="nombre_usuario"
                     class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 dark:disabled:bg-gray-600"
                     [class.border-red-400]="form.controls.alias.invalid && form.controls.alias.touched"
@@ -64,8 +73,11 @@ import { API } from '@shared/constants/api.constants';
                   @if (form.controls.alias.invalid && form.controls.alias.touched) {
                     @if (form.controls.alias.errors?.['required']) {
                       <p class="mt-1 text-xs text-red-500">El alias es obligatorio.</p>
-                    }
-                    @if (form.controls.alias.errors?.['aliasUnavailable']) {
+                    } @else if (form.controls.alias.errors?.['minlength']) {
+                      <p class="mt-1 text-xs text-red-500">El alias debe tener entre 5 y 12 caracteres.</p>
+                    } @else if (form.controls.alias.errors?.['maxlength']) {
+                      <p class="mt-1 text-xs text-red-500">El alias debe tener entre 5 y 12 caracteres.</p>
+                    } @else if (form.controls.alias.errors?.['aliasUnavailable']) {
                       <p class="mt-1 text-xs text-red-500">Este alias ya está en uso.</p>
                     }
                   }
@@ -359,10 +371,17 @@ import { API } from '@shared/constants/api.constants';
             }
           </div>
 
+          @if (isEdit() && personId(); as pid) {
+            <!-- Sección 5: Contactos, direcciones y documentos -->
+            <app-person-contacts [personId]="pid" />
+            <app-person-addresses [personId]="pid" />
+            <app-person-identification-documents [personId]="pid" />
+          }
+
           <!-- Acciones -->
           <div class="flex justify-end gap-3">
             <a
-              routerLink="/users"
+              [routerLink]="['/applications', applicationId, 'users']"
               class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               Cancelar
@@ -389,7 +408,7 @@ export class UserFormComponent implements OnInit {
   private readonly roleService = inject(RoleService);
   private readonly toast = inject(ToastService);
 
-  private readonly appId = API.APPLICATION.ID;
+  protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
   private userId: string | null = null;
 
   protected readonly isEdit = signal(false);
@@ -399,9 +418,10 @@ export class UserFormComponent implements OnInit {
   protected readonly allRoles = signal<Role[]>([]);
   protected readonly selectedRoleIds = signal<Set<string>>(new Set());
   private readonly initialRoleIds = signal<Set<string>>(new Set());
+  protected readonly personId = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
-    alias: ['', Validators.required],
+    alias: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(12)]],
     displayName: ['', [Validators.required, Validators.maxLength(256)]],
     email: ['', [Validators.required, Validators.email]],
     password: [''],
@@ -429,17 +449,18 @@ export class UserFormComponent implements OnInit {
 
       forkJoin({
         user: this.userService.getById(this.userId),
-        roles: this.roleService.getAll(),
+        roles: this.roleService.getByApplication(this.applicationId),
       }).subscribe({
         next: ({ user, roles }) => {
           this.allRoles.set(roles);
           this.patchFromUser(user);
           this.loading.set(false);
           this.showPassword.set(false);
+          this.personId.set(user.person?.id ?? null);
         },
         error: () => {
           this.toast.error('Error al cargar el usuario');
-          this.router.navigate(['/users']);
+          this.router.navigate(['/applications', this.applicationId, 'users']);
         },
       });
     } else {
@@ -451,7 +472,7 @@ export class UserFormComponent implements OnInit {
       this.form.controls.email.updateValueAndValidity();
       this.showPassword.set(true);
 
-      this.roleService.getAll().subscribe({
+      this.roleService.getByApplication(this.applicationId).subscribe({
         next: (roles) => {
           this.allRoles.set(roles);
           this.loading.set(false);
@@ -516,7 +537,7 @@ export class UserFormComponent implements OnInit {
         notificationSms: v.notificationSms,
         privacyDataOutActive: v.privacyDataOutActive,
         roleId: v.roleId,
-        applicationId: this.appId,
+        applicationId: this.applicationId,
         person: {
           firstName: v.firstName,
           lastName: v.lastName,
@@ -540,7 +561,7 @@ export class UserFormComponent implements OnInit {
             this.toast.warning(warnings);
           }
           this.toast.success(`Usuario creado con ID: ${response.body!.id}`);
-          this.router.navigate(['/users']);
+          this.router.navigate(['/applications', this.applicationId, 'users']);
         },
         error: (err: HttpErrorResponse) => {
           const warningHeader = err.headers?.get('Warning');
@@ -579,7 +600,7 @@ export class UserFormComponent implements OnInit {
         ...(v.gender ? { gender: v.gender } : {}),
         ...(v.birthdate ? { birthdate: v.birthdate } : {}),
         ...(v.password ? { password: v.password } : {}),
-        application: this.appId,
+        application: this.applicationId,
       })
       .pipe(
         switchMap(() => {
@@ -597,7 +618,7 @@ export class UserFormComponent implements OnInit {
       .subscribe({
         next: () => {
           this.toast.success('Usuario actualizado correctamente');
-          this.router.navigate(['/users']);
+          this.router.navigate(['/applications', this.applicationId, 'users']);
         },
         error: () => {
           this.toast.error('Error al actualizar el usuario');
@@ -611,7 +632,7 @@ export class UserFormComponent implements OnInit {
       const value = control.value as string;
       if (!value || value.length < 2) return of(null);
       return timer(400).pipe(
-        switchMap(() => this.userService.checkAlias(value, this.appId)),
+        switchMap(() => this.userService.checkAlias(value, this.applicationId)),
         map(() => null),
         catchError((err: HttpErrorResponse) =>
           of(err.status === 404 ? { aliasUnavailable: true } : null)
@@ -625,7 +646,7 @@ export class UserFormComponent implements OnInit {
       const value = control.value as string;
       if (!value || !value.includes('@')) return of(null);
       return timer(400).pipe(
-        switchMap(() => this.userService.checkEmail(value, this.appId)),
+        switchMap(() => this.userService.checkEmail(value, this.applicationId)),
         map(() => null),
         catchError((err: HttpErrorResponse) =>
           of(err.status === 404 ? { emailUnavailable: true } : null)

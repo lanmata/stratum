@@ -5,4 +5,5 @@ export interface Toast {
   type: ToastType;
   message: string;
   duration: number;
+  copyValue?: string;
 }

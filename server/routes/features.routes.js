@@ -11,6 +11,9 @@ router.get('/:includeInactive', (req, res) =>
 router.get('/find/:featureId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/features/find/${req.params['featureId']}`)
 );
+router.get('/role/:roleId', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/features/role/${req.params['roleId']}`)
+);
 router.post('/', (req, res) => proxyToBackbone(req, res, '/api/v1/features/'));
 router.put('/:featureId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/features/${req.params['featureId']}`)

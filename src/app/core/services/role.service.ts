@@ -9,11 +9,11 @@ export class RoleService {
   private readonly http = inject(HttpService);
 
   getAll(): Observable<Role[]> {
-    return this.http.get<Role[]>(API.ROLES.ROOT);
+    return this.http.getList<Role>(API.ROLES.ROOT);
   }
 
   getAllWithFeatures(): Observable<Role[]> {
-    return this.http.get<Role[]>(API.ROLES.WITH_INACTIVE(true));
+    return this.http.getList<Role>(API.ROLES.WITH_INACTIVE(true));
   }
 
   getById(roleId: string): Observable<Role> {
@@ -21,7 +21,11 @@ export class RoleService {
   }
 
   getByUser(userId: string): Observable<Role[]> {
-    return this.http.get<Role[]>(API.ROLES.BY_USER(userId));
+    return this.http.getList<Role>(API.ROLES.BY_USER(userId));
+  }
+
+  getByApplication(applicationId: string): Observable<Role[]> {
+    return this.http.getList<Role>(API.ROLES.BY_APPLICATION(applicationId));
   }
 
   create(req: RoleRequest): Observable<Role> {

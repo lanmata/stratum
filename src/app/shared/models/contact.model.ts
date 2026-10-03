@@ -1,8 +1,9 @@
 export interface Contact {
   id?: string;
-  value: string;
-  contactTypeId: string;
-  personId?: string;
+  content: string;
+  contactType: ContactType;
+  personId: string;
+  active: boolean;
 }
 
 export interface ContactType {
