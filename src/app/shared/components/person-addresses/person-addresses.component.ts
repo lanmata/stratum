@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AddressService } from '@core/services/address.service';
 import { ToastService } from '@core/services/toast.service';
 import { Address } from '@shared/models/address.model';
+import { notBlankValidator, zipcodeValidator } from '@shared/utils/contact-validators';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -77,6 +78,9 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 [class.border-red-400]="submitted() && form.controls.content.invalid"
               />
+              @if (submitted() && form.controls.content.invalid) {
+                <p class="mt-1 text-xs text-red-500">La dirección es obligatoria</p>
+              }
             </div>
             <div>
               <input
@@ -85,7 +89,11 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
                 maxlength="32"
                 placeholder="Código postal"
                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                [class.border-red-400]="submitted() && form.controls.zipcode.invalid"
               />
+              @if (submitted() && form.controls.zipcode.invalid) {
+                <p class="mt-1 text-xs text-red-500">Código postal inválido</p>
+              }
             </div>
             <div class="flex justify-end gap-2 pt-1">
               <button
@@ -133,8 +141,8 @@ export class PersonAddressesComponent implements OnChanges {
   private editingId: string | null = null;
 
   protected readonly form = this.fb.nonNullable.group({
-    content: ['', [Validators.required, Validators.maxLength(256)]],
-    zipcode: ['', Validators.maxLength(32)],
+    content: ['', [Validators.required, Validators.maxLength(256), notBlankValidator]],
+    zipcode: ['', [Validators.maxLength(32), zipcodeValidator]],
   });
 
   ngOnChanges(): void {
@@ -182,8 +190,8 @@ export class PersonAddressesComponent implements OnChanges {
     const address: Address = {
       id: this.editingId ?? undefined,
       personId: this.personId(),
-      content,
-      zipcode: zipcode || undefined,
+      content: content.trim(),
+      zipcode: zipcode.trim() || undefined,
     };
 
     const call = this.editingId

@@ -4,6 +4,7 @@ import { ContactService } from '@core/services/contact.service';
 import { ContactTypeService } from '@core/services/contact-type.service';
 import { ToastService } from '@core/services/toast.service';
 import { Contact, ContactType } from '@shared/models/contact.model';
+import { contactContentValidator, notBlankValidator } from '@shared/utils/contact-validators';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -79,6 +80,14 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 [class.border-red-400]="submitted() && form.controls.content.invalid"
               />
+              @if (submitted() && form.controls.content.errors; as e) {
+                <p class="mt-1 text-xs text-red-500">
+                  @if (e['required'] || e['blank']) { El contacto es obligatorio }
+                  @else if (e['email']) { Correo electrónico inválido }
+                  @else if (e['phone']) { Número de teléfono inválido }
+                  @else { Contacto inválido }
+                </p>
+              }
             </div>
             <div>
               <select
@@ -91,6 +100,9 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
                   <option [value]="ct.id">{{ ct.name }}</option>
                 }
               </select>
+              @if (submitted() && form.controls.contactTypeId.invalid) {
+                <p class="mt-1 text-xs text-red-500">Selecciona un tipo de contacto</p>
+              }
             </div>
             <div class="flex items-center gap-2">
               <input formControlName="active" type="checkbox" id="contactActive" class="h-4 w-4 rounded border-gray-300" />
@@ -144,10 +156,29 @@ export class PersonContactsComponent implements OnChanges {
   private editingId: string | null = null;
 
   protected readonly form = this.fb.nonNullable.group({
-    content: ['', [Validators.required, Validators.maxLength(256)]],
+    content: [
+      '',
+      [
+        Validators.required,
+        Validators.maxLength(256),
+        notBlankValidator,
+        contactContentValidator(() => this.selectedTypeName()),
+      ],
+    ],
     contactTypeId: ['', Validators.required],
     active: [true],
   });
+
+  constructor() {
+    this.form.controls.contactTypeId.valueChanges.subscribe(() =>
+      this.form.controls.content.updateValueAndValidity(),
+    );
+  }
+
+  private selectedTypeName(): string | undefined {
+    const id = this.form.controls.contactTypeId.value;
+    return this.contactTypes().find((ct) => ct.id === id)?.name;
+  }
 
   ngOnChanges(): void {
     this.contactTypeService.getAll().subscribe((types) => this.contactTypes.set(types));
@@ -199,7 +230,7 @@ export class PersonContactsComponent implements OnChanges {
     const contactType = this.contactTypes().find((ct) => ct.id === contactTypeId)!;
     const contact: Contact = {
       id: this.editingId ?? undefined,
-      content,
+      content: content.trim(),
       contactType,
       personId: this.personId(),
       active,

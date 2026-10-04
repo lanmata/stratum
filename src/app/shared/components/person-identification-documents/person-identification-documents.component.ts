@@ -7,6 +7,7 @@ import {
   IDENTIFICATION_TYPE_PASSPORT,
   IDENTIFICATION_TYPE_IDENTIFICATION,
 } from '@shared/models/identification-document.model';
+import { documentNumberValidator, notBlankValidator } from '@shared/utils/contact-validators';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -92,6 +93,12 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 [class.border-red-400]="submitted() && form.controls.number.invalid"
               />
+              @if (submitted() && form.controls.number.errors; as e) {
+                <p class="mt-1 text-xs text-red-500">
+                  @if (e['required'] || e['blank']) { El número es obligatorio }
+                  @else { Número de documento inválido }
+                </p>
+              }
             </div>
             <div>
               <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">Fecha de vencimiento</label>
@@ -151,7 +158,7 @@ export class PersonIdentificationDocumentsComponent implements OnChanges {
 
   protected readonly form = this.fb.nonNullable.group({
     identificationType: [IDENTIFICATION_TYPE_IDENTIFICATION],
-    number: ['', [Validators.required, Validators.maxLength(64)]],
+    number: ['', [Validators.required, Validators.maxLength(64), notBlankValidator, documentNumberValidator]],
     expirationDate: [''],
   });
 
@@ -207,7 +214,7 @@ export class PersonIdentificationDocumentsComponent implements OnChanges {
     const { identificationType, number, expirationDate } = this.form.getRawValue();
     const document: IdentificationDocument = {
       id: this.editingId ?? undefined,
-      number,
+      number: number.trim(),
       expirationDate: expirationDate || undefined,
       identificationType,
       personId: this.personId(),
