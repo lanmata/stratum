@@ -6,7 +6,7 @@ const { proxyToBackbone } = require('../shared/proxy');
 const router = Router();
 
 router.post('/', (req, res) => proxyToBackbone(req, res, '/api/v1/service-types/'));
-router.get('/list-all', (req, res) => proxyToBackbone(req, res, '/api/v1/service-types/true'));
+router.get('/list-all', (req, res) => proxyToBackbone(req, res, '/api/v1/service-types'));
 router.get('/find/:serviceTypeId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/service-types/find/${req.params['serviceTypeId']}`)
 );

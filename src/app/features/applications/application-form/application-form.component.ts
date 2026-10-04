@@ -161,9 +161,13 @@ export class ApplicationFormComponent implements OnInit {
       if (app && app.id === this.applicationId) {
         this.populateForm(app);
       } else {
-        this.toast.error('No se encontraron los datos de la aplicación');
-        this.router.navigate(['/applications']);
-        return;
+        this.applicationService.getById(this.applicationId).subscribe({
+          next: (a) => this.populateForm(a),
+          error: () => {
+            this.toast.error('No se encontraron los datos de la aplicación');
+            this.router.navigate(['/applications']);
+          },
+        });
       }
     }
 
