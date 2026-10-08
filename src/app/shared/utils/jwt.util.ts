@@ -5,9 +5,9 @@ export function decodeUserFromToken(token: string): UserTO {
     const payload = JSON.parse(atob(token.split('.')[1]));
     return {
       id: payload.sub ?? '',
-      alias: payload.alias ?? '',
+      alias: payload.alias ?? payload.preferred_username ?? payload.username ?? '',
       email: payload.email ?? '',
-      displayName: payload.displayName ?? payload.alias ?? '',
+      displayName: payload.displayName ?? payload.name ?? payload.alias ?? payload.preferred_username ?? '',
       active: true,
       notificationEmail: false,
       notificationSms: false,
@@ -25,5 +25,14 @@ export function decodeUserFromToken(token: string): UserTO {
       notificationSms: false,
       privacyDataOutActive: false,
     };
+  }
+}
+
+export function getTokenExpiry(token: string): number | null {
+  try {
+    const exp = JSON.parse(atob(token.split('.')[1])).exp;
+    return typeof exp === 'number' ? exp * 1000 : null;
+  } catch {
+    return null;
   }
 }

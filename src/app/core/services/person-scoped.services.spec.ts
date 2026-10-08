@@ -31,19 +31,26 @@ describe('person-scoped services', () => {
       personId: 'p1',
       active: true,
     };
+    const wireContact = {
+      id: undefined,
+      content: 'a@b.com',
+      contentTypeId: 't1',
+      personId: 'p1',
+      active: true,
+    };
 
     it('creates, reads, updates and deletes through HttpService', () => {
       const svc = TestBed.inject(ContactService);
       svc.create(contact).subscribe();
-      expect(http.post).toHaveBeenCalledWith(`${API.CONTACTS.ROOT}/`, contact);
+      expect(http.post).toHaveBeenCalledWith(`${API.CONTACTS.ROOT}/`, wireContact);
       svc.getById('c1').subscribe();
       expect(http.get).toHaveBeenCalledWith(API.CONTACTS.BY_ID('c1'));
       svc.getAll().subscribe();
-      expect(http.get).toHaveBeenCalledWith(API.CONTACTS.LIST);
+      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.LIST);
       svc.getByPerson('p1').subscribe();
       expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_PERSON('p1'));
       svc.update('c1', contact).subscribe();
-      expect(http.put).toHaveBeenCalledWith(API.CONTACTS.BY_ID('c1'), contact);
+      expect(http.put).toHaveBeenCalledWith(API.CONTACTS.BY_ID('c1'), wireContact);
       svc.delete('c1').subscribe();
       expect(http.delete).toHaveBeenCalledWith(API.CONTACTS.BY_ID('c1'));
     });

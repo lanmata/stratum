@@ -27,6 +27,8 @@ Este documento describe **lo que existe hoy**, no un plan a futuro.
 | 06 | [Aplicaciones](./06-aplicaciones.md) | CRUD completo (list/create/edit/detail), hub de pestañas | ✅ Implementado |
 | 07 | [Clientes Gestionados (M2M)](./07-clientes-gestionados.md) | Scoped a aplicación, OAuth2 client-credentials | ✅ Implementado |
 | 08 | [Dashboard](./08-dashboard.md) | Navegación a los módulos reales | ✅ Implementado |
+| 09 | [Guía técnica — Docker](./09-guia-tecnica-docker.md) | Dockerfile, docker-compose, HTTPS en 443 (`stratum.umdc-qa.tst`) | ✅ Documentado |
+| 10 | [Guía de usuario — Docker](./10-guia-usuario-docker.md) | Arranque y operación con Docker | ✅ Documentado |
 | — | **Personas** | CRUD completo + contactos/direcciones/documentos de identificación (scoped a persona) | ✅ Implementado |
 | — | **Tipos de Aviso** | Catálogo global, CRUD completo (clon de Tipos de Contacto) | ✅ Implementado |
 | — | **Avisos** | Pestaña "Avisos" en Application Detail — registro/revocación de acuses de aviso por usuario | ✅ Implementado |

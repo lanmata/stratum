@@ -19,15 +19,14 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
     PersonIdentificationDocumentsComponent,
   ],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
-      <div class="mb-6">
-        <a routerLink="/people" class="text-sm text-blue-600 hover:underline">← Personas</a>
-        <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
+    <div class="mx-auto flex w-full max-w-lg flex-col gap-6">
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
           {{ isEditMode() ? 'Editar Persona' : 'Nueva Persona' }}
         </h1>
       </div>
 
-      <div class="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <div class="w-full rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         @if (loadingData()) {
           <p class="text-sm text-gray-500 dark:text-gray-400">Cargando…</p>
         } @else {
@@ -117,7 +116,7 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
       </div>
 
       @if (isEditMode() && personId) {
-        <div class="mx-auto mt-4 max-w-lg space-y-4">
+        <div class="flex flex-col gap-6">
           <app-person-contacts [personId]="personId" />
           <app-person-addresses [personId]="personId" />
           <app-person-identification-documents [personId]="personId" />

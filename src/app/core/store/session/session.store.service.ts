@@ -5,6 +5,7 @@ import { UserTO } from '@shared/models/user.model';
 import { clearSession, refreshSession, saveSession } from './session.actions';
 import {
   selectIsAuthenticated,
+  selectRefreshToken,
   selectToken,
   selectUser,
   selectUserRoles,
@@ -16,6 +17,7 @@ export class SessionStoreService {
   private readonly store = inject(Store);
 
   readonly token$: Observable<string | null> = this.store.select(selectToken);
+  readonly refreshToken$: Observable<string | null> = this.store.select(selectRefreshToken);
   readonly user$: Observable<UserTO | null> = this.store.select(selectUser);
   readonly isAuthenticated$: Observable<boolean> = this.store.select(selectIsAuthenticated);
   readonly userRoles$: Observable<Role[]> = this.store.select(selectUserRoles);

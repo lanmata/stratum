@@ -27,7 +27,8 @@ npm run serve:ssr          # start Express BFF on :4000 (serves built app)
 npm run dev                # watch + serve concurrently (dev)
 npm run start              # Angular dev server only on :4200 (no BFF)
 npm test                   # unit tests (Karma, interactive)
-npm run test:headless      # unit tests (ChromeHeadlessNoSandbox, CI-friendly)
+npm run test:headless      # unit tests + coverage (ChromeHeadlessNoSandbox, CI-friendly, fails under 85 %)
+npm run test:server        # BFF tests (node:test, fake backbone, fails under 85 %)
 ```
 
 ## Environment Variables (BFF)
@@ -60,13 +61,15 @@ src/app/
 │   ├── services/        http · auth · user · role · person · contact · feature · audit · loading · storage-mock
 │   └── store/session/   actions · reducer · selectors · effects · store.service
 ├── features/
-│   ├── auth/            login/ · register/ (lazy-loaded via authRoutes)
+│   ├── auth/            login/ (alias or email) (lazy-loaded via authRoutes)
 │   ├── dashboard/
 │   ├── users/           users-list/ (lazy-loaded)
 │   ├── roles/
 │   ├── people/
 │   ├── contacts/
-│   ├── features-mgmt/
+│   ├── features-mgmt/   features-list/ (read-only; features are edited from the role form)
+│   ├── iam/             token introspection · permission check
+│   ├── reports/         Word template → placeholders → document
 │   ├── audit/
 │   └── forbidden/
 └── shared/
@@ -82,6 +85,8 @@ server/
 ### Key patterns
 
 **NgRx session store** — `SessionStoreService` (`core/store/session/session.store.service.ts`) is the only facade for session state. Guards and components inject it instead of the raw store. Effects persist/clear tokens to `StorageMockService` on `saveSession`/`clearSession` actions.
+
+**Session keep-alive** — `SessionKeepAliveService` (started from `App`) validates the stored session at startup and refreshes it before expiry (`/session/refresh`, falling back to `/session/renew`); if both fail it logs out.
 
 **HttpService** — thin wrapper around `HttpClient` (`core/services/http.service.ts`). Prefixes all paths with `environment.apiBaseUrl`. GET requests automatically retry once. All feature services must use this instead of `HttpClient` directly.
 

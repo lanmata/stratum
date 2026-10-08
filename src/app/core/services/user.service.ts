@@ -3,7 +3,13 @@ import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HttpService } from './http.service';
 import { API } from '@shared/constants/api.constants';
-import { UserTO, UserCreateRequest, UserCreateResponse, PutUserUpdateRequest } from '@shared/models/user.model';
+import {
+  UserTO,
+  UserAliasTO,
+  UserCreateRequest,
+  UserCreateResponse,
+  PutUserUpdateRequest,
+} from '@shared/models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -23,6 +29,10 @@ export class UserService {
 
   getByAlias(alias: string, applicationId: string): Observable<UserTO> {
     return this.http.get<UserTO>(API.USERS.BY_ALIAS(alias, applicationId));
+  }
+
+  findAliasRecord(alias: string, applicationId: string): Observable<UserAliasTO> {
+    return this.http.get<UserAliasTO>(API.USERS.ALIAS_RECORD(alias, applicationId));
   }
 
   checkAlias(alias: string, applicationId: string): Observable<void> {
