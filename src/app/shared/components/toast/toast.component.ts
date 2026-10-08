@@ -10,7 +10,7 @@ import { Toast } from '@shared/models/toast.model';
     <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
       @for (toast of toastService.toasts(); track toast.id) {
         <div
-          class="flex min-w-64 max-w-sm items-start gap-3 rounded-lg px-4 py-3 text-white shadow-lg"
+          class="animate-toast-in flex min-w-64 max-w-sm items-start gap-3 rounded-xl px-4 py-3 text-white shadow-lg ring-1 ring-black/5"
           [class]="bgClass(toast)"
         >
           <span class="flex-1 text-sm">{{ toast.message }}</span>

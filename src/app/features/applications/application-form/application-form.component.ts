@@ -6,6 +6,7 @@ import { ApplicationEditState } from '@core/services/application-edit.state';
 import { ServiceTypeService } from '@core/services/service-type.service';
 import { StorageMockService } from '@core/services/storage-mock.service';
 import { ToastService } from '@core/services/toast.service';
+import { ApplicationProfileImageComponent } from '@shared/components/application-profile-image/application-profile-image.component';
 import { Application } from '@shared/models/application.model';
 import { ServiceType } from '@shared/models/service-type.model';
 import { environment } from '@env/environment';
@@ -20,13 +21,10 @@ function formatLocalDate(d: Date): string {
 @Component({
   selector: 'app-application-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, ApplicationProfileImageComponent],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6">
-        <a routerLink="/applications" class="text-sm text-blue-600 hover:underline">
-          ← Aplicaciones
-        </a>
         <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
           {{ isEditMode() ? 'Editar Aplicación' : 'Nueva Aplicación' }}
         </h1>
@@ -125,6 +123,12 @@ function formatLocalDate(d: Date): string {
 
         </form>
       </div>
+
+      @if (isEditMode() && applicationId) {
+        <div class="mx-auto mt-6 max-w-lg">
+          <app-application-profile-image [applicationId]="applicationId" />
+        </div>
+      }
     </div>
   `,
 })
@@ -143,7 +147,7 @@ export class ApplicationFormComponent implements OnInit {
   protected readonly serviceTypes = signal<ServiceType[]>([]);
   protected readonly loadingServiceTypes = signal(true);
 
-  private applicationId: string | null = null;
+  protected applicationId: string | null = null;
   private originalCreatedDate: string | null = null;
 
   protected readonly form = this.fb.nonNullable.group({

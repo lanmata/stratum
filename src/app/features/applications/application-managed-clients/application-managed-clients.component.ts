@@ -6,11 +6,12 @@ import { ManagedClientService } from '@core/services/managed-client.service';
 import { ToastService } from '@core/services/toast.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ManagedClientTO } from '@shared/models/managed-client.model';
+import { ManagedClientTokenToolsComponent } from './managed-client-token-tools.component';
 
 @Component({
   selector: 'app-application-managed-clients',
   standalone: true,
-  imports: [ReactiveFormsModule, SlicePipe, ConfirmDialogComponent],
+  imports: [ReactiveFormsModule, SlicePipe, ConfirmDialogComponent, ManagedClientTokenToolsComponent],
   template: `
     <div class="p-6">
 
@@ -255,6 +256,10 @@ import { ManagedClientTO } from '@shared/models/managed-client.model';
             }
           </div>
         }
+      }
+
+      @if (!loading()) {
+        <app-managed-client-token-tools [clients]="clients()" />
       }
     </div>
 

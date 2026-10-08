@@ -7,10 +7,12 @@ export const usersRoutes: Routes = [
   },
   {
     path: 'new',
+    data: { breadcrumb: 'Nuevo usuario' },
     loadComponent: () => import('./user-form/user-form.component').then((m) => m.UserFormComponent),
   },
   {
     path: ':userId/edit',
+    data: { breadcrumb: 'Editar' },
     loadComponent: () => import('./user-form/user-form.component').then((m) => m.UserFormComponent),
   },
 ];

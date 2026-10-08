@@ -10,6 +10,7 @@ export const noticeTypesRoutes: Routes = [
   },
   {
     path: 'new',
+    data: { breadcrumb: 'Nuevo tipo' },
     loadComponent: () =>
       import('./notice-type-form/notice-type-form.component').then(
         (m) => m.NoticeTypeFormComponent,
@@ -17,6 +18,7 @@ export const noticeTypesRoutes: Routes = [
   },
   {
     path: ':noticeTypeId/edit',
+    data: { breadcrumb: 'Editar' },
     loadComponent: () =>
       import('./notice-type-form/notice-type-form.component').then(
         (m) => m.NoticeTypeFormComponent,

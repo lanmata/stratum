@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { HttpService } from './http.service';
 import { API } from '@shared/constants/api.constants';
 import { Role, RoleRequest } from '@shared/models/role.model';
@@ -12,8 +12,13 @@ export class RoleService {
     return this.http.getList<Role>(API.ROLES.ROOT);
   }
 
-  getAllWithFeatures(): Observable<Role[]> {
-    return this.http.getList<Role>(API.ROLES.WITH_INACTIVE(true));
+  getByStatus(includeInactive: boolean): Observable<Role[]> {
+    return this.http.getList<Role>(API.ROLES.WITH_INACTIVE(includeInactive));
+  }
+
+  getByStatusAndIds(includeInactive: boolean, roleIds: string[]): Observable<Role[]> {
+    if (roleIds.length === 0) return of([]);
+    return this.http.getList<Role>(API.ROLES.BY_STATUS_AND_IDS(includeInactive, roleIds));
   }
 
   getById(roleId: string): Observable<Role> {

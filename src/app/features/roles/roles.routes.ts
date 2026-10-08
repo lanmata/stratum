@@ -8,11 +8,13 @@ export const rolesRoutes: Routes = [
   },
   {
     path: 'new',
+    data: { breadcrumb: 'Nuevo rol' },
     loadComponent: () =>
       import('./role-form/role-form.component').then((m) => m.RoleFormComponent),
   },
   {
     path: ':roleId/edit',
+    data: { breadcrumb: 'Editar' },
     loadComponent: () =>
       import('./role-form/role-form.component').then((m) => m.RoleFormComponent),
   },

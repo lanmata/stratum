@@ -10,6 +10,7 @@ export const serviceTypesRoutes: Routes = [
   },
   {
     path: 'new',
+    data: { breadcrumb: 'Nuevo tipo' },
     loadComponent: () =>
       import('./service-type-form/service-type-form.component').then(
         (m) => m.ServiceTypeFormComponent,
@@ -17,6 +18,7 @@ export const serviceTypesRoutes: Routes = [
   },
   {
     path: ':serviceTypeId/edit',
+    data: { breadcrumb: 'Editar' },
     loadComponent: () =>
       import('./service-type-form/service-type-form.component').then(
         (m) => m.ServiceTypeFormComponent,

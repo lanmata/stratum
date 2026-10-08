@@ -58,6 +58,9 @@ export interface PutUserUpdateRequest {
 }
 
 export interface UserAliasTO {
+  userId: string;
   alias: string;
-  applicationId: string;
+  firstname?: string | null;
+  lastname?: string | null;
+  roles?: string[];
 }

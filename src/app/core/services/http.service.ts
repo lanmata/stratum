@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpErrorResponse, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
+import { SILENT_ERRORS } from '@core/interceptors/http-context';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { environment } from '@env/environment';
@@ -27,6 +28,10 @@ export class HttpService {
 
   private headers(): HttpHeaders {
     return new HttpHeaders({ 'Content-Type': 'application/json', Accept: 'application/json' });
+  }
+
+  private binaryHeaders(): HttpHeaders {
+    return new HttpHeaders({ Accept: '*/*' });
   }
 
   get<T>(path: string, params?: QueryParams): Observable<T> {
@@ -68,6 +73,27 @@ export class HttpService {
 
   delete<T>(path: string): Observable<T> {
     return this.http.delete<T>(`${this.base}${path}`, { headers: this.headers() });
+  }
+
+  getBlob(path: string, silent = false): Observable<Blob> {
+    return this.http.get(`${this.base}${path}`, {
+      headers: this.binaryHeaders(),
+      responseType: 'blob',
+      context: new HttpContext().set(SILENT_ERRORS, silent),
+    });
+  }
+
+  postForm<T>(path: string, form: FormData): Observable<T> {
+    return this.http.post<T>(`${this.base}${path}`, form, {
+      headers: new HttpHeaders({ Accept: 'application/json' }),
+    });
+  }
+
+  postFormForBlob(path: string, form: FormData): Observable<Blob> {
+    return this.http.post(`${this.base}${path}`, form, {
+      headers: this.binaryHeaders(),
+      responseType: 'blob',
+    });
   }
 
   patch<T>(path: string, body: unknown): Observable<T> {

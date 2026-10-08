@@ -1,19 +1,20 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ContactTypeService } from '@core/services/contact-type.service';
 import { ToastService } from '@core/services/toast.service';
 import { ContactType } from '@shared/models/contact.model';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { parseIds } from '@shared/utils/ids.util';
 
 @Component({
   selector: 'app-contact-types-list',
   standalone: true,
-  imports: [RouterLink, ConfirmDialogComponent],
+  imports: [RouterLink, FormsModule, ConfirmDialogComponent],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Tipos de Contacto</h1>
         </div>
         <a
@@ -23,6 +24,24 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
           Nuevo Tipo de Contacto
         </a>
       </div>
+
+      <form class="mb-4 flex flex-wrap gap-2" (ngSubmit)="searchByIds()">
+        <input
+          type="text"
+          name="ids"
+          [ngModel]="idsInput()"
+          (ngModelChange)="idsInput.set($event)"
+          placeholder="Filtrar por IDs (separados por coma)…"
+          aria-label="Filtrar por IDs"
+          class="w-80 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+        />
+        <button
+          type="submit"
+          class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+        >
+          Buscar por IDs
+        </button>
+      </form>
 
       @if (loading()) {
         <p class="text-sm text-gray-500 dark:text-gray-400">Cargando…</p>
@@ -109,6 +128,7 @@ export class ContactTypesListComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly showConfirm = signal(false);
   private readonly pendingId = signal<string | null>(null);
+  protected readonly idsInput = signal('');
 
   ngOnInit(): void {
     this.load();
@@ -129,6 +149,25 @@ export class ContactTypesListComponent implements OnInit {
         this.load();
       },
       error: () => this.toast.error('Error al eliminar el tipo de contacto'),
+    });
+  }
+
+  protected searchByIds(): void {
+    const ids = parseIds(this.idsInput());
+    if (ids.length === 0) {
+      this.load();
+      return;
+    }
+    this.loading.set(true);
+    this.service.getByIds(ids).subscribe({
+      next: (data) => {
+        this.contactTypes.set(data);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Error al buscar los tipos de contacto');
+        this.loading.set(false);
+      },
     });
   }
 

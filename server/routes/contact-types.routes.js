@@ -7,6 +7,9 @@ const router = Router();
 
 router.post('/', (req, res) => proxyToBackbone(req, res, '/api/v1/contact-types/'));
 router.get('/list-all', (req, res) => proxyToBackbone(req, res, '/api/v1/contact-types/list-all'));
+router.get('/list/:contactTypeIds', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/contact-types/list/${req.params['contactTypeIds']}`)
+);
 router.get('/:contactTypeId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/contact-types/${req.params['contactTypeId']}`)
 );

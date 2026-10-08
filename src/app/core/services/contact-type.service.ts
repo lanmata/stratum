@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { HttpService } from './http.service';
 import { API } from '@shared/constants/api.constants';
 import { ContactType, ContactTypeRequest } from '@shared/models/contact.model';
@@ -10,6 +10,11 @@ export class ContactTypeService {
 
   getAll(): Observable<ContactType[]> {
     return this.http.get<ContactType[]>(API.CONTACT_TYPES.LIST_ALL);
+  }
+
+  getByIds(ids: string[]): Observable<ContactType[]> {
+    if (ids.length === 0) return of([]);
+    return this.http.getList<ContactType>(API.CONTACT_TYPES.BY_IDS(ids));
   }
 
   getById(id: string): Observable<ContactType> {

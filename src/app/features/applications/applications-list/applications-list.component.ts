@@ -7,6 +7,7 @@ import { ApplicationDirectoryService } from '@core/services/application-director
 import { ToastService } from '@core/services/toast.service';
 import { Application } from '@shared/models/application.model';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { parseIds } from '@shared/utils/ids.util';
 import { environment } from '@env/environment';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -21,10 +22,9 @@ function formatLocalDate(d: Date): string {
   standalone: true,
   imports: [RouterLink, FormsModule, ConfirmDialogComponent],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Aplicaciones</h1>
         </div>
         <a
@@ -53,6 +53,24 @@ function formatLocalDate(d: Date): string {
           <option value="active">Activas</option>
           <option value="inactive">Inactivas</option>
         </select>
+
+        <form class="flex gap-2" (ngSubmit)="searchByIds()">
+          <input
+            type="text"
+            name="ids"
+            [ngModel]="idsInput()"
+            (ngModelChange)="idsInput.set($event)"
+            placeholder="Filtrar por IDs (separados por coma)…"
+            aria-label="Filtrar por IDs"
+            class="w-72 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+          />
+          <button
+            type="submit"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            Buscar por IDs
+          </button>
+        </form>
 
         <select
           [ngModel]="pageSize()"
@@ -130,6 +148,16 @@ function formatLocalDate(d: Date): string {
                           </svg>
                         </button>
                       }
+                      <button
+                        type="button"
+                        title="Eliminar"
+                        (click)="deleteTarget.set(app)"
+                        class="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -176,6 +204,17 @@ function formatLocalDate(d: Date): string {
         (cancelled)="showConfirm.set(false)"
       />
     }
+
+    @if (deleteTarget(); as target) {
+      <app-confirm-dialog
+        title="Eliminar aplicación"
+        [message]="'¿Eliminar la aplicación &quot;' + target.name + '&quot;? Esta acción no se puede deshacer.'"
+        confirmLabel="Eliminar"
+        confirmStyle="danger"
+        (confirmed)="onDeleteConfirmed()"
+        (cancelled)="deleteTarget.set(null)"
+      />
+    }
   `,
 })
 export class ApplicationsListComponent implements OnInit {
@@ -189,6 +228,8 @@ export class ApplicationsListComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly showConfirm = signal(false);
   private readonly pendingApp = signal<Application | null>(null);
+  protected readonly deleteTarget = signal<Application | null>(null);
+  protected readonly idsInput = signal('');
 
   protected readonly searchName = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
@@ -258,6 +299,40 @@ export class ApplicationsListComponent implements OnInit {
         },
         error: () => this.toast.error('Error al desactivar la aplicación'),
       });
+  }
+
+  protected onDeleteConfirmed(): void {
+    const app = this.deleteTarget();
+    if (!app) return;
+    this.deleteTarget.set(null);
+    this.applicationService.delete(app.id).subscribe({
+      next: () => {
+        this.allApplications.update((list) => list.filter((a) => a.id !== app.id));
+        this.directory.setAll(this.allApplications());
+        this.toast.success(`Aplicación "${app.name}" eliminada`);
+      },
+      error: () => this.toast.error('Error al eliminar la aplicación'),
+    });
+  }
+
+  protected searchByIds(): void {
+    const ids = parseIds(this.idsInput());
+    if (ids.length === 0) {
+      this.load();
+      return;
+    }
+    this.loading.set(true);
+    this.applicationService.getByIds(ids).subscribe({
+      next: (apps) => {
+        this.allApplications.set(apps);
+        this.currentPage.set(1);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.toast.error('Error al buscar las aplicaciones');
+      },
+    });
   }
 
   private load(): void {

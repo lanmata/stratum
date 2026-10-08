@@ -41,3 +41,28 @@ export interface ManagedClientSecretRotateResponse {
   gracePeriodSeconds?: number;
   rotatedAt?: string;
 }
+
+export interface ManagedClientTokenRequest {
+  clientId: string;
+  clientSecret: string;
+  scopes: string[];
+}
+
+export interface ManagedClientTokenResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  scopes: string[];
+  issuedAt?: string;
+}
+
+export interface ManagedClientTokenIntrospectResponse {
+  active: boolean;
+  clientId?: string;
+  clientName?: string;
+  scopes?: string[];
+  issuer?: string;
+  exp?: number;
+  iat?: number;
+  jti?: string;
+}
