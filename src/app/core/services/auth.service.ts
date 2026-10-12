@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap, map, catchError, of, throwError } from 'rxjs';
+import { Observable, tap, map, catchError, of, switchMap, take, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpService } from './http.service';
 import { SessionStoreService } from '@core/store/session/session.store.service';
@@ -64,7 +64,18 @@ export class AuthService {
     );
   }
 
+  /**
+   * Ends the session on the server too: backbone-rest revokes the session token (attached by the interceptor while it
+   * is still stored) and the refresh token. Best effort: the local session is cleared whatever the server answers.
+   */
   logout(): void {
+    this.store.refreshToken$
+      .pipe(
+        take(1),
+        switchMap((refreshToken) => this.http.post<void>(API.SESSION.LOGOUT, refreshToken ? { refreshToken } : {})),
+        catchError(() => of(undefined))
+      )
+      .subscribe();
     this.store.clear();
     this.router.navigate(['/auth/login']);
   }

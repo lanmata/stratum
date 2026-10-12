@@ -8,6 +8,7 @@ export const API = {
     VALIDATE: '/v1/session/validate',
     RENEW: '/v1/session/renew',
     REFRESH: '/v1/session/refresh',
+    LOGOUT: '/v1/session/logout',
   },
   USERS: {
     ROOT: '/v1/users',

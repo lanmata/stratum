@@ -18,7 +18,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     http = createHttpSpy();
-    store = jasmine.createSpyObj('SessionStoreService', ['save', 'refresh', 'clear']);
+    store = jasmine.createSpyObj('SessionStoreService', ['save', 'refresh', 'clear'], { refreshToken$: of('refresh-1') });
     router = jasmine.createSpyObj('Router', ['navigate']);
     TestBed.configureTestingModule({
       providers: [
@@ -155,7 +155,24 @@ describe('AuthService', () => {
     });
   });
 
-  it('logout clears the session and goes to the login page', () => {
+  it('logout revokes the session on the server, then clears it and goes to the login page', () => {
+    http.post.and.returnValue(of(undefined) as never);
+    auth.logout();
+    expect(http.post).toHaveBeenCalledWith(API.SESSION.LOGOUT, { refreshToken: 'refresh-1' });
+    expect(http.post).toHaveBeenCalledBefore(store.clear);
+    expect(store.clear).toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/auth/login']);
+  });
+
+  it('logout without a refresh token still revokes the session token', () => {
+    (Object.getOwnPropertyDescriptor(store, 'refreshToken$')!.get as jasmine.Spy).and.returnValue(of(null));
+    http.post.and.returnValue(of(undefined) as never);
+    auth.logout();
+    expect(http.post).toHaveBeenCalledWith(API.SESSION.LOGOUT, {});
+  });
+
+  it('logout clears the local session even when the server cannot be reached', () => {
+    http.post.and.returnValue(throwError(() => new Error('502')) as never);
     auth.logout();
     expect(store.clear).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login']);

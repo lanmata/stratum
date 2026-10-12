@@ -7,13 +7,13 @@ const { BACKBONE_BASE_URL, SESSION_HEADER, AUTHORIZATION } = require('../config/
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-function buildHeaders(req, url, { sessionHeader = false, ...extra } = {}) {
+function buildHeaders(req, url, { sessionHeader = false, bearer = true, ...extra } = {}) {
   const sessionToken = req.headers[SESSION_HEADER];
   const { host } = new URL(url);
   return {
     Accept: 'application/json',
     host,
-    ...(sessionToken ? { [AUTHORIZATION]: `Bearer ${sessionToken}` } : {}),
+    ...(sessionToken && bearer ? { [AUTHORIZATION]: `Bearer ${sessionToken}` } : {}),
     ...(sessionToken && sessionHeader ? { [SESSION_HEADER]: sessionToken } : {}),
     ...extra,
   };
@@ -34,17 +34,20 @@ function sendBinary(res, response) {
  * @param {string} backendPath  Path relative to backbone-rest base (e.g. '/api/v1/users')
  * @param {object} [overrides]  Axios config overrides. `responseType: 'arraybuffer'` streams the
  *                              upstream body back untouched (used for images / documents);
- *                              `sessionHeader: true` also forwards the raw session-token header.
+ *                              `sessionHeader: true` also forwards the raw session-token header;
+ *                              `bearer: false` does not turn the session token into `Authorization: Bearer`
+ *                              (backbone's public session endpoints: its filter answers 401 to an expired
+ *                              Bearer before the endpoint runs, and that header is the application client's).
  */
 async function proxyToBackbone(req, res, backendPath, overrides = {}) {
   const url = `${BACKBONE_BASE_URL}${backendPath}`;
-  const { sessionHeader, ...axiosOverrides } = overrides;
+  const { sessionHeader, bearer, ...axiosOverrides } = overrides;
 
   try {
     const response = await axios({
       method: req.method,
       url,
-      headers: buildHeaders(req, url, { 'Content-Type': 'application/json', sessionHeader }),
+      headers: buildHeaders(req, url, { 'Content-Type': 'application/json', sessionHeader, bearer }),
       params: req.query,
       data: ['POST', 'PUT', 'PATCH'].includes(req.method) ? req.body : undefined,
       validateStatus: () => true,

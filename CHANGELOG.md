@@ -1,6 +1,10 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- **Logout now ends the session on the server.** `AuthService.logout()` calls `POST /v1/session/logout` (new BFF route → backbone-rest `POST /api/v1/session/logout`) with the session token and the refresh token before clearing local state; until now a "logged out" token stayed valid until it expired. Local state is cleared whatever the server answers.
+- **Session routes send the token the way backbone-rest reads it.** `validate`, `renew` and `logout` forward it in `session-token`; `token`, the alias login and `refresh` forward no session token at all. None of them gets `Authorization: Bearer <session token>` any more: backbone's filter answers `401` to an expired Bearer before a public endpoint runs, so a refresh after the access token expired could never succeed, and `validate` received `Bearer <token>` where a raw token was expected.
+
 ### Added
 - Session: automatic renewal (`refresh` with `renew` fallback) shortly before the token expires, token validation at startup, and email login next to alias login. Refreshed tokens are now persisted so the interceptor never sends a stale one.
 - Applications: delete (with confirmation), filter by IDs, profile image upload and reference.

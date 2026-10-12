@@ -93,7 +93,8 @@ describe('BFF routes proxy to the matching backbone-rest path', () => {
         assert.equal(seen.method, method);
         const trim = (v) => (v.length > 1 ? v.replace(/\/$/, '') : v);
         assert.equal(trim(seen.path), trim(expected));
-        assert.equal(seen.headers['authorization'], 'Bearer tok-123');
+        // the public session endpoints get the token in session-token (or not at all), never as a Bearer: session.test.js
+        assert.equal(seen.headers['authorization'], name === 'session' ? undefined : 'Bearer tok-123');
         if (['POST', 'PUT', 'PATCH'].includes(method)) {
           assert.deepEqual(JSON.parse(seen.body.toString()), { a: 1 });
         }
