@@ -372,7 +372,7 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
 
           @if (isEdit() && personId(); as pid) {
             <!-- Sección 5: Contactos, direcciones y documentos -->
-            <app-person-contacts [personId]="pid" />
+            <app-person-contacts [personId]="pid" [applicationId]="applicationId" />
             <app-person-addresses [personId]="pid" />
             <app-person-identification-documents [personId]="pid" />
           }

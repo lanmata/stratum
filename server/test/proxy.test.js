@@ -4,8 +4,8 @@ const { before, after, beforeEach, describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const express = require('express');
 const multer = require('multer');
-const http = require('node:http');
-const { startFakeBackbone } = require('./helpers');
+const https = require('node:https');
+const { startFakeBackbone, tlsOptions } = require('./helpers');
 
 describe('proxy', () => {
   let backbone;
@@ -21,6 +21,7 @@ describe('proxy', () => {
 
     const upload = multer({ storage: multer.memoryStorage() });
     const app = express();
+    app.disable('x-powered-by');
     app.use(express.json());
     app.all('/json', (req, res) => proxy.proxyToBackbone(req, res, '/json'));
     app.get('/binary', (req, res) =>
@@ -39,9 +40,9 @@ describe('proxy', () => {
     app.post('/multi-none', upload.none(), (req, res) =>
       proxy.proxyMultipart(req, res, '/multi-none')
     );
-    server = http.createServer(app);
+    server = https.createServer(tlsOptions, app);
     await new Promise((r) => server.listen(0, '127.0.0.1', r));
-    base = `http://127.0.0.1:${server.address().port}`;
+    base = `https://127.0.0.1:${server.address().port}`;
   });
 
   after(async () => {
@@ -104,10 +105,11 @@ describe('proxy', () => {
     delete require.cache[require.resolve('../shared/proxy')];
     const isolated = require('../shared/proxy');
     const app = express();
+    app.disable('x-powered-by');
     app.get('/x', (req, res) => isolated.proxyToBackbone(req, res, '/x'));
-    const srv = http.createServer(app);
+    const srv = https.createServer(tlsOptions, app);
     await new Promise((r) => srv.listen(0, '127.0.0.1', r));
-    const res = await fetch(`http://127.0.0.1:${srv.address().port}/x`);
+    const res = await fetch(`https://127.0.0.1:${srv.address().port}/x`);
     assert.equal(res.status, 502);
     assert.deepEqual(await res.json(), { error: 'Backend unavailable' });
     await new Promise((r) => srv.close(r));

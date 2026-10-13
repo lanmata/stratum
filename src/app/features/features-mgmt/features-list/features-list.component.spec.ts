@@ -1,98 +1,174 @@
-import { TestBed } from '@angular/core/testing';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { Dom } from '@app/testing/dom';
 import { FeatureService } from '@core/services/feature.service';
-import { RoleService } from '@core/services/role.service';
 import { ToastService } from '@core/services/toast.service';
-import { Feature } from '@shared/models/feature.model';
+import { FeatureRoleLink, FeatureSummary } from '@shared/models/feature.model';
+import { Page } from '@shared/models/page.model';
 import { FeaturesListComponent } from './features-list.component';
 
-const features: Feature[] = [
-  { id: 'feature-0001-aaaa', name: 'Crear usuarios', description: 'Alta', active: true },
-  { id: 'feature-0002-bbbb', name: 'Borrar usuarios', active: false },
-  ...Array.from({ length: 10 }, (_, i) => ({ id: `feature-x${i}-cccc`, name: `Extra ${i}`, active: true })),
+function page<T>(content: T[], opts: Partial<Page<T>> = {}): Page<T> {
+  return {
+    content,
+    page: 0,
+    size: 10,
+    totalElements: content.length,
+    totalPages: 1,
+    ...opts,
+  };
+}
+
+const summaries: FeatureSummary[] = [
+  { id: 'f1', name: 'USER_READ', description: 'Leer usuarios', active: true },
+  { id: 'f2', name: 'USER_WRITE', active: false },
+];
+
+const links: FeatureRoleLink[] = [
+  { roleId: 'r1', roleName: 'Admin', roleActive: true, applicationId: 'a1', applicationName: 'Comercios' },
+  { roleId: 'r2', roleName: 'Soporte', roleActive: false, applicationId: 'a2', applicationName: 'Ventas' },
 ];
 
 describe('FeaturesListComponent', () => {
   let service: jasmine.SpyObj<FeatureService>;
-  let roles: jasmine.SpyObj<RoleService>;
   let toast: jasmine.SpyObj<ToastService>;
 
-  async function create(list: unknown = of(features), roleList: unknown = of([{ id: 'r1', name: 'Admin', active: true }])) {
-    service = jasmine.createSpyObj('FeatureService', ['getAll', 'getByRole', 'getByStatusAndIds']);
-    roles = jasmine.createSpyObj('RoleService', ['getAll']);
+  function create() {
+    service = jasmine.createSpyObj('FeatureService', ['search', 'getRoles']);
     toast = jasmine.createSpyObj('ToastService', ['error']);
-    service.getAll.and.returnValue(list as never);
-    service.getByRole.and.returnValue(of(features.slice(0, 2)));
-    service.getByStatusAndIds.and.returnValue(of([features[0]]));
-    roles.getAll.and.returnValue(roleList as never);
+    service.search.and.returnValue(of(page(summaries)));
+    service.getRoles.and.returnValue(of(page(links)));
     TestBed.configureTestingModule({
       providers: [
+        provideRouter([]),
         { provide: FeatureService, useValue: service },
-        { provide: RoleService, useValue: roles },
         { provide: ToastService, useValue: toast },
       ],
     });
     const fixture = TestBed.createComponent(FeaturesListComponent);
     fixture.detectChanges();
-    const dom = new Dom(fixture);
-    await dom.stable();
-    return dom;
+    return new Dom(fixture);
   }
 
-  it('lists features including inactive ones, paginated', async () => {
-    const dom = await create();
-    expect(service.getAll).toHaveBeenCalledWith(true);
-    expect(dom.qa('tbody tr').length).toBe(10);
-    expect(dom.text).toContain('Crear usuarios');
-    expect(dom.text).toContain('Inactiva');
-    expect(dom.text).toContain('12 features');
-    dom.clickByText('button', 'Siguiente');
-    expect(dom.text).toContain('Página 2 de 2');
-    dom.clickByText('button', 'Anterior');
-    expect(dom.text).toContain('Página 1 de 2');
+  function search(dom: Dom<FeaturesListComponent>, text: string) {
+    dom.type('input[aria-label="Buscar funcionalidad"]', text);
+    tick(300);
+    dom.fixture.detectChanges();
+  }
+
+  it('does not load the catalog until something is searched', () => {
+    const dom = create();
+    expect(service.search).not.toHaveBeenCalled();
+    expect(dom.text).toContain('Escribe al menos 2 caracteres');
+    expect(dom.qa('tbody tr').length).toBe(0);
   });
 
-  it('filters by name client-side', async () => {
-    const dom = await create();
-    dom.type('input[aria-label="Buscar por nombre"]', 'borrar');
-    expect(dom.qa('tbody tr').length).toBe(1);
-  });
+  it('ignores queries shorter than two characters', fakeAsync(() => {
+    const dom = create();
+    search(dom, 'u');
+    expect(service.search).not.toHaveBeenCalled();
+    expect(dom.text).toContain('Escribe al menos 2 caracteres');
+  }));
 
-  it('reloads only active features when inactive ones are excluded', async () => {
-    const dom = await create();
-    dom.check('input[type=checkbox]', false);
-    expect(service.getAll).toHaveBeenCalledWith(false);
-  });
-
-  it('filters by role, hiding inactive features when excluded', async () => {
-    const dom = await create();
-    dom.type('select[aria-label="Filtrar por rol"]', 'r1');
-    expect(service.getByRole).toHaveBeenCalledWith('r1');
+  it('searches server-side once the user stops typing, one page at a time', fakeAsync(() => {
+    const dom = create();
+    dom.type('input[aria-label="Buscar funcionalidad"]', 'us');
+    dom.type('input[aria-label="Buscar funcionalidad"]', 'user');
+    expect(service.search).not.toHaveBeenCalled();
+    tick(300);
+    dom.fixture.detectChanges();
+    expect(service.search).toHaveBeenCalledTimes(1);
+    expect(service.search).toHaveBeenCalledWith({ q: 'user', active: undefined, page: 0, size: 10 });
     expect(dom.qa('tbody tr').length).toBe(2);
+    expect(dom.text).toContain('USER_READ');
+    expect(dom.text).toContain('Inactiva');
+    expect(dom.text).toContain('2 funcionalidades');
+  }));
 
-    dom.check('input[type=checkbox]', false);
-    expect(dom.qa('tbody tr').length).toBe(1);
-    expect(dom.text).not.toContain('Borrar usuarios');
-  });
+  it('filters by status and paginates the results', fakeAsync(() => {
+    const dom = create();
+    service.search.and.returnValue(of(page(summaries, { totalElements: 25, totalPages: 3 })));
+    search(dom, 'user');
+    dom.type('select[aria-label="Filtrar por estado"]', 'true');
+    expect(service.search).toHaveBeenCalledWith({ q: 'user', active: true, page: 0, size: 10 });
 
-  it('filters by ids, taking precedence over the role', async () => {
-    const dom = await create();
-    dom.type('select[aria-label="Filtrar por rol"]', 'r1');
-    dom.type('input[aria-label="Filtrar por IDs"]', 'a, b');
-    dom.submit();
-    expect(service.getByStatusAndIds).toHaveBeenCalledWith(true, ['a', 'b']);
-    expect(dom.qa('tbody tr').length).toBe(1);
-  });
+    dom.clickByText('button', 'Siguiente');
+    expect(service.search).toHaveBeenCalledWith({ q: 'user', active: true, page: 1, size: 10 });
 
-  it('shows the empty state and tolerates a failing role list', async () => {
-    const dom = await create(of([]), throwError(() => new Error('x')));
-    expect(dom.text).toContain('No se encontraron features');
-  });
+    service.search.and.returnValue(of(page(summaries, { page: 2, totalElements: 25, totalPages: 3 })));
+    dom.clickByText('button', 'Siguiente');
+    expect(dom.text).toContain('Página 3 de 3');
+    const calls = service.search.calls.count();
+    dom.clickByText('button', 'Siguiente');
+    expect(service.search.calls.count()).toBe(calls);
+  }));
 
-  it('reports load errors', async () => {
-    const dom = await create(throwError(() => new Error('x')));
-    expect(toast.error).toHaveBeenCalledWith('Error al cargar las features');
+  it('clears the results when the query becomes too short', fakeAsync(() => {
+    const dom = create();
+    search(dom, 'user');
+    dom.clickByText('button', 'Ver roles');
+    search(dom, 'u');
+    expect(dom.qa('tbody tr').length).toBe(0);
+    expect(dom.q('section[aria-label="Roles vinculados"]')).toBeNull();
+    expect(dom.text).toContain('Escribe al menos 2 caracteres');
+  }));
+
+  it('shows the roles, and applications, a feature is linked to, and closes the panel', fakeAsync(() => {
+    const dom = create();
+    search(dom, 'user');
+    dom.clickByText('button', 'Ver roles');
+    expect(service.getRoles).toHaveBeenCalledWith('f1', 0, 10);
+    expect(dom.text).toContain('Roles que usan «USER_READ»');
+    expect(dom.text).toContain('Admin');
+    expect(dom.text).toContain('Comercios');
+    expect(dom.text).toContain('Inactivo');
+    const link = dom.q<HTMLAnchorElement>('section a')!;
+    expect(link.getAttribute('href')).toBe('/applications/a1/roles/r1/edit');
+
+    dom.clickByText('button', 'Cerrar');
+    expect(dom.q('section[aria-label="Roles vinculados"]')).toBeNull();
+  }));
+
+  it('paginates the roles of a feature', fakeAsync(() => {
+    const dom = create();
+    service.getRoles.and.returnValue(of(page(links, { totalElements: 12, totalPages: 2 })));
+    search(dom, 'user');
+    dom.clickByText('button', 'Ver roles');
+    service.getRoles.and.returnValue(of(page(links, { page: 1, totalElements: 12, totalPages: 2 })));
+    dom.clickByText('section button', 'Siguiente');
+    expect(service.getRoles).toHaveBeenCalledWith('f1', 1, 10);
+    expect(dom.text).toContain('Página 2 de 2');
+    const calls = service.getRoles.calls.count();
+    dom.clickByText('section button', 'Siguiente');
+    expect(service.getRoles.calls.count()).toBe(calls);
+  }));
+
+  it('explains when a feature is not linked to any role', fakeAsync(() => {
+    const dom = create();
+    service.getRoles.and.returnValue(of(page([])));
+    search(dom, 'user');
+    dom.clickByText('button', 'Ver roles');
+    expect(dom.text).toContain('no está vinculada a ningún rol');
+  }));
+
+  it('shows the empty state', fakeAsync(() => {
+    const dom = create();
+    service.search.and.returnValue(of(page([])));
+    search(dom, 'zzz');
+    expect(dom.text).toContain('No se encontraron funcionalidades');
+  }));
+
+  it('reports search and role-loading errors', fakeAsync(() => {
+    const dom = create();
+    service.search.and.returnValue(throwError(() => new Error('x')));
+    search(dom, 'user');
+    expect(toast.error).toHaveBeenCalledWith('Error al buscar las funcionalidades');
     expect(dom.text).not.toContain('Cargando');
-  });
+
+    service.search.and.returnValue(of(page(summaries)));
+    search(dom, 'users');
+    service.getRoles.and.returnValue(throwError(() => new Error('x')));
+    dom.clickByText('button', 'Ver roles');
+    expect(toast.error).toHaveBeenCalledWith('Error al cargar los roles de la funcionalidad');
+  }));
 });

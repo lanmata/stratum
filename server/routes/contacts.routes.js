@@ -5,10 +5,16 @@ const { proxyToBackbone } = require('../shared/proxy');
 
 const router = Router();
 
+// Contacts are never listed across applications: GET / is the per-application directory
+// (backbone answers 400 without applicationId) and the other listings are scoped to a subject.
+router.get('/', (req, res) => proxyToBackbone(req, res, '/api/v1/contacts/'));
 router.post('/', (req, res) => proxyToBackbone(req, res, '/api/v1/contacts/'));
-router.get('/list-all', (req, res) => proxyToBackbone(req, res, '/api/v1/contacts/list-all'));
-router.get('/list/:contactIds', (req, res) =>
-  proxyToBackbone(req, res, `/api/v1/contacts/list/${req.params['contactIds']}`)
+router.get('/owner/:ownerType/:ownerId', (req, res) =>
+  proxyToBackbone(
+    req,
+    res,
+    `/api/v1/contacts/owner/${req.params['ownerType']}/${req.params['ownerId']}`
+  )
 );
 router.get('/person/:personId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/contacts/person/${req.params['personId']}`)

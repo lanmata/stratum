@@ -30,11 +30,6 @@ export const routes: Routes = [
         loadChildren: () => import('./features/people/people.routes').then((m) => m.peopleRoutes),
       },
       {
-        path: 'contacts',
-        data: { breadcrumb: 'Contactos' },
-        loadChildren: () => import('./features/contacts/contacts.routes').then((m) => m.contactsRoutes),
-      },
-      {
         path: 'features',
         data: { breadcrumb: 'Features' },
         loadChildren: () =>

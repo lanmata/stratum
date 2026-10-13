@@ -6,9 +6,10 @@
       <script value="dev" />
     </scripts>
     <node-interpreter value="project" />
+    <package-manager value="pnpm" />
     <envs>
       <env name="BACKBONE_BASE_URL" value="https://api.umdc-qa.tst/backbone" />
-      <env name="PORT" value="4200" />
+      <env name="PORT" value="4000" />
     </envs>
     <method v="2" />
   </configuration>

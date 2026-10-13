@@ -4,7 +4,6 @@ import { applicationsRoutes } from '@app/features/applications/applications.rout
 import { auditRoutes } from '@app/features/audit/audit.routes';
 import { authRoutes } from '@app/features/auth/auth.routes';
 import { contactTypesRoutes } from '@app/features/contact-types/contact-types.routes';
-import { contactsRoutes } from '@app/features/contacts/contacts.routes';
 import { featuresMgmtRoutes } from '@app/features/features-mgmt/features-mgmt.routes';
 import { iamRoutes } from '@app/features/iam/iam.routes';
 import { noticeTypesRoutes } from '@app/features/notice-types/notice-types.routes';
@@ -39,7 +38,6 @@ describe('route configuration', () => {
       '/forbidden',
       '/dashboard',
       '/people',
-      '/contacts',
       '/features',
       '/iam',
       '/reports',
@@ -50,11 +48,17 @@ describe('route configuration', () => {
       '/notice-types',
       '/applications/:applicationId/users',
       '/applications/:applicationId/roles',
+      '/applications/:applicationId/contacts',
       '/applications/:applicationId/managed-clients',
       '/applications/:applicationId/notices',
     ]) {
       expect(found).toContain(expected);
     }
+  });
+
+  it('no longer exposes a global contacts directory', async () => {
+    const found = await resolveAll(routes);
+    expect(found).not.toContain('/contacts');
   });
 
   it('resolves each feature route table on its own', async () => {
@@ -63,7 +67,6 @@ describe('route configuration', () => {
       auditRoutes,
       authRoutes,
       contactTypesRoutes,
-      contactsRoutes,
       featuresMgmtRoutes,
       iamRoutes,
       noticeTypesRoutes,

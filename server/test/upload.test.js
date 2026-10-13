@@ -3,9 +3,10 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const express = require('express');
-const http = require('node:http');
+const https = require('node:https');
 const multer = require('multer');
 const { handleUpload, MAX_FILE_BYTES } = require('../shared/upload');
+const { tlsOptions } = require('./helpers');
 
 describe('handleUpload', () => {
   let server;
@@ -26,9 +27,9 @@ describe('handleUpload', () => {
       ),
       (req, res) => res.json({ size: req.file?.size ?? 0 })
     );
-    server = http.createServer(app);
+    server = https.createServer(tlsOptions, app);
     await new Promise((r) => server.listen(0, '127.0.0.1', r));
-    base = `http://127.0.0.1:${server.address().port}`;
+    base = `https://127.0.0.1:${server.address().port}`;
   });
 
   after(() => new Promise((r) => server.close(r)));

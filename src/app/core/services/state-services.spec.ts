@@ -71,7 +71,11 @@ describe('StorageMockService', () => {
 });
 
 describe('ThemeService', () => {
-  beforeEach(() => localStorage.clear());
+  // Other specs (the shell's theme toggle) can leave `dark` on <html>: start from a clean document.
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.classList.remove('dark');
+  });
 
   afterEach(() => {
     localStorage.clear();

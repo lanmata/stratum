@@ -36,6 +36,9 @@ describe('person-scoped services', () => {
       content: 'a@b.com',
       contentTypeId: 't1',
       personId: 'p1',
+      applicationId: undefined,
+      ownerType: undefined,
+      ownerId: undefined,
       active: true,
     };
 
@@ -45,16 +48,79 @@ describe('person-scoped services', () => {
       expect(http.post).toHaveBeenCalledWith(`${API.CONTACTS.ROOT}/`, wireContact);
       svc.getById('c1').subscribe();
       expect(http.get).toHaveBeenCalledWith(API.CONTACTS.BY_ID('c1'));
-      svc.getAll().subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.LIST);
       svc.getByPerson('p1').subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_PERSON('p1'));
+      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_PERSON('p1'), {
+        applicationId: undefined,
+      });
       svc.update('c1', contact).subscribe();
       expect(http.put).toHaveBeenCalledWith(API.CONTACTS.BY_ID('c1'), wireContact);
       svc.delete('c1').subscribe();
       expect(http.delete).toHaveBeenCalledWith(API.CONTACTS.BY_ID('c1'));
     });
+    it('limits a person\'s contacts to one application when asked', () => {
+      TestBed.inject(ContactService).getByPerson('p1', 'a1').subscribe();
+      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_PERSON('p1'), {
+        applicationId: 'a1',
+      });
+    });
+
+    it('sends the application and external owner of a contact in the wire request', () => {
+      const merchant: Contact = {
+        content: 'shop@a.com',
+        contactType: { id: 't1', name: 'Email', active: true },
+        applicationId: 'a1',
+        ownerType: 'MERCHANT',
+        ownerId: 'm1',
+        active: true,
+      };
+      TestBed.inject(ContactService).create(merchant).subscribe();
+      expect(http.post).toHaveBeenCalledWith(`${API.CONTACTS.ROOT}/`, {
+        id: undefined,
+        content: 'shop@a.com',
+        contentTypeId: 't1',
+        personId: undefined,
+        applicationId: 'a1',
+        ownerType: 'MERCHANT',
+        ownerId: 'm1',
+        active: true,
+      });
+    });
+
+    it('lists an external owner\'s contacts, optionally within one application', () => {
+      const svc = TestBed.inject(ContactService);
+      svc.getByOwner('MERCHANT', 'm1').subscribe();
+      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_OWNER('MERCHANT', 'm1'), {
+        applicationId: undefined,
+      });
+      svc.getByOwner('MERCHANT', 'm1', 'a1').subscribe();
+      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_OWNER('MERCHANT', 'm1'), {
+        applicationId: 'a1',
+      });
+    });
+
+    it('searches the directory of ONE application, one server-side page at a time', () => {
+      const svc = TestBed.inject(ContactService);
+      svc.search({ applicationId: 'a1', contactTypeId: 't1', active: false, q: ' ana ', page: 2, size: 10 }).subscribe();
+      expect(http.get).toHaveBeenCalledWith(API.CONTACTS.SEARCH, {
+        applicationId: 'a1',
+        contactTypeId: 't1',
+        active: false,
+        q: 'ana',
+        page: 2,
+        size: 10,
+      });
+      svc.search({ applicationId: 'a1', contactTypeId: '', q: '  ' }).subscribe();
+      expect(http.get).toHaveBeenCalledWith(API.CONTACTS.SEARCH, {
+        applicationId: 'a1',
+        contactTypeId: undefined,
+        active: undefined,
+        q: undefined,
+        page: 0,
+        size: 20,
+      });
+    });
   });
+
 
   describe('AddressService', () => {
     it('creates, reads, updates and deletes through HttpService', () => {

@@ -3,7 +3,6 @@ import { API } from '@shared/constants/api.constants';
 import { createHttpSpy, HttpSpy, provideHttpSpy } from '@app/testing/http-spy';
 import { ApplicationService } from './application.service';
 import { AuditService } from './audit.service';
-import { ContactService } from './contact.service';
 import { ContactTypeService } from './contact-type.service';
 import { FeatureService } from './feature.service';
 import { IamService } from './iam.service';
@@ -68,23 +67,6 @@ describe('feature services', () => {
     });
   });
 
-  describe('ContactService', () => {
-    it('resolves contacts by ids and lists all as a list', () => {
-      const svc = TestBed.inject(ContactService);
-      svc.getByIds(['a', 'b']).subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_IDS(['a', 'b']));
-      svc.getAll().subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.LIST);
-    });
-
-    it('short-circuits an empty id list', () => {
-      let result: unknown;
-      TestBed.inject(ContactService).getByIds([]).subscribe((r) => (result = r));
-      expect(result).toEqual([]);
-      expect(http.getList).not.toHaveBeenCalled();
-    });
-  });
-
   describe('ContactTypeService', () => {
     it('maps every operation', () => {
       const svc = TestBed.inject(ContactTypeService);
@@ -114,26 +96,44 @@ describe('feature services', () => {
     it('maps every operation', () => {
       const svc = TestBed.inject(FeatureService);
       const req = { feature: { name: 'f', active: true } };
-      svc.getAll().subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.FEATURES.WITH_INACTIVE(false));
-      svc.getAll(true).subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.FEATURES.WITH_INACTIVE(true));
       svc.getById('1').subscribe();
       expect(http.get).toHaveBeenCalledWith(API.FEATURES.BY_ID('1'));
       svc.getByRole('r').subscribe();
       expect(http.getList).toHaveBeenCalledWith(API.FEATURES.BY_ROLE('r'));
-      svc.getByStatusAndIds(true, ['a']).subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.FEATURES.BY_STATUS_AND_IDS(true, ['a']));
       svc.create(req).subscribe();
       expect(http.post).toHaveBeenCalledWith(API.FEATURES.ROOT, req);
       svc.update('1', req).subscribe();
       expect(http.put).toHaveBeenCalledWith(API.FEATURES.UPDATE('1'), req);
     });
 
-    it('short-circuits an empty id list', () => {
-      let result: unknown;
-      TestBed.inject(FeatureService).getByStatusAndIds(true, []).subscribe((r) => (result = r));
-      expect(result).toEqual([]);
+    it('searches the catalog one server-side page at a time, trimming the query', () => {
+      const svc = TestBed.inject(FeatureService);
+      svc.search({ q: '  read ', active: true, page: 2, size: 5 }).subscribe();
+      expect(http.get).toHaveBeenCalledWith(API.FEATURES.SEARCH, {
+        q: 'read',
+        active: true,
+        page: 2,
+        size: 5,
+      });
+    });
+
+    it('defaults to the first page of 20 and drops a blank query', () => {
+      const svc = TestBed.inject(FeatureService);
+      svc.search().subscribe();
+      expect(http.get).toHaveBeenCalledWith(API.FEATURES.SEARCH, {
+        q: undefined,
+        active: undefined,
+        page: 0,
+        size: 20,
+      });
+    });
+
+    it('pages the roles a feature is linked to', () => {
+      const svc = TestBed.inject(FeatureService);
+      svc.getRoles('f1').subscribe();
+      expect(http.get).toHaveBeenCalledWith(API.FEATURES.ROLES('f1'), { page: 0, size: 20 });
+      svc.getRoles('f1', 3, 10).subscribe();
+      expect(http.get).toHaveBeenCalledWith(API.FEATURES.ROLES('f1'), { page: 3, size: 10 });
     });
   });
 

@@ -58,7 +58,7 @@ Agregar al array `navItems` (o equivalente en el template):
 | 1 | Usuarios | `/users` |
 | 2 | Roles | `/roles` |
 | 3 | Personas | `/people` |
-| 4 | Contactos | `/contacts` |
+| 4 | ~~Contactos~~ | ~~`/contacts`~~ — eliminado: los contactos se ven por aplicación (`/applications/:id/contacts`), ver [11](./11-contactos-y-features-segmentados.md) |
 | 5 | Features | `/features-mgmt` |
 | 6 | Auditoría | `/audit` |
 

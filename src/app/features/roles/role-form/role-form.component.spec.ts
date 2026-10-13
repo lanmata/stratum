@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { Dom } from '@app/testing/dom';
@@ -19,6 +19,11 @@ const role: Role = {
   ],
 };
 
+const catalog = [
+  { id: 'cf1', name: 'USER_READ', description: 'Leer usuarios', active: true },
+  { id: 'cf2', name: 'USER_WRITE', active: true },
+];
+
 describe('RoleFormComponent', () => {
   let roles: jasmine.SpyObj<RoleService>;
   let features: jasmine.SpyObj<FeatureService>;
@@ -27,7 +32,8 @@ describe('RoleFormComponent', () => {
 
   function create(roleId: string | null) {
     roles = jasmine.createSpyObj('RoleService', ['getById', 'create', 'update']);
-    features = jasmine.createSpyObj('FeatureService', ['create', 'update']);
+    features = jasmine.createSpyObj('FeatureService', ['create', 'update', 'search']);
+    features.search.and.returnValue(of({ content: catalog, page: 0, size: 5, totalElements: 2, totalPages: 1 }));
     toast = jasmine.createSpyObj('ToastService', ['success', 'error']);
     roles.getById.and.returnValue(of(role));
     roles.create.and.returnValue(of(role));
@@ -228,5 +234,107 @@ describe('RoleFormComponent', () => {
     expect(dom).toBeNull();
     expect(toast.error).toHaveBeenCalledWith('Error al cargar el rol');
     expect(router.navigate).toHaveBeenCalledWith(['/applications', 'a1', 'roles']);
+  });
+
+  describe('linking existing features', () => {
+    const picker = 'input[aria-label="Buscar funcionalidad existente"]';
+
+    function searchFor(dom: Dom<RoleFormComponent>, text: string) {
+      dom.type(picker, text);
+      tick(300);
+      dom.fixture.detectChanges();
+    }
+
+    it('does not offer the picker when editing a role', () => {
+      const dom = create('r1');
+      expect(dom.q(picker)).toBeNull();
+    });
+
+    it('never loads the catalog until at least two characters are typed', fakeAsync(() => {
+      const dom = create(null);
+      expect(features.search).not.toHaveBeenCalled();
+      expect(dom.text).toContain('El catálogo no se muestra completo');
+      searchFor(dom, 'u');
+      expect(features.search).not.toHaveBeenCalled();
+    }));
+
+    it('searches the catalog page by page, active features only', fakeAsync(() => {
+      const dom = create(null);
+      searchFor(dom, 'user');
+      expect(features.search).toHaveBeenCalledWith({ q: 'user', active: true, page: 0, size: 5 });
+      expect(dom.text).toContain('USER_READ');
+      expect(dom.text).toContain('Leer usuarios');
+    }));
+
+    it('paginates the picker results', fakeAsync(() => {
+      const dom = create(null);
+      features.search.and.returnValue(of({ content: catalog, page: 0, size: 5, totalElements: 12, totalPages: 3 }));
+      searchFor(dom, 'user');
+      expect(dom.text).toContain('Página 1 de 3');
+      features.search.and.returnValue(of({ content: catalog, page: 1, size: 5, totalElements: 12, totalPages: 3 }));
+      dom.clickByText('button', 'Siguiente');
+      expect(features.search).toHaveBeenCalledWith({ q: 'user', active: true, page: 1, size: 5 });
+      expect(dom.text).toContain('Página 2 de 3');
+      const calls = features.search.calls.count();
+      const picker = dom.fixture.componentInstance as unknown as { pickerGoTo(page: number): void };
+      picker.pickerGoTo(-1);
+      picker.pickerGoTo(3);
+      expect(features.search.calls.count()).toBe(calls);
+    }));
+
+    it('shows an empty result and reports search errors', fakeAsync(() => {
+      const dom = create(null);
+      features.search.and.returnValue(of({ content: [], page: 0, size: 5, totalElements: 0, totalPages: 0 }));
+      searchFor(dom, 'zzz');
+      expect(dom.text).toContain('Sin resultados');
+      features.search.and.returnValue(throwError(() => new Error('x')));
+      searchFor(dom, 'zzzz');
+      expect(toast.error).toHaveBeenCalledWith('Error al buscar funcionalidades');
+    }));
+
+    it('replaces the blank placeholder with the linked feature and sends its id on create', fakeAsync(() => {
+      const dom = create(null);
+      dom.type('input[formControlName=name]', 'Editor');
+      searchFor(dom, 'user');
+      dom.clickByText('button', 'Vincular');
+      expect(dom.qa('input[placeholder="Nombre *"]').length).toBe(0);
+      expect(dom.text).toContain('Vinculada');
+      expect(dom.text).toContain('USER_READ');
+      expect(dom.qa('button').filter((b) => b.textContent!.trim() === 'Vinculada').length).toBe(1);
+
+      dom.clickByText('button', 'Crear rol');
+      const req = roles.create.calls.mostRecent().args[0];
+      expect(req.role.features).toEqual([
+        { id: 'cf1', name: 'USER_READ', description: 'Leer usuarios', active: true },
+      ]);
+    }));
+
+    it('mixes linked and brand new features, and never links the same feature twice', fakeAsync(() => {
+      const dom = create(null);
+      dom.type('input[formControlName=name]', 'Editor');
+      dom.type(featureName(dom, 0), 'Nueva');
+      searchFor(dom, 'user');
+      dom.clickByText('button', 'Vincular');
+      (dom.fixture.componentInstance as unknown as { linkFeature(f: unknown): void }).linkFeature(catalog[0]);
+      expect(dom.qa('button[role=switch]').length).toBe(2);
+
+      dom.clickByText('button', 'Crear rol');
+      const req = roles.create.calls.mostRecent().args[0];
+      expect(req.role.features).toEqual([
+        { name: 'Nueva', description: undefined, active: true },
+        { id: 'cf1', name: 'USER_READ', description: 'Leer usuarios', active: true },
+      ]);
+    }));
+
+    it('removes a linked feature instead of deactivating it', fakeAsync(() => {
+      const dom = create(null);
+      searchFor(dom, 'user');
+      dom.clickByText('button', 'Vincular');
+      dom.clickByText('button', 'Agregar funcionalidad');
+      expect(dom.qa('button[title=Eliminar]').length).toBe(2);
+      dom.click(dom.qa('button[title=Eliminar]')[0]);
+      expect(dom.text).not.toContain('Vinculada');
+      expect(dom.qa('input[placeholder="Nombre *"]').length).toBe(1);
+    }));
   });
 });

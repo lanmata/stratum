@@ -23,9 +23,10 @@ describe('nav items', () => {
     expect(NAV_ITEMS[0]).toBe(DASHBOARD_ITEM);
     expect(NAV_ITEMS.length).toBe(1 + NAV_GROUPS.reduce((n, g) => n + g.items.length, 0));
     const paths = NAV_ITEMS.map((i) => i.path);
-    for (const p of ['/applications', '/people', '/contacts', '/features', '/audit', '/iam', '/reports']) {
+    for (const p of ['/applications', '/people', '/features', '/audit', '/iam', '/reports']) {
       expect(paths).toContain(p);
     }
+    expect(paths).not.toContain('/contacts');
     expect(new Set(paths).size).toBe(paths.length);
     expect(QUICK_ACTIONS.every((a) => a.path.endsWith('/new'))).toBeTrue();
   });

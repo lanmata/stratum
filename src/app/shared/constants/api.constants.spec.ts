@@ -22,17 +22,18 @@ describe('API constants', () => {
     expect(API.ROLES.BY_APPLICATION('a')).toBe('/v1/roles/application/a');
     expect(API.ROLES.BY_STATUS_AND_IDS(false, ['a', 'b'])).toBe('/v1/roles/false/a,b');
     expect(API.ROLES.UPDATE('r')).toBe('/v1/roles/r');
-    expect(API.FEATURES.WITH_INACTIVE(false)).toBe('/v1/features/false');
+    expect(API.FEATURES.SEARCH).toBe('/v1/features/');
+    expect(API.FEATURES.ROLES('f')).toBe('/v1/features/f/roles');
     expect(API.FEATURES.BY_ID('f')).toBe('/v1/features/find/f');
     expect(API.FEATURES.BY_ROLE('r')).toBe('/v1/features/role/r');
-    expect(API.FEATURES.BY_STATUS_AND_IDS(true, ['x'])).toBe('/v1/features/true/x');
     expect(API.FEATURES.UPDATE('f')).toBe('/v1/features/f');
   });
 
   it('builds contact, people and catalogue paths', () => {
     expect(API.CONTACTS.BY_ID('c')).toBe('/v1/contacts/c');
     expect(API.CONTACTS.BY_PERSON('p')).toBe('/v1/contacts/person/p');
-    expect(API.CONTACTS.BY_IDS(['a', 'b'])).toBe('/v1/contacts/list/a,b');
+    expect(API.CONTACTS.SEARCH).toBe('/v1/contacts/');
+    expect(API.CONTACTS.BY_OWNER('MERCHANT', 'm')).toBe('/v1/contacts/owner/MERCHANT/m');
     expect(API.PEOPLE.BY_ID('p')).toBe('/v1/people/p');
     expect(API.CONTACT_TYPES.BY_ID('t')).toBe('/v1/contact-types/t');
     expect(API.CONTACT_TYPES.BY_IDS(['a'])).toBe('/v1/contact-types/list/a');

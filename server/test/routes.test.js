@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { startFakeBackbone, startApp } = require('./helpers');
 
 const FAKE_PORT = 18943;
-process.env.BACKBONE_BASE_URL = `http://127.0.0.1:${FAKE_PORT}`;
+process.env.BACKBONE_BASE_URL = `https://127.0.0.1:${FAKE_PORT}`;
 
 const MOUNTS = [
   ['/api/v1/session', 'session'],
@@ -110,8 +110,8 @@ describe('BFF routes proxy to the matching backbone-rest path', () => {
       'DELETE /api/v1/applications/:applicationId',
       'GET /api/v1/users/alias/:alias/application/:applicationId',
       'GET /api/v1/roles/:includeInactive/:roleIds',
-      'GET /api/v1/features/:includeInactive/:featureIds',
-      'GET /api/v1/contacts/list/:contactIds',
+      'GET /api/v1/features/:featureId/roles',
+      'GET /api/v1/contacts/owner/:ownerType/:ownerId',
       'GET /api/v1/contact-types/list/:contactTypeIds',
       'GET /api/v1/service-types/:active',
       'POST /api/v1/managed-clients/token',
@@ -125,6 +125,56 @@ describe('BFF routes proxy to the matching backbone-rest path', () => {
     ]) {
       assert.ok(all.includes(expected), `missing route ${expected}`);
     }
+  });
+
+  it('no longer exposes the unbounded contact and feature listings', () => {
+    const all = routers.flatMap(([prefix, router]) =>
+      listRoutes(router).map(({ method, path }) => `${method} ${prefix}${path === '/' ? '' : path}`)
+    );
+    for (const removed of [
+      'GET /api/v1/contacts/list-all',
+      'GET /api/v1/contacts/list/:contactIds',
+      'GET /api/v1/features/:includeInactive',
+      'GET /api/v1/features/:includeInactive/:featureIds',
+    ]) {
+      assert.ok(!all.includes(removed), `${removed} must not be exposed`);
+    }
+  });
+
+  it('forwards the application scope, filters and pagination of the contact directory', async () => {
+    backbone.requests.length = 0;
+    const query = 'applicationId=a1&contactTypeId=t1&active=true&q=ana&page=2&size=20';
+    const res = await fetch(`${bff.url}/api/v1/contacts?${query}`, {
+      headers: { 'session-token': 'tok-123' },
+    });
+    assert.equal(res.status, 200);
+    const seen = backbone.requests.at(-1);
+    assert.equal(seen.path.replace(/\/$/, ''), '/api/v1/contacts');
+    assert.deepEqual(Object.fromEntries(new URLSearchParams(seen.url.split('?')[1])), {
+      applicationId: 'a1',
+      contactTypeId: 't1',
+      active: 'true',
+      q: 'ana',
+      page: '2',
+      size: '20',
+    });
+  });
+
+  it('forwards the search and pagination of the feature catalog and of a feature roles', async () => {
+    backbone.requests.length = 0;
+    await fetch(`${bff.url}/api/v1/features?q=read&active=true&page=1&size=10`, {
+      headers: { 'session-token': 'tok-123' },
+    });
+    const search = backbone.requests.at(-1);
+    assert.equal(search.path.replace(/\/$/, ''), '/api/v1/features');
+    assert.equal(new URLSearchParams(search.url.split('?')[1]).get('q'), 'read');
+
+    await fetch(`${bff.url}/api/v1/features/f1/roles?page=1&size=10`, {
+      headers: { 'session-token': 'tok-123' },
+    });
+    const roles = backbone.requests.at(-1);
+    assert.equal(roles.path, '/api/v1/features/f1/roles');
+    assert.equal(new URLSearchParams(roles.url.split('?')[1]).get('page'), '1');
   });
 
   it('does not let the generic two-segment role route shadow /roles/find/:id', async () => {

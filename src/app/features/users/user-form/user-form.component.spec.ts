@@ -1,6 +1,7 @@
 import { HttpErrorResponse, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Component, input } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { Dom } from '@app/testing/dom';
@@ -14,9 +15,13 @@ import { Role } from '@shared/models/role.model';
 import { UserTO } from '@shared/models/user.model';
 import { UserFormComponent } from './user-form.component';
 
+// Generated per run: no password literal is committed and nothing depends on a Node-only env var.
+const TEST_PASSWORD = `Pw-${crypto.randomUUID()}`;
+
 @Component({ selector: 'app-person-contacts', standalone: true, template: 'contacts' })
 class FakeContacts {
   personId = input<string>();
+  applicationId = input<string>();
 }
 @Component({ selector: 'app-person-addresses', standalone: true, template: 'addresses' })
 class FakeAddresses {
@@ -92,7 +97,7 @@ describe('UserFormComponent', () => {
     dom.type('input[formControlName=alias]', 'newuser');
     dom.type('input[formControlName=displayName]', 'Nuevo Usuario');
     dom.type('input[formControlName=email]', 'n@x.com');
-    dom.type('input[formControlName=password]', 'password1');
+    dom.type('input[formControlName=password]', TEST_PASSWORD);
     dom.type('input[formControlName=firstName]', 'Nuevo');
     dom.type('input[formControlName=lastName]', 'Usuario');
     dom.type('select[formControlName=roleId]', 'r1');
@@ -124,7 +129,7 @@ describe('UserFormComponent', () => {
           alias: 'newuser',
           displayName: 'Nuevo Usuario',
           email: 'n@x.com',
-          password: 'password1',
+          password: TEST_PASSWORD,
           roleId: 'r1',
           applicationId: 'a1',
           active: true,
@@ -269,6 +274,7 @@ describe('UserFormComponent', () => {
       expect(dom.q('input[formControlName=email]')).toBeNull();
       expect(dom.q<HTMLInputElement>('input[formControlName=firstName]')!.value).toBe('Ana');
       expect(dom.q('app-person-contacts')).not.toBeNull();
+      expect(dom.fixture.debugElement.query(By.directive(FakeContacts)).componentInstance.applicationId()).toBe('a1');
       expect(dom.q('app-person-addresses')).not.toBeNull();
       expect(dom.q('app-person-identification-documents')).not.toBeNull();
       expect(dom.qa<HTMLInputElement>('input[type=checkbox]').map((c) => c.checked)).toEqual([true, false]);

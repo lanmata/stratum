@@ -29,6 +29,7 @@ Este documento describe **lo que existe hoy**, no un plan a futuro.
 | 08 | [Dashboard](./08-dashboard.md) | Navegación a los módulos reales | ✅ Implementado |
 | 09 | [Guía técnica — Docker](./09-guia-tecnica-docker.md) | Dockerfile, docker-compose, HTTPS en 443 (`stratum.umdc-qa.tst`) | ✅ Documentado |
 | 10 | [Guía de usuario — Docker](./10-guia-usuario-docker.md) | Arranque y operación con Docker | ✅ Documentado |
+| 11 | [Contactos y Features segmentados](./11-contactos-y-features-segmentados.md) | Contactos por titular y aplicación (paginados en el servidor), features como búsqueda + roles vinculados — guía técnica y de usuario | ✅ Implementado |
 | — | **Personas** | CRUD completo + contactos/direcciones/documentos de identificación (scoped a persona) | ✅ Implementado |
 | — | **Tipos de Aviso** | Catálogo global, CRUD completo (clon de Tipos de Contacto) | ✅ Implementado |
 | — | **Avisos** | Pestaña "Avisos" en Application Detail — registro/revocación de acuses de aviso por usuario | ✅ Implementado |
@@ -44,7 +45,8 @@ Stratum (Angular 22 + Express BFF)
 ├── /applications                      → lista + crear + detalle
 │   └── /applications/:id              → hub con pestañas:
 │       ├── /users                     → usuarios de esta aplicación
-│       ├── /roles                     → roles de esta aplicación (features embebidas)
+│       ├── /roles                     → roles de esta aplicación (features embebidas; vincular features existentes al crear)
+│       ├── /contacts                  → contactos de esta aplicación (paginados en el servidor)
 │       ├── /managed-clients           → clientes M2M OAuth2 de esta aplicación
 │       └── /notices                   → avisos reconocidos por usuarios de esta aplicación
 ├── /people                            → personas (catálogo global)
@@ -53,6 +55,7 @@ Stratum (Angular 22 + Express BFF)
 │       ├── Direcciones                → scoped a personId
 │       └── Documentos de identificación → scoped a personId
 ├── /contact-types                     → catálogo global
+├── /features                          → búsqueda de features + roles (y aplicaciones) que las usan
 ├── /service-types                     → catálogo global
 ├── /notice-types                      → catálogo global
 └── /audit                             → lista de eventos de auditoría

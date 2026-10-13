@@ -739,9 +739,47 @@ paths:
         "404":
           description: "Feature not found"
 
+  /api/v1/features/{featureId}/roles:
+    get:
+      tags: ["features"]
+      operationId: "listFeatureRoles"
+      summary: "Roles (and owning applications) a feature is linked to"
+      parameters:
+        - name: "featureId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "page"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            minimum: 0
+            default: 0
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: "Requested page"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatureRoleLinkPage"
+        "404":
+          description: "Feature not found"
+
   /api/v1/features/{includeInactive}:
     get:
       tags: ["features"]
+      deprecated: true
       operationId: "listFeaturesByStatus"
       summary: "List features by active status"
       parameters:
@@ -793,6 +831,45 @@ paths:
           description: "No features found"
 
   /api/v1/features/:
+    get:
+      tags: ["features"]
+      operationId: "searchFeatures"
+      summary: "Paginated feature catalog search"
+      description: "Use it to pick features while creating a role. The catalog is never returned whole: results are lightweight summaries (no role links), filtered and paginated on the server (page size capped at 50)."
+      parameters:
+        - name: "q"
+          in: "query"
+          required: false
+          description: "Case-insensitive 'contains' filter on name or description"
+          schema:
+            type: "string"
+        - name: "active"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+        - name: "page"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            minimum: 0
+            default: 0
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: "Requested page"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatureSummaryPage"
     post:
       tags: ["features"]
       operationId: "createFeature"
@@ -871,10 +948,64 @@ paths:
   # ── Contacts ──────────────────────────────────────────────────────────────────
 
   /api/v1/contacts/:
+    get:
+      tags: ["contacts"]
+      operationId: "searchContacts"
+      summary: "Paginated contact directory of ONE application"
+      description: "Contacts are never listed across applications: applicationId is mandatory. Results are filtered and paginated on the server (page size capped at 100). Includes the contacts of persons and of external owners (e.g. merchants) of that application."
+      parameters:
+        - name: "applicationId"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "contactTypeId"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "active"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+        - name: "q"
+          in: "query"
+          required: false
+          description: "Case-insensitive 'contains' filter on the contact content"
+          schema:
+            type: "string"
+        - name: "page"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            minimum: 0
+            default: 0
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: "Requested page"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactPage"
+        "400":
+          description: "applicationId is missing"
     post:
       tags: ["contacts"]
       operationId: "createContact"
       summary: "Create a contact"
+      description: "A contact belongs to exactly one subject: a person (personId) or an external owner that is neither a person nor an application (ownerType + ownerId, e.g. a merchant of an application), which requires applicationId. The contact limit and the duplicate check apply per subject and per application."
       requestBody:
         required: true
         content:
@@ -889,13 +1020,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Contact"
         "400":
-          description: "Invalid contact payload"
+          description: "Invalid contact payload (no subject, person and owner at once, incomplete owner, invalid ownerType or unknown contact type)"
         "404":
           description: "Person or application not found"
         "409":
-          description: "This person already has a contact with the same value (phone number, email or messaging account) for this application"
+          description: "This subject already has a contact with the same value (phone number, email or messaging account) for this application"
         "406":
-          description: "Contact limit reached for this person"
+          description: "Contact limit reached for this subject in this application"
 
   /api/v1/contacts/{contactId}:
     get:
@@ -1000,10 +1131,17 @@ paths:
       tags: ["contacts"]
       operationId: "listContactsByPersonId"
       summary: "List contacts by person ID"
+      description: "Optionally limited to one application. Bounded by the per-application contact limit."
       parameters:
         - name: "personId"
           in: "path"
           required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "applicationId"
+          in: "query"
+          required: false
           schema:
             type: "string"
             format: "uuid"
@@ -1019,20 +1157,42 @@ paths:
         "404":
           description: "Person not found"
 
-  /api/v1/contacts/list-all:
+  /api/v1/contacts/owner/{ownerType}/{ownerId}:
     get:
       tags: ["contacts"]
-      operationId: "listAllContacts"
-      summary: "List all contacts"
+      operationId: "listContactsByOwner"
+      summary: "List the contacts of an external owner"
+      description: "For subjects that are neither a person nor an application (e.g. a merchant of a commerce-index application). Bounded by the per-application contact limit."
+      parameters:
+        - name: "ownerType"
+          in: "path"
+          required: true
+          description: "Kind of the owner, e.g. MERCHANT (case-insensitive, stored upper-case)"
+          schema:
+            type: "string"
+        - name: "ownerId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "applicationId"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            format: "uuid"
       responses:
         "200":
-          description: "Contact list returned"
+          description: "Contact list returned (possibly empty)"
           content:
             application/json:
               schema:
                 type: "array"
                 items:
                   $ref: "#/components/schemas/Contact"
+        "400":
+          description: "Missing ownerType or ownerId"
 
   # ── Contact Types ─────────────────────────────────────────────────────────────
 
@@ -2770,8 +2930,31 @@ components:
         applicationId:
           type: "string"
           format: "uuid"
+        ownerType:
+          type: "string"
+          description: "External owner kind (e.g. MERCHANT); null for person contacts"
+        ownerId:
+          type: "string"
+          format: "uuid"
         active:
           type: "boolean"
+
+    ContactPage:
+      type: "object"
+      properties:
+        content:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Contact"
+        page:
+          type: "integer"
+        size:
+          type: "integer"
+        totalElements:
+          type: "integer"
+          format: "int64"
+        totalPages:
+          type: "integer"
 
     ContactCreateRequest:
       type: "object"
@@ -2791,8 +2974,78 @@ components:
         applicationId:
           type: "string"
           format: "uuid"
+        ownerType:
+          type: "string"
+          description: "External owner kind (e.g. MERCHANT); mutually exclusive with personId"
+        ownerId:
+          type: "string"
+          format: "uuid"
+          description: "External owner id; requires ownerType and applicationId"
         active:
           type: "boolean"
+
+    FeatureSummary:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+        description:
+          type: "string"
+        active:
+          type: "boolean"
+
+    FeatureSummaryPage:
+      type: "object"
+      properties:
+        content:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/FeatureSummary"
+        page:
+          type: "integer"
+        size:
+          type: "integer"
+        totalElements:
+          type: "integer"
+          format: "int64"
+        totalPages:
+          type: "integer"
+
+    FeatureRoleLink:
+      type: "object"
+      properties:
+        roleId:
+          type: "string"
+          format: "uuid"
+        roleName:
+          type: "string"
+        roleActive:
+          type: "boolean"
+        applicationId:
+          type: "string"
+          format: "uuid"
+        applicationName:
+          type: "string"
+
+    FeatureRoleLinkPage:
+      type: "object"
+      properties:
+        content:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/FeatureRoleLink"
+        page:
+          type: "integer"
+        size:
+          type: "integer"
+        totalElements:
+          type: "integer"
+          format: "int64"
+        totalPages:
+          type: "integer"
 
     Feature:
       type: "object"

@@ -48,7 +48,7 @@ describe('ApplicationDetailComponent', () => {
     expect(dom.text).toContain('Desc');
     expect(dom.text).toContain('Activa');
     expect(dom.text).toContain('Premium');
-    expect(dom.qa('nav a').map((a) => a.textContent!.trim())).toEqual(['Usuarios', 'Roles', 'Clientes M2M', 'Avisos']);
+    expect(dom.qa('nav a').map((a) => a.textContent!.trim())).toEqual(['Usuarios', 'Roles', 'Contactos', 'Clientes M2M', 'Avisos']);
     expect(breadcrumbs.setLabel).toHaveBeenCalledWith('a1', 'Alpha');
     expect(dom.q('a[href="/applications/a1/edit"]')).not.toBeNull();
   });

@@ -15,7 +15,7 @@ const client: ManagedClientTO = {
   scopes: ['read', 'write'],
   active: true,
   createdAt: '2026-01-01',
-  secretLastRotatedAt: '2026-02-01',
+  secretLastRotatedAt: '',
 };
 
 describe('ApplicationManagedClientsComponent', () => {

@@ -41,21 +41,14 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         path: '/people',
         label: 'Personas',
-        description: 'Personas, contactos, direcciones y documentos de identificación',
+        description: 'Personas, sus contactos, direcciones y documentos de identificación',
         icon: 'users',
         accent: 'from-emerald-500 to-teal-600',
       },
       {
-        path: '/contacts',
-        label: 'Contactos',
-        description: 'Directorio de contactos de todas las personas',
-        icon: 'phone',
-        accent: 'from-lime-500 to-green-600',
-      },
-      {
         path: '/features',
         label: 'Features',
-        description: 'Funcionalidades asignables a los roles',
+        description: 'Consulta de funcionalidades y de los roles a los que están vinculadas',
         icon: 'puzzle',
         accent: 'from-fuchsia-500 to-pink-600',
       },

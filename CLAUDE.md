@@ -66,8 +66,7 @@ src/app/
 │   ├── users/           users-list/ (lazy-loaded)
 │   ├── roles/
 │   ├── people/
-│   ├── contacts/
-│   ├── features-mgmt/   features-list/ (read-only; features are edited from the role form)
+│   ├── features-mgmt/   features-list/ (server-paginated search + roles using a feature; features are created/linked from the role form)
 │   ├── iam/             token introspection · permission check
 │   ├── reports/         Word template → placeholders → document
 │   ├── audit/

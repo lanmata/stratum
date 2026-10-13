@@ -1,15 +1,26 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin, Observable, of } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { forkJoin, Observable, of, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { RoleService } from '@core/services/role.service';
 import { FeatureService } from '@core/services/feature.service';
 import { ToastService } from '@core/services/toast.service';
 import { environment } from '@env/environment';
+import { emptyPage, Page } from '@shared/models/page.model';
+import { FeatureSummary } from '@shared/models/feature.model';
+
+const PICKER_PAGE_SIZE = 5;
+const PICKER_MIN_QUERY = 2;
+const PICKER_DEBOUNCE_MS = 300;
 
 interface FeatureEntry {
   id: string;
   backendId?: string;
+  /** An existing catalog feature linked to this role (create mode): shared, so read-only. */
+  linked?: boolean;
   name: string;
   description: string;
   active: boolean;
@@ -18,7 +29,7 @@ interface FeatureEntry {
 @Component({
   selector: 'app-role-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink],
   template: `
     <div>
       <div class="mb-6">
@@ -103,6 +114,58 @@ interface FeatureEntry {
               </button>
             </div>
 
+            @if (!isEdit()) {
+              <div class="mb-4 rounded-lg border border-dashed border-gray-300 p-4 dark:border-gray-600">
+                <p class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Vincular funcionalidades existentes (opcional)
+                </p>
+                <input
+                  type="text"
+                  [ngModel]="pickerQuery()"
+                  (ngModelChange)="onPickerQuery($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Buscar funcionalidad por nombre…"
+                  aria-label="Buscar funcionalidad existente"
+                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+                />
+                @if (pickerSearched()) {
+                  <ul class="mt-2 divide-y divide-gray-100 dark:divide-gray-700">
+                    @for (f of pickerResults().content; track f.id) {
+                      <li class="flex items-center justify-between py-1.5 text-sm">
+                        <span class="text-gray-800 dark:text-gray-200">
+                          {{ f.name }}
+                          @if (f.description) {
+                            <span class="ml-2 text-xs text-gray-400 dark:text-gray-500">{{ f.description }}</span>
+                          }
+                        </span>
+                        <button
+                          type="button"
+                          (click)="linkFeature(f)"
+                          [disabled]="isLinked(f.id)"
+                          class="rounded-lg border border-blue-300 px-2 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-40 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                        >
+                          {{ isLinked(f.id) ? 'Vinculada' : 'Vincular' }}
+                        </button>
+                      </li>
+                    } @empty {
+                      <li class="py-2 text-xs text-gray-400 dark:text-gray-500">Sin resultados.</li>
+                    }
+                  </ul>
+                  @if (pickerResults().totalPages > 1) {
+                    <div class="mt-2 flex items-center justify-end gap-2 text-xs text-gray-600 dark:text-gray-400">
+                      <button type="button" (click)="pickerGoTo(pickerResults().page - 1)" [disabled]="pickerResults().page === 0" class="rounded border border-gray-300 px-2 py-1 disabled:opacity-40 dark:border-gray-600">← Anterior</button>
+                      <span>Página {{ pickerResults().page + 1 }} de {{ pickerResults().totalPages }}</span>
+                      <button type="button" (click)="pickerGoTo(pickerResults().page + 1)" [disabled]="pickerResults().page + 1 >= pickerResults().totalPages" class="rounded border border-gray-300 px-2 py-1 disabled:opacity-40 dark:border-gray-600">Siguiente →</button>
+                    </div>
+                  }
+                } @else {
+                  <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                    Escribe al menos 2 caracteres. El catálogo no se muestra completo.
+                  </p>
+                }
+              </div>
+            }
+
             <div class="space-y-3">
               @for (entry of featureEntries(); track entry.id; let i = $index) {
                 <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/40">
@@ -111,8 +174,8 @@ interface FeatureEntry {
                     <button
                       type="button"
                       (click)="removeFeature(i)"
-                      [disabled]="featureEntries().length === 1 || (entry.backendId && !entry.active)"
-                      [title]="entry.backendId ? 'Desactivar' : 'Eliminar'"
+                      [disabled]="featureEntries().length === 1 || (entry.backendId && !entry.linked && !entry.active)"
+                      [title]="entry.backendId && !entry.linked ? 'Desactivar' : 'Eliminar'"
                       class="rounded p-0.5 text-red-400 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-red-900/20"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -121,6 +184,15 @@ interface FeatureEntry {
                     </button>
                   </div>
 
+                  @if (entry.linked) {
+                    <p class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                      {{ entry.name }}
+                      <span class="ml-2 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">Vinculada</span>
+                    </p>
+                    @if (entry.description) {
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ entry.description }}</p>
+                    }
+                  } @else {
                   <div class="space-y-2">
                     <div>
                       <input
@@ -161,6 +233,7 @@ interface FeatureEntry {
                       <span class="text-xs text-gray-600 dark:text-gray-400">{{ entry.active ? 'Activa' : 'Inactiva' }}</span>
                     </div>
                   </div>
+                  }
                 </div>
               }
             </div>
@@ -203,12 +276,27 @@ export class RoleFormComponent implements OnInit {
   protected readonly submitted = signal(false);
   protected readonly featureEntries = signal<FeatureEntry[]>([this.emptyFeature()]);
   private roleId: string | null = null;
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly pickerQuery$ = new Subject<string>();
+  protected readonly pickerQuery = signal('');
+  protected readonly pickerSearched = signal(false);
+  protected readonly pickerResults = signal<Page<FeatureSummary>>(emptyPage(PICKER_PAGE_SIZE));
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(128)]],
     description: ['', Validators.maxLength(512)],
     active: [true],
   });
+
+  constructor() {
+    this.pickerQuery$
+      .pipe(
+        debounceTime(PICKER_DEBOUNCE_MS),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.searchPicker(0));
+  }
 
   ngOnInit(): void {
     this.roleId = this.route.snapshot.paramMap.get('roleId');
@@ -245,6 +333,50 @@ export class RoleFormComponent implements OnInit {
     }
   }
 
+  protected onPickerQuery(value: string): void {
+    this.pickerQuery.set(value);
+    this.pickerQuery$.next(value.trim());
+  }
+
+  protected pickerGoTo(page: number): void {
+    if (page < 0 || page >= this.pickerResults().totalPages) return;
+    this.searchPicker(page);
+  }
+
+  protected isLinked(featureId: string): boolean {
+    return this.featureEntries().some((e) => e.backendId === featureId);
+  }
+
+  protected linkFeature(feature: FeatureSummary): void {
+    if (this.isLinked(feature.id)) return;
+    const entry: FeatureEntry = {
+      id: feature.id,
+      backendId: feature.id,
+      linked: true,
+      name: feature.name,
+      description: feature.description ?? '',
+      active: feature.active,
+    };
+    this.featureEntries.update((list) => {
+      const onlyPlaceholder = list.length === 1 && !list[0].name.trim() && !list[0].description.trim();
+      return onlyPlaceholder ? [entry] : [...list, entry];
+    });
+  }
+
+  private searchPicker(page: number): void {
+    const q = this.pickerQuery().trim();
+    if (q.length < PICKER_MIN_QUERY) {
+      this.pickerSearched.set(false);
+      this.pickerResults.set(emptyPage(PICKER_PAGE_SIZE));
+      return;
+    }
+    this.pickerSearched.set(true);
+    this.featureService.search({ q, active: true, page, size: PICKER_PAGE_SIZE }).subscribe({
+      next: (result) => this.pickerResults.set(result),
+      error: () => this.toast.error('Error al buscar funcionalidades'),
+    });
+  }
+
   protected addFeature(): void {
     this.featureEntries.update((list) => [...list, this.emptyFeature()]);
   }
@@ -255,7 +387,7 @@ export class RoleFormComponent implements OnInit {
     // The API has no DELETE for features — an already-persisted feature can
     // only be deactivated, not removed, or it would silently reappear the
     // next time this role is loaded (GET still returns inactive features).
-    if (entry.backendId) {
+    if (entry.backendId && !entry.linked) {
       this.updateFeature(index, 'active', false);
       return;
     }
@@ -304,6 +436,7 @@ export class RoleFormComponent implements OnInit {
           applicationId: this.applicationId,
           active,
           features: this.featureEntries().map((e) => ({
+            ...(e.linked ? { id: e.backendId } : {}),
             name: e.name.trim(),
             description: e.description.trim() || undefined,
             active: e.active,

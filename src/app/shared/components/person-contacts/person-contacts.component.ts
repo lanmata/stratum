@@ -141,6 +141,8 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
 })
 export class PersonContactsComponent implements OnChanges {
   readonly personId = input.required<string>();
+  /** When set, only this application's contacts are listed and new ones are created in it. */
+  readonly applicationId = input<string | undefined>(undefined);
 
   private readonly contactService = inject(ContactService);
   private readonly contactTypeService = inject(ContactTypeService);
@@ -155,6 +157,7 @@ export class PersonContactsComponent implements OnChanges {
   protected readonly showForm = signal(false);
   protected readonly deleteTarget = signal<Contact | null>(null);
   private editingId: string | null = null;
+  private editingApplicationId: string | undefined;
 
   protected readonly form = this.fb.nonNullable.group({
     content: [
@@ -188,7 +191,7 @@ export class PersonContactsComponent implements OnChanges {
 
   private load(): void {
     this.loading.set(true);
-    this.contactService.getByPerson(this.personId()).subscribe({
+    this.contactService.getByPerson(this.personId(), this.applicationId()).subscribe({
       next: (data) => {
         this.contacts.set(data);
         this.loading.set(false);
@@ -202,6 +205,7 @@ export class PersonContactsComponent implements OnChanges {
 
   protected startCreate(): void {
     this.editingId = null;
+    this.editingApplicationId = undefined;
     this.submitted.set(false);
     this.form.reset({ content: '', contactTypeId: '', active: true });
     this.showForm.set(true);
@@ -209,6 +213,7 @@ export class PersonContactsComponent implements OnChanges {
 
   protected startEdit(contact: Contact): void {
     this.editingId = contact.id ?? null;
+    this.editingApplicationId = contact.applicationId;
     this.submitted.set(false);
     this.form.setValue({
       content: contact.content,
@@ -234,6 +239,7 @@ export class PersonContactsComponent implements OnChanges {
       content: content.trim(),
       contactType,
       personId: this.personId(),
+      applicationId: this.applicationId() ?? this.editingApplicationId,
       active,
     };
 

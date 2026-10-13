@@ -44,6 +44,14 @@ export const applicationsRoutes: Routes = [
         loadChildren: () => import('../roles/roles.routes').then((m) => m.rolesRoutes),
       },
       {
+        path: 'contacts',
+        data: { breadcrumb: 'Contactos' },
+        loadComponent: () =>
+          import('./application-contacts/application-contacts.component').then(
+            (m) => m.ApplicationContactsComponent,
+          ),
+      },
+      {
         path: 'managed-clients',
         data: { breadcrumb: 'Clientes M2M' },
         loadComponent: () =>

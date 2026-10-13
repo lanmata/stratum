@@ -60,7 +60,7 @@ describe('PersonContactsComponent', () => {
 
   it('renders the contacts for the person', () => {
     create();
-    expect(contacts.getByPerson).toHaveBeenCalledWith('p1');
+    expect(contacts.getByPerson).toHaveBeenCalledWith('p1', undefined);
     expect(el.textContent).toContain('a@b.com');
     expect(el.textContent).toContain('Email');
   });
@@ -124,6 +124,7 @@ describe('PersonContactsComponent', () => {
       content: 'new@mail.com',
       contactType: emailType,
       personId: 'p1',
+      applicationId: undefined,
       active: true,
     });
     expect(toast.success).toHaveBeenCalledWith('Contacto agregado');
@@ -154,6 +155,36 @@ describe('PersonContactsComponent', () => {
       jasmine.objectContaining({ id: 'c1', content: 'changed@b.com' }),
     );
     expect(toast.success).toHaveBeenCalledWith('Contacto actualizado');
+  });
+
+  it('scopes the list and new contacts to the application when one is given', () => {
+    contacts.getByPerson.and.returnValue(of([]));
+    contacts.create.and.returnValue(of(contact));
+    fixture = TestBed.createComponent(PersonContactsComponent);
+    fixture.componentRef.setInput('personId', 'p1');
+    fixture.componentRef.setInput('applicationId', 'a1');
+    fixture.detectChanges();
+    el = fixture.nativeElement;
+    expect(contacts.getByPerson).toHaveBeenCalledWith('p1', 'a1');
+
+    click('button.border-blue-300');
+    type('select', 't1');
+    type('input[formControlName=content]', 'new@mail.com');
+    click('form button[type=submit]');
+    expect(contacts.create).toHaveBeenCalledWith(
+      jasmine.objectContaining({ personId: 'p1', applicationId: 'a1' }),
+    );
+  });
+
+  it('keeps the application of a contact when editing it', () => {
+    create([{ ...contact, applicationId: 'a9' }]);
+    contacts.update.and.returnValue(of(contact));
+    click('button[title=Editar]');
+    click('form button[type=submit]');
+    expect(contacts.update).toHaveBeenCalledWith(
+      'c1',
+      jasmine.objectContaining({ applicationId: 'a9' }),
+    );
   });
 
   it('cancels the form', () => {

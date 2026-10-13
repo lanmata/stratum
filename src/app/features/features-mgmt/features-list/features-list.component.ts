@@ -1,98 +1,85 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { RouterLink } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { FeatureService } from '@core/services/feature.service';
-import { RoleService } from '@core/services/role.service';
 import { ToastService } from '@core/services/toast.service';
-import { Feature } from '@shared/models/feature.model';
-import { Role } from '@shared/models/role.model';
-import { parseIds } from '@shared/utils/ids.util';
+import { FeatureRoleLink, FeatureSummary } from '@shared/models/feature.model';
+import { emptyPage, Page } from '@shared/models/page.model';
+
+const PAGE_SIZE = 10;
+const ROLES_PAGE_SIZE = 10;
+const MIN_QUERY_LENGTH = 2;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const INPUT_CLASS =
   'rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400';
+const PAGER_BUTTON_CLASS =
+  'rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700';
+
+type StatusFilter = '' | 'true' | 'false';
 
 @Component({
   selector: 'app-features-list',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   template: `
     <div>
       <div class="mb-6">
         <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Features</h1>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Funcionalidades asignables a roles. Se crean y editan desde el formulario de cada rol.
+          Consulta de funcionalidades. El catálogo puede ser muy grande, por eso no se lista completo:
+          busca una funcionalidad para saber a qué roles (y aplicaciones) está vinculada. Las
+          funcionalidades se crean y vinculan desde el formulario de cada rol.
         </p>
       </div>
 
       <div class="mb-4 flex flex-wrap items-center gap-3">
         <input
           type="text"
-          [ngModel]="searchName()"
-          (ngModelChange)="onSearch($event)"
-          placeholder="Buscar por nombre…"
-          aria-label="Buscar por nombre"
-          [class]="inputClass"
+          [ngModel]="query()"
+          (ngModelChange)="onQuery($event)"
+          placeholder="Buscar por nombre o descripción…"
+          aria-label="Buscar funcionalidad"
+          [class]="inputClass + ' w-80'"
         />
-
         <select
-          [ngModel]="roleFilter()"
-          (ngModelChange)="onRoleChange($event)"
-          aria-label="Filtrar por rol"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusChange($event)"
+          aria-label="Filtrar por estado"
           [class]="inputClass"
         >
-          <option value="">Todos los roles</option>
-          @for (role of roles(); track role.id) {
-            <option [value]="role.id">{{ role.name }}</option>
-          }
+          <option value="">Todas</option>
+          <option value="true">Activas</option>
+          <option value="false">Inactivas</option>
         </select>
-
-        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-          <input
-            type="checkbox"
-            [ngModel]="includeInactive()"
-            (ngModelChange)="onIncludeInactiveChange($event)"
-            class="h-4 w-4 rounded border-gray-300"
-          />
-          Incluir inactivas
-        </label>
-
-        <form class="flex gap-2" (ngSubmit)="searchByIds()">
-          <input
-            type="text"
-            name="ids"
-            [ngModel]="idsInput()"
-            (ngModelChange)="idsInput.set($event)"
-            placeholder="Filtrar por IDs (separados por coma)…"
-            aria-label="Filtrar por IDs"
-            [class]="inputClass + ' w-72'"
-          />
-          <button
-            type="submit"
-            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            Buscar por IDs
-          </button>
-        </form>
       </div>
 
-      @if (loading()) {
+      @if (!searched()) {
+        <p class="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+          Escribe al menos {{ minQueryLength }} caracteres para buscar una funcionalidad.
+        </p>
+      } @else if (loading()) {
         <p class="text-sm text-gray-500 dark:text-gray-400">Cargando…</p>
       } @else {
         <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <table class="w-full text-sm">
             <thead class="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-700/50 dark:text-gray-400">
               <tr>
-                <th class="px-4 py-3">Id</th>
                 <th class="px-4 py-3">Nombre</th>
                 <th class="px-4 py-3">Descripción</th>
                 <th class="px-4 py-3">Estado</th>
+                <th class="px-4 py-3"><span class="sr-only">Acciones</span></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-              @for (feature of paginated(); track feature.id) {
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td class="px-4 py-3 font-mono text-xs text-gray-400 dark:text-gray-500" [title]="feature.id">{{ feature.id.slice(0, 8) }}…</td>
+              @for (feature of results().content; track feature.id) {
+                <tr
+                  class="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                  [class.bg-blue-50]="selected()?.id === feature.id"
+                >
                   <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{{ feature.name }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ feature.description ?? '—' }}</td>
                   <td class="px-4 py-3">
@@ -102,133 +89,181 @@ const INPUT_CLASS =
                       <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">Inactiva</span>
                     }
                   </td>
+                  <td class="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      (click)="showRoles(feature)"
+                      class="rounded-lg border border-blue-300 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                    >
+                      Ver roles
+                    </button>
+                  </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="4" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No se encontraron features</td>
+                  <td colspan="4" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No se encontraron funcionalidades</td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
 
-        @if (totalPages() > 1) {
-          <div class="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-            <span>{{ filtered().length }} features</span>
+        <div class="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+          <span>{{ results().totalElements }} funcionalidades</span>
+          @if (results().totalPages > 1) {
             <div class="flex items-center gap-2">
-              <button
-                (click)="prevPage()"
-                [disabled]="currentPage() === 1"
-                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
-              >
-                ← Anterior
-              </button>
-              <span class="px-2">Página {{ currentPage() }} de {{ totalPages() }}</span>
-              <button
-                (click)="nextPage()"
-                [disabled]="currentPage() === totalPages()"
-                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
-              >
-                Siguiente →
-              </button>
+              <button type="button" (click)="goToResults(results().page - 1)" [disabled]="results().page === 0" [class]="pagerButtonClass">← Anterior</button>
+              <span class="px-2">Página {{ results().page + 1 }} de {{ results().totalPages }}</span>
+              <button type="button" (click)="goToResults(results().page + 1)" [disabled]="results().page + 1 >= results().totalPages" [class]="pagerButtonClass">Siguiente →</button>
             </div>
+          }
+        </div>
+      }
+
+      @if (selected(); as feature) {
+        <section class="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800" aria-label="Roles vinculados">
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              Roles que usan «{{ feature.name }}»
+            </h2>
+            <button
+              type="button"
+              (click)="closeRoles()"
+              class="text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Cerrar
+            </button>
           </div>
-        }
+
+          @if (rolesLoading()) {
+            <p class="text-sm text-gray-500 dark:text-gray-400">Cargando roles…</p>
+          } @else {
+            <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+              @for (link of roles().content; track link.roleId) {
+                <li class="flex items-center justify-between py-2 text-sm">
+                  <span class="text-gray-800 dark:text-gray-200">
+                    {{ link.roleName }}
+                    @if (!link.roleActive) {
+                      <span class="ml-2 text-xs text-gray-400 dark:text-gray-500">Inactivo</span>
+                    }
+                  </span>
+                  <a
+                    [routerLink]="['/applications', link.applicationId, 'roles', link.roleId, 'edit']"
+                    class="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {{ link.applicationName }}
+                  </a>
+                </li>
+              } @empty {
+                <li class="py-4 text-center text-sm text-gray-400 dark:text-gray-500">
+                  Esta funcionalidad no está vinculada a ningún rol.
+                </li>
+              }
+            </ul>
+            @if (roles().totalPages > 1) {
+              <div class="mt-3 flex items-center justify-end gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <button type="button" (click)="goToRoles(roles().page - 1)" [disabled]="roles().page === 0" [class]="pagerButtonClass">← Anterior</button>
+                <span class="px-2">Página {{ roles().page + 1 }} de {{ roles().totalPages }}</span>
+                <button type="button" (click)="goToRoles(roles().page + 1)" [disabled]="roles().page + 1 >= roles().totalPages" [class]="pagerButtonClass">Siguiente →</button>
+              </div>
+            }
+          }
+        </section>
       }
     </div>
   `,
 })
-export class FeaturesListComponent implements OnInit {
+export class FeaturesListComponent {
   private readonly featureService = inject(FeatureService);
-  private readonly roleService = inject(RoleService);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly query$ = new Subject<string>();
 
   protected readonly inputClass = INPUT_CLASS;
-  protected readonly pageSize = 10;
+  protected readonly pagerButtonClass = PAGER_BUTTON_CLASS;
+  protected readonly minQueryLength = MIN_QUERY_LENGTH;
 
-  private readonly features = signal<Feature[]>([]);
-  protected readonly roles = signal<Role[]>([]);
-  protected readonly loading = signal(true);
-  protected readonly searchName = signal('');
-  protected readonly roleFilter = signal('');
-  protected readonly includeInactive = signal(true);
-  protected readonly idsInput = signal('');
-  protected readonly currentPage = signal(1);
+  protected readonly query = signal('');
+  protected readonly statusFilter = signal<StatusFilter>('');
+  protected readonly searched = signal(false);
+  protected readonly loading = signal(false);
+  protected readonly results = signal<Page<FeatureSummary>>(emptyPage(PAGE_SIZE));
+  protected readonly selected = signal<FeatureSummary | null>(null);
+  protected readonly rolesLoading = signal(false);
+  protected readonly roles = signal<Page<FeatureRoleLink>>(emptyPage(ROLES_PAGE_SIZE));
 
-  protected readonly filtered = computed(() => {
-    const name = this.searchName().toLowerCase().trim();
-    return this.features().filter((f) => !name || f.name.toLowerCase().includes(name));
-  });
-
-  protected readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filtered().length / this.pageSize)),
-  );
-
-  protected readonly paginated = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize;
-    return this.filtered().slice(start, start + this.pageSize);
-  });
-
-  ngOnInit(): void {
-    this.roleService.getAll().pipe(catchError(() => of([] as Role[]))).subscribe((roles) =>
-      this.roles.set(roles),
-    );
-    this.reload();
+  constructor() {
+    this.query$
+      .pipe(debounceTime(SEARCH_DEBOUNCE_MS), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.runSearch(0));
   }
 
-  protected onSearch(value: string): void {
-    this.searchName.set(value);
-    this.currentPage.set(1);
+  protected onQuery(value: string): void {
+    this.query.set(value);
+    this.query$.next(value.trim());
   }
 
-  protected onRoleChange(roleId: string): void {
-    this.roleFilter.set(roleId);
-    this.reload();
+  protected onStatusChange(value: StatusFilter): void {
+    this.statusFilter.set(value);
+    this.runSearch(0);
   }
 
-  protected onIncludeInactiveChange(value: boolean): void {
-    this.includeInactive.set(value);
-    this.reload();
+  protected goToResults(page: number): void {
+    if (page < 0 || page >= this.results().totalPages) return;
+    this.runSearch(page);
   }
 
-  protected searchByIds(): void {
-    this.reload();
+  protected showRoles(feature: FeatureSummary): void {
+    this.selected.set(feature);
+    this.loadRoles(0);
   }
 
-  protected prevPage(): void {
-    this.currentPage.update((p) => Math.max(1, p - 1));
+  protected closeRoles(): void {
+    this.selected.set(null);
   }
 
-  protected nextPage(): void {
-    this.currentPage.update((p) => Math.min(this.totalPages(), p + 1));
+  protected goToRoles(page: number): void {
+    if (page < 0 || page >= this.roles().totalPages) return;
+    this.loadRoles(page);
   }
 
-  private reload(): void {
-    this.loading.set(true);
-    const include = this.includeInactive();
-    const ids = parseIds(this.idsInput());
-    const roleId = this.roleFilter();
-
-    let source$: Observable<Feature[]>;
-    if (ids.length > 0) {
-      source$ = this.featureService.getByStatusAndIds(include, ids);
-    } else if (roleId) {
-      source$ = this.featureService
-        .getByRole(roleId)
-        .pipe(map((list) => (include ? list : list.filter((f) => f.active))));
-    } else {
-      source$ = this.featureService.getAll(include);
+  private runSearch(page: number): void {
+    const q = this.query().trim();
+    if (q.length < MIN_QUERY_LENGTH) {
+      this.searched.set(false);
+      this.selected.set(null);
+      this.results.set(emptyPage(PAGE_SIZE));
+      return;
     }
+    this.searched.set(true);
+    this.loading.set(true);
+    const status = this.statusFilter();
+    this.featureService
+      .search({ q, active: status === '' ? undefined : status === 'true', page, size: PAGE_SIZE })
+      .subscribe({
+        next: (result) => {
+          this.results.set(result);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.toast.error('Error al buscar las funcionalidades');
+          this.loading.set(false);
+        },
+      });
+  }
 
-    source$.subscribe({
-      next: (list) => {
-        this.features.set(list);
-        this.currentPage.set(1);
-        this.loading.set(false);
+  private loadRoles(page: number): void {
+    const feature = this.selected();
+    if (!feature) return;
+    this.rolesLoading.set(true);
+    this.featureService.getRoles(feature.id, page, ROLES_PAGE_SIZE).subscribe({
+      next: (result) => {
+        this.roles.set(result);
+        this.rolesLoading.set(false);
       },
       error: () => {
-        this.toast.error('Error al cargar las features');
-        this.loading.set(false);
+        this.toast.error('Error al cargar los roles de la funcionalidad');
+        this.rolesLoading.set(false);
       },
     });
   }

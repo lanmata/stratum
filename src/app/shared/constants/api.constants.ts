@@ -34,19 +34,19 @@ export const API = {
   },
   FEATURES: {
     ROOT: '/v1/features',
-    WITH_INACTIVE: (include: boolean) => `/v1/features/${include}`,
+    SEARCH: '/v1/features/',
+    ROLES: (id: string) => `/v1/features/${id}/roles`,
     BY_ID: (id: string) => `/v1/features/find/${id}`,
     BY_ROLE: (roleId: string) => `/v1/features/role/${roleId}`,
-    BY_STATUS_AND_IDS: (include: boolean, ids: string[]) =>
-      `/v1/features/${include}/${ids.join(',')}`,
     UPDATE: (id: string) => `/v1/features/${id}`,
   },
   CONTACTS: {
     ROOT: '/v1/contacts',
+    SEARCH: '/v1/contacts/',
     BY_ID: (id: string) => `/v1/contacts/${id}`,
-    LIST: '/v1/contacts/list-all',
-    BY_IDS: (ids: string[]) => `/v1/contacts/list/${ids.join(',')}`,
     BY_PERSON: (personId: string) => `/v1/contacts/person/${personId}`,
+    BY_OWNER: (ownerType: string, ownerId: string) =>
+      `/v1/contacts/owner/${encodeURIComponent(ownerType)}/${ownerId}`,
   },
   PEOPLE: {
     ROOT: '/v1/people',

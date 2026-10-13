@@ -78,6 +78,7 @@ export class ApplicationDetailComponent implements OnInit {
   protected readonly tabs = [
     { path: 'users', label: 'Usuarios' },
     { path: 'roles', label: 'Roles' },
+    { path: 'contacts', label: 'Contactos' },
     { path: 'managed-clients', label: 'Clientes M2M' },
     { path: 'notices', label: 'Avisos' },
   ];

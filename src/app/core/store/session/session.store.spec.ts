@@ -81,9 +81,12 @@ describe('SessionStoreService', () => {
 
   it('exposes the session through observables and dispatches changes', async () => {
     expect(await firstValueFrom(facade.isAuthenticated$)).toBeFalse();
-    facade.save('t', 'r', user);
-    expect(await firstValueFrom(facade.token$)).toBe('t');
-    expect(await firstValueFrom(facade.refreshToken$)).toBe('r');
+    const generated = [0, 1].map(() => Math.random().toString(36).slice(2));
+    const [tokenValue, refreshValue] = generated;
+    const sessionUser = { ...user };
+    facade.save(...(generated as [string, string]), sessionUser);
+    expect(await firstValueFrom(facade.token$)).toBe(tokenValue);
+    expect(await firstValueFrom(facade.refreshToken$)).toBe(refreshValue);
     expect(await firstValueFrom(facade.user$)).toEqual(user);
     expect(await firstValueFrom(facade.userRoles$)).toEqual(user.roles!);
     expect(await firstValueFrom(facade.isAuthenticated$)).toBeTrue();
