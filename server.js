@@ -8,6 +8,7 @@ if (!process.env['NG_ALLOWED_HOSTS']) {
 }
 
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
@@ -18,9 +19,11 @@ const https = require('node:https');
 const { readFileSync } = require('node:fs');
 
 const logger = require('./server/config/logger');
+const { connectRedis } = require('./server/shared/redis-session-store');
 const {
   PORT,
   CORS_ORIGIN,
+  TRUST_PROXY,
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX,
   NODE_ENV,
@@ -43,16 +46,25 @@ const addressesRoutes = require('./server/routes/addresses.routes');
 const identificationDocumentsRoutes = require('./server/routes/identification-documents.routes');
 const noticeTypesRoutes = require('./server/routes/notice-types.routes');
 const noticesRoutes = require('./server/routes/notices.routes');
+const iamRoutes = require('./server/routes/iam.routes');
+const profileImageRoutes = require('./server/routes/profile-image.routes');
+const reportRoutes = require('./server/routes/report.routes');
 
 const app = express();
+app.disable('x-powered-by');
+if (TRUST_PROXY) app.set('trust proxy', TRUST_PROXY);
 
 // ── Middleware ──────────────────────────────────────────────────────────────
+app.use(helmet());
 app.use(compression());
 app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Only the API is rate limited: static assets (dozens of chunks per page load) must not
+// consume the quota.
 app.use(
+  '/api',
   rateLimit({
     windowMs: RATE_LIMIT_WINDOW_MS,
     max: RATE_LIMIT_MAX,
@@ -62,8 +74,18 @@ app.use(
 );
 
 // ── Request logging ─────────────────────────────────────────────────────────
-app.use((req, _res, next) => {
-  logger.debug(`${req.method} ${req.path}`);
+// API calls are logged at info/warn/error by status; static assets and pages only at debug.
+// Query strings are left out on purpose.
+app.use((req, res, next) => {
+  const started = process.hrtime.bigint();
+  const { method, path: fullPath } = req;
+  res.on('finish', () => {
+    const ms = Number(process.hrtime.bigint() - started) / 1e6;
+    const isApi = fullPath.startsWith('/api');
+    const level =
+      res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : isApi ? 'info' : 'debug';
+    logger.log(level, `${method} ${fullPath} ${res.statusCode} ${ms.toFixed(0)}ms`);
+  });
   next();
 });
 
@@ -83,6 +105,9 @@ app.use('/api/v1/addresses', addressesRoutes);
 app.use('/api/v1/identification-documents', identificationDocumentsRoutes);
 app.use('/api/v1/notice-types', noticeTypesRoutes);
 app.use('/api/v1/notices', noticesRoutes);
+app.use('/api/v1/iam', iamRoutes);
+app.use('/api/v1/profile/image', profileImageRoutes);
+app.use('/api/v1/report', reportRoutes);
 
 // ── Angular SSR ─────────────────────────────────────────────────────────────
 const distPath = path.join(__dirname, 'dist/front-backbone-rest/browser');
@@ -116,8 +141,10 @@ const sslOptions = {
   cert: readFileSync(SSL_CERT_PATH),
 };
 
-https.createServer(sslOptions, app).listen(PORT, () => {
-  logger.info(`front-backbone-rest BFF running on https://localhost:${PORT} [${NODE_ENV}]`);
+connectRedis().finally(() => {
+  https.createServer(sslOptions, app).listen(PORT, () => {
+    logger.info(`front-backbone-rest BFF running on https://localhost:${PORT} [${NODE_ENV}]`);
+  });
 });
 
 module.exports = app;

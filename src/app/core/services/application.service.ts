@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { HttpService } from './http.service';
 import { API } from '@shared/constants/api.constants';
 import {
@@ -17,6 +17,11 @@ export class ApplicationService {
     return this.http.getList<Application>(API.APPLICATIONS.ROOT);
   }
 
+  getByIds(ids: string[]): Observable<Application[]> {
+    if (ids.length === 0) return of([]);
+    return this.http.getList<Application>(API.APPLICATIONS.ROOT, { ids: ids.join(',') });
+  }
+
   getById(id: string): Observable<Application> {
     return this.http.get<Application>(API.APPLICATIONS.BY_ID(id));
   }
@@ -27,5 +32,9 @@ export class ApplicationService {
 
   update(id: string, req: ApplicationUpdateRequest): Observable<Application> {
     return this.http.put<Application>(API.APPLICATIONS.BY_ID(id), req);
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(API.APPLICATIONS.BY_ID(id));
   }
 }

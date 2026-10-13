@@ -1,20 +1,27 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { forkJoin, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { RoleService } from '@core/services/role.service';
 import { Role } from '@shared/models/role.model';
+import { parseIds } from '@shared/utils/ids.util';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
+
+function intersectById(candidates: Role[], owned: Role[]): Role[] {
+  const ownedIds = new Set(owned.map((r) => r.id));
+  return candidates.filter((r) => ownedIds.has(r.id));
+}
 
 @Component({
   selector: 'app-roles-list',
   standalone: true,
   imports: [RouterLink, FormsModule],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a [routerLink]="['/applications', applicationId]" class="text-sm text-blue-600 hover:underline">← Aplicación</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Roles</h1>
         </div>
         <a
@@ -43,6 +50,34 @@ type StatusFilter = 'all' | 'active' | 'inactive';
           <option value="active">Activos</option>
           <option value="inactive">Inactivos</option>
         </select>
+
+        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="checkbox"
+            [ngModel]="includeInactive()"
+            (ngModelChange)="onIncludeInactiveChange($event)"
+            class="h-4 w-4 rounded border-gray-300"
+          />
+          Incluir inactivos
+        </label>
+
+        <form class="flex gap-2" (ngSubmit)="searchByIds()">
+          <input
+            type="text"
+            name="ids"
+            [ngModel]="idsInput()"
+            (ngModelChange)="idsInput.set($event)"
+            placeholder="Filtrar por IDs (separados por coma)…"
+            aria-label="Filtrar por IDs"
+            class="w-72 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+          />
+          <button
+            type="submit"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            Buscar por IDs
+          </button>
+        </form>
 
         <select
           [ngModel]="pageSize()"
@@ -205,6 +240,8 @@ export class RolesListComponent implements OnInit {
   private readonly allRoles = signal<Role[]>([]);
   protected readonly expandedIds = signal<Set<string>>(new Set());
 
+  protected readonly includeInactive = signal(true);
+  protected readonly idsInput = signal('');
   protected readonly searchName = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
   protected readonly pageSize = signal(10);
@@ -240,9 +277,43 @@ export class RolesListComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.roleService.getByApplication(this.applicationId).subscribe({
+    this.reload();
+  }
+
+  protected onIncludeInactiveChange(value: boolean): void {
+    this.includeInactive.set(value);
+    this.reload();
+  }
+
+  protected searchByIds(): void {
+    this.reload();
+  }
+
+  private reload(): void {
+    this.loading.set(true);
+    const ids = parseIds(this.idsInput());
+    const include = this.includeInactive();
+
+    // Role payloads carry no applicationId, so the status/ids endpoints (which span every
+    // application) are narrowed to the roles that belong to this application.
+    const applicationRoles$ = this.roleService.getByApplication(this.applicationId);
+    let source$: Observable<Role[]>;
+    if (ids.length > 0) {
+      source$ = forkJoin([applicationRoles$, this.roleService.getByStatusAndIds(include, ids)]).pipe(
+        map(([own, matched]) => intersectById(matched, own)),
+      );
+    } else if (include) {
+      source$ = applicationRoles$;
+    } else {
+      source$ = forkJoin([applicationRoles$, this.roleService.getByStatus(false)]).pipe(
+        map(([own, active]) => intersectById(active, own)),
+      );
+    }
+
+    source$.subscribe({
       next: (roles) => {
         this.allRoles.set(roles);
+        this.currentPage.set(1);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

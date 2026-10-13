@@ -1,19 +1,37 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, computed, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { AuditService } from '@core/services/audit.service';
-import { AuditEvent, AuditQuery } from '@shared/models/audit.model';
+import { AUDIT_EVENT_TYPES, AuditEvent, AuditQuery } from '@shared/models/audit.model';
+
+interface AuditFilters {
+  eventType: string;
+  userId: string;
+  applicationId: string;
+  from: string;
+  to: string;
+}
+
+const EMPTY_FILTERS: AuditFilters = { eventType: '', userId: '', applicationId: '', from: '', to: '' };
+
+export function toQuery(filters: AuditFilters): Omit<AuditQuery, 'page' | 'size'> {
+  const query: Omit<AuditQuery, 'page' | 'size'> = {};
+  if (filters.eventType) query.eventType = filters.eventType;
+  if (filters.userId.trim()) query.userId = filters.userId.trim();
+  if (filters.applicationId.trim()) query.applicationId = filters.applicationId.trim();
+  if (filters.from) query.from = `${filters.from}:00`;
+  if (filters.to) query.to = `${filters.to}:00`;
+  return query;
+}
 
 @Component({
   selector: 'app-audit-list',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [FormsModule],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Audit Log</h1>
         </div>
         <button
@@ -32,6 +50,70 @@ import { AuditEvent, AuditQuery } from '@shared/models/audit.model';
           }
         </button>
       </div>
+
+      <form class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6" (ngSubmit)="applyFilters()">
+        <select
+          name="eventType"
+          [ngModel]="filters().eventType"
+          (ngModelChange)="patchFilters({ eventType: $event })"
+          aria-label="Tipo de evento"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+        >
+          <option value="">Todos los eventos</option>
+          @for (type of eventTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+        <input
+          type="text"
+          name="userId"
+          [ngModel]="filters().userId"
+          (ngModelChange)="patchFilters({ userId: $event })"
+          placeholder="ID de usuario"
+          aria-label="ID de usuario"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+        />
+        <input
+          type="text"
+          name="applicationId"
+          [ngModel]="filters().applicationId"
+          (ngModelChange)="patchFilters({ applicationId: $event })"
+          placeholder="ID de aplicación"
+          aria-label="ID de aplicación"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+        />
+        <input
+          type="datetime-local"
+          name="from"
+          [ngModel]="filters().from"
+          (ngModelChange)="patchFilters({ from: $event })"
+          aria-label="Desde"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+        />
+        <input
+          type="datetime-local"
+          name="to"
+          [ngModel]="filters().to"
+          (ngModelChange)="patchFilters({ to: $event })"
+          aria-label="Hasta"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+        />
+        <div class="flex gap-2">
+          <button
+            type="submit"
+            class="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Filtrar
+          </button>
+          <button
+            type="button"
+            (click)="clearFilters()"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            Limpiar
+          </button>
+        </div>
+      </form>
 
       <div class="mb-4 flex flex-wrap gap-3">
         <select
@@ -53,9 +135,12 @@ import { AuditEvent, AuditQuery } from '@shared/models/audit.model';
           <table class="w-full text-sm">
             <thead class="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:border-gray-700 dark:bg-gray-700/50 dark:text-gray-400">
               <tr>
-                <th class="px-4 py-3">Event Type</th>
-                <th class="px-4 py-3">User</th>
-                <th class="px-4 py-3">Timestamp</th>
+                <th class="px-4 py-3">Evento</th>
+                <th class="px-4 py-3">Usuario</th>
+                <th class="px-4 py-3">Aplicación</th>
+                <th class="px-4 py-3">IP</th>
+                <th class="px-4 py-3">Fecha</th>
+                <th class="px-4 py-3">Detalle</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -63,11 +148,14 @@ import { AuditEvent, AuditQuery } from '@shared/models/audit.model';
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                   <td class="px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">{{ event.eventType }}</td>
                   <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ event.userId ?? '—' }}</td>
-                  <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ event.timestamp }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ event.applicationId ?? '—' }}</td>
+                  <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ event.ipAddress ?? '—' }}</td>
+                  <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ eventDate(event) }}</td>
+                  <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ event.details ?? '—' }}</td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="3" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No se encontraron eventos</td>
+                  <td colspan="6" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">No se encontraron eventos</td>
                 </tr>
               }
             </tbody>
@@ -107,6 +195,9 @@ export class AuditListComponent implements OnInit {
   protected readonly exporting = signal(false);
   protected readonly currentPage = signal(1);
   protected readonly pageSize = signal(20);
+  protected readonly eventTypes = AUDIT_EVENT_TYPES;
+  protected readonly filters = signal<AuditFilters>({ ...EMPTY_FILTERS });
+  private appliedQuery: Omit<AuditQuery, 'page' | 'size'> = {};
 
   protected readonly hasNextPage = computed(() => this.events().length === this.pageSize());
 
@@ -120,6 +211,25 @@ export class AuditListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPage();
+  }
+
+  protected patchFilters(patch: Partial<AuditFilters>): void {
+    this.filters.update((f) => ({ ...f, ...patch }));
+  }
+
+  protected applyFilters(): void {
+    this.appliedQuery = toQuery(this.filters());
+    this.currentPage.set(1);
+    this.loadPage();
+  }
+
+  protected clearFilters(): void {
+    this.filters.set({ ...EMPTY_FILTERS });
+    this.applyFilters();
+  }
+
+  protected eventDate(event: AuditEvent): string {
+    return event.occurredAt ?? event.createdAt ?? '—';
   }
 
   protected onPageSizeChange(value: number): void {
@@ -145,7 +255,7 @@ export class AuditListComponent implements OnInit {
   protected downloadCsv(): void {
     if (!isPlatformBrowser(this.platformId)) return;
     this.exporting.set(true);
-    this.auditService.exportEvents({}).subscribe({
+    this.auditService.exportEvents(this.appliedQuery).subscribe({
       next: (data) => {
         triggerCsvDownload(data);
         this.exporting.set(false);
@@ -156,7 +266,11 @@ export class AuditListComponent implements OnInit {
 
   private loadPage(): void {
     this.loading.set(true);
-    const query: AuditQuery = { page: this.currentPage() - 1, size: this.pageSize() };
+    const query: AuditQuery = {
+      ...this.appliedQuery,
+      page: this.currentPage() - 1,
+      size: this.pageSize(),
+    };
     this.auditService.getEvents(query).subscribe({
       next: (data) => {
         this.events.set(data);
@@ -167,14 +281,18 @@ export class AuditListComponent implements OnInit {
   }
 }
 
-function triggerCsvDownload(events: AuditEvent[]): void {
-  const header = 'id,eventType,userId,applicationId,timestamp';
+export function toCsv(events: AuditEvent[]): string {
+  const header = 'id,eventType,userId,applicationId,ipAddress,occurredAt,details';
   const rows = events.map((e) =>
-    [e.id, e.eventType, e.userId ?? '', e.applicationId ?? '', e.timestamp]
+    [e.id, e.eventType, e.userId ?? '', e.applicationId ?? '', e.ipAddress ?? '', e.occurredAt ?? e.createdAt ?? '', e.details ?? '']
       .map((v) => `"${String(v).replace(/"/g, '""')}"`)
       .join(','),
   );
-  const csv = [header, ...rows].join('\n');
+  return [header, ...rows].join('\n');
+}
+
+function triggerCsvDownload(events: AuditEvent[]): void {
+  const csv = toCsv(events);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

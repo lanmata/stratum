@@ -10,6 +10,7 @@ export const contactTypesRoutes: Routes = [
   },
   {
     path: 'new',
+    data: { breadcrumb: 'Nuevo tipo' },
     loadComponent: () =>
       import('./contact-type-form/contact-type-form.component').then(
         (m) => m.ContactTypeFormComponent
@@ -17,6 +18,7 @@ export const contactTypesRoutes: Routes = [
   },
   {
     path: ':contactTypeId/edit',
+    data: { breadcrumb: 'Editar' },
     loadComponent: () =>
       import('./contact-type-form/contact-type-form.component').then(
         (m) => m.ContactTypeFormComponent

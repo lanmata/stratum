@@ -31,9 +31,8 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
     PersonIdentificationDocumentsComponent,
   ],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6">
-        <a [routerLink]="['/applications', applicationId, 'users']" class="text-sm text-blue-600 hover:underline">← Usuarios</a>
         <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
           {{ isEdit() ? 'Editar Usuario' : 'Nuevo Usuario' }}
         </h1>
@@ -386,6 +385,17 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
             >
               Cancelar
             </a>
+            @if (isEdit()) {
+              <button
+                type="button"
+                (click)="saveFullDetail()"
+                [disabled]="form.invalid || form.pending || saving()"
+                title="Reemplaza el registro completo del usuario (persona, roles y preferencias)"
+                class="rounded-lg border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20"
+              >
+                Guardar detalle completo
+              </button>
+            }
             <button
               type="submit"
               [disabled]="form.invalid || form.pending || saving()"
@@ -410,6 +420,7 @@ export class UserFormComponent implements OnInit {
 
   protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
   private userId: string | null = null;
+  private loadedUser: UserTO | null = null;
 
   protected readonly isEdit = signal(false);
   protected readonly loading = signal(true);
@@ -450,10 +461,12 @@ export class UserFormComponent implements OnInit {
       forkJoin({
         user: this.userService.getById(this.userId),
         roles: this.roleService.getByApplication(this.applicationId),
+        userRoles: this.roleService.getByUser(this.userId).pipe(catchError(() => of([] as Role[]))),
       }).subscribe({
-        next: ({ user, roles }) => {
+        next: ({ user, roles, userRoles }) => {
           this.allRoles.set(roles);
-          this.patchFromUser(user);
+          this.loadedUser = user;
+          this.patchFromUser(user, this.ownedRoleIds(roles, userRoles));
           this.loading.set(false);
           this.showPassword.set(false);
           this.personId.set(user.person?.id ?? null);
@@ -482,7 +495,13 @@ export class UserFormComponent implements OnInit {
     }
   }
 
-  private patchFromUser(user: UserTO): void {
+  private ownedRoleIds(applicationRoles: Role[], userRoles: Role[]): string[] | null {
+    if (userRoles.length === 0) return null;
+    const applicationRoleIds = new Set(applicationRoles.map((r) => r.id));
+    return userRoles.filter((r) => applicationRoleIds.has(r.id)).map((r) => r.id);
+  }
+
+  private patchFromUser(user: UserTO, roleIdsOverride: string[] | null = null): void {
     this.form.patchValue({
       alias: user.alias,
       displayName: user.displayName ?? '',
@@ -496,7 +515,7 @@ export class UserFormComponent implements OnInit {
       gender: user.person?.gender ?? '',
       birthdate: user.person?.birthdate ?? '',
     });
-    const roleIds = new Set((user.roles ?? []).map((r) => r.id));
+    const roleIds = new Set(roleIdsOverride ?? (user.roles ?? []).map((r) => r.id));
     this.selectedRoleIds.set(roleIds);
     this.initialRoleIds.set(new Set(roleIds));
   }
@@ -578,6 +597,45 @@ export class UserFormComponent implements OnInit {
           } else {
             this.toast.error('Error al crear el usuario');
           }
+          this.saving.set(false);
+        },
+      });
+  }
+
+  protected saveFullDetail(): void {
+    if (this.form.invalid || this.saving() || !this.userId || !this.loadedUser) return;
+    this.saving.set(true);
+    const userId = this.userId;
+    const v = this.form.getRawValue();
+    const base = this.loadedUser;
+    const roles = this.allRoles().filter((r) => this.selectedRoleIds().has(r.id));
+
+    this.userService
+      .updateFull(userId, {
+        ...base,
+        displayName: v.displayName,
+        active: v.active,
+        notificationEmail: v.notificationEmail,
+        notificationSms: v.notificationSms,
+        privacyDataOutActive: v.privacyDataOutActive,
+        ...(v.password ? { password: v.password } : {}),
+        person: {
+          ...base.person,
+          firstName: v.firstName,
+          lastName: v.lastName,
+          ...(v.middleName ? { middleName: v.middleName } : {}),
+          ...(v.gender ? { gender: v.gender } : {}),
+          ...(v.birthdate ? { birthdate: v.birthdate } : {}),
+        },
+        roles,
+      })
+      .subscribe({
+        next: () => {
+          this.toast.success('Detalle completo del usuario actualizado');
+          this.router.navigate(['/applications', this.applicationId, 'users']);
+        },
+        error: () => {
+          this.toast.error('Error al actualizar el detalle completo del usuario');
           this.saving.set(false);
         },
       });

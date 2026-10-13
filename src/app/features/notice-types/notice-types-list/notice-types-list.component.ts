@@ -10,10 +10,9 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
   standalone: true,
   imports: [RouterLink, ConfirmDialogComponent],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Tipos de Aviso</h1>
         </div>
         <a

@@ -10,11 +10,8 @@ import { ServiceTypeRequest } from '@shared/models/service-type.model';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6">
-        <a routerLink="/service-types" class="text-sm text-blue-600 hover:underline">
-          ← Tipos de Servicio
-        </a>
         <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
           {{ isEditMode() ? 'Editar Tipo de Servicio' : 'Nuevo Tipo de Servicio' }}
         </h1>

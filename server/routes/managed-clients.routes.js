@@ -7,6 +7,10 @@ const router = Router();
 
 router.get('/', (req, res) => proxyToBackbone(req, res, '/api/v1/managed-clients'));
 router.post('/', (req, res) => proxyToBackbone(req, res, '/api/v1/managed-clients'));
+router.post('/token', (req, res) => proxyToBackbone(req, res, '/api/v1/managed-clients/token'));
+router.post('/introspect', (req, res) =>
+  proxyToBackbone(req, res, '/api/v1/managed-clients/introspect')
+);
 router.get('/:clientId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/managed-clients/${req.params['clientId']}`)
 );

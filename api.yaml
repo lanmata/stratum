@@ -113,11 +113,10 @@ paths:
       tags: ["session"]
       operationId: "validateSessionToken"
       summary: "Validate session token"
-      description: "Validates the session JWT supplied in the session-token header."
-      security:
-        - sessionToken: []
+      description: "Validates the session JWT supplied in the Authorization header."
+      security: []
       parameters:
-        - name: "session-token"
+        - name: "Authorization"
           in: "header"
           required: true
           description: "The session JWT to validate"
@@ -125,13 +124,15 @@ paths:
             type: "string"
       responses:
         "200":
-          description: "Token validation result"
+          description: "Validation result: true if the token is valid; false if its type is not session-token or its JTI is revoked"
           content:
             application/json:
               schema:
                 type: "boolean"
+        "400":
+          description: "Missing or empty Authorization header"
         "401":
-          description: "Invalid or expired session token"
+          description: "Expired or malformed session token (body: false)"
 
   /api/v1/session/renew:
     get:
@@ -139,10 +140,9 @@ paths:
       operationId: "renewSessionToken"
       summary: "Renew session token"
       description: "Validates the current session token and issues a fresh one."
-      security:
-        - sessionToken: []
+      security: []
       parameters:
-        - name: "session-token"
+        - name: "Authorization"
           in: "header"
           required: true
           description: "The current session JWT to renew"
@@ -880,7 +880,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Contact"
+              $ref: "#/components/schemas/ContactCreateRequest"
       responses:
         "201":
           description: "Contact created"
@@ -890,6 +890,12 @@ paths:
                 $ref: "#/components/schemas/Contact"
         "400":
           description: "Invalid contact payload"
+        "404":
+          description: "Person or application not found"
+        "409":
+          description: "This person already has a contact with the same value (phone number, email or messaging account) for this application"
+        "406":
+          description: "Contact limit reached for this person"
 
   /api/v1/contacts/{contactId}:
     get:
@@ -928,7 +934,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Contact"
+              $ref: "#/components/schemas/ContactCreateRequest"
       responses:
         "200":
           description: "Contact updated"
@@ -940,6 +946,8 @@ paths:
           description: "Invalid payload"
         "404":
           description: "Contact not found"
+        "409":
+          description: "This person already has a contact with the same value (phone number, email or messaging account) for this application"
     delete:
       tags: ["contacts"]
       operationId: "deleteContact"
@@ -2756,8 +2764,33 @@ components:
           type: "string"
         contactType:
           $ref: "#/components/schemas/ContactType"
-        person:
-          $ref: "#/components/schemas/Person"
+        personId:
+          type: "string"
+          format: "uuid"
+        applicationId:
+          type: "string"
+          format: "uuid"
+        active:
+          type: "boolean"
+
+    ContactCreateRequest:
+      type: "object"
+      description: "Wire shape for creating/updating a contact — references the contact type by id (contentTypeId) rather than embedding a full ContactType object."
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        content:
+          type: "string"
+        contentTypeId:
+          type: "string"
+          format: "uuid"
+        personId:
+          type: "string"
+          format: "uuid"
+        applicationId:
+          type: "string"
+          format: "uuid"
         active:
           type: "boolean"
 

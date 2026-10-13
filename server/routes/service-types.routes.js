@@ -10,6 +10,10 @@ router.get('/list-all', (req, res) => proxyToBackbone(req, res, '/api/v1/service
 router.get('/find/:serviceTypeId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/service-types/find/${req.params['serviceTypeId']}`)
 );
+router.get('/', (req, res) => proxyToBackbone(req, res, '/api/v1/service-types'));
+router.get('/:active', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/service-types/${req.params['active']}`)
+);
 router.put('/:serviceTypeId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/service-types/${req.params['serviceTypeId']}`)
 );

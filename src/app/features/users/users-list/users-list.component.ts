@@ -1,6 +1,10 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { RoleService } from '@core/services/role.service';
 import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
@@ -8,15 +12,19 @@ import { UserTO } from '@shared/models/user.model';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
+interface AliasLookupResult {
+  user: UserTO;
+  roleNames: string[];
+}
+
 @Component({
   selector: 'app-users-list',
   standalone: true,
   imports: [RouterLink, FormsModule, ConfirmDialogComponent],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a [routerLink]="['/applications', applicationId]" class="text-sm text-blue-600 hover:underline">← Aplicación</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Usuarios</h1>
         </div>
         <a
@@ -56,6 +64,57 @@ type StatusFilter = 'all' | 'active' | 'inactive';
           <option [ngValue]="50">50 por página</option>
         </select>
       </div>
+
+      <form class="mb-4 flex flex-wrap items-center gap-2" (ngSubmit)="lookupAlias()">
+        <input
+          type="text"
+          name="aliasLookup"
+          [ngModel]="aliasQuery()"
+          (ngModelChange)="aliasQuery.set($event)"
+          placeholder="Alias exacto…"
+          aria-label="Alias exacto"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+        />
+        <button
+          type="submit"
+          [disabled]="!aliasQuery().trim() || aliasSearching()"
+          class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+        >
+          {{ aliasSearching() ? 'Buscando…' : 'Buscar en servidor' }}
+        </button>
+        @if (aliasResult() || aliasNotFound()) {
+          <button type="button" (click)="clearAlias()" class="text-sm text-gray-500 hover:underline dark:text-gray-400">
+            Limpiar
+          </button>
+        }
+      </form>
+
+      @if (aliasNotFound()) {
+        <p class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+          No se encontró un usuario con ese alias en esta aplicación.
+        </p>
+      }
+      @if (aliasResult(); as found) {
+        <div class="mb-4 flex flex-wrap items-center gap-4 rounded-xl border border-blue-200 bg-blue-50/60 p-4 dark:border-blue-900/50 dark:bg-blue-900/10">
+          <div class="min-w-0 flex-1">
+            <p class="font-medium text-gray-900 dark:text-gray-100">{{ found.user.displayName }}</p>
+            <p class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ found.user.alias }} · {{ found.user.email }}</p>
+            <div class="mt-2 flex flex-wrap gap-1">
+              @for (name of found.roleNames; track name) {
+                <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">{{ name }}</span>
+              } @empty {
+                <span class="text-xs text-gray-400 dark:text-gray-500">Sin roles</span>
+              }
+            </div>
+          </div>
+          <a
+            [routerLink]="['/applications', applicationId, 'users', found.user.id, 'edit']"
+            class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Editar
+          </a>
+        </div>
+      }
 
       @if (loading()) {
         <p class="text-sm text-gray-500 dark:text-gray-400">Cargando…</p>
@@ -176,6 +235,7 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 })
 export class UsersListComponent implements OnInit {
   private readonly userService = inject(UserService);
+  private readonly roleService = inject(RoleService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   protected readonly applicationId = this.route.snapshot.paramMap.get('applicationId')!;
@@ -183,6 +243,11 @@ export class UsersListComponent implements OnInit {
   protected readonly loading = signal(true);
   private readonly allUsers = signal<UserTO[]>([]);
   protected readonly deleteTarget = signal<UserTO | null>(null);
+
+  protected readonly aliasQuery = signal('');
+  protected readonly aliasSearching = signal(false);
+  protected readonly aliasNotFound = signal(false);
+  protected readonly aliasResult = signal<AliasLookupResult | null>(null);
 
   protected readonly searchAlias = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
@@ -239,6 +304,47 @@ export class UsersListComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  protected lookupAlias(): void {
+    const alias = this.aliasQuery().trim();
+    if (!alias || this.aliasSearching()) return;
+    this.aliasSearching.set(true);
+    this.aliasNotFound.set(false);
+    this.aliasResult.set(null);
+
+    forkJoin({
+      user: this.userService.getByAlias(alias, this.applicationId),
+      record: this.userService.findAliasRecord(alias, this.applicationId),
+    })
+      .pipe(
+        switchMap(({ user, record }) =>
+          this.roleService.getByStatusAndIds(true, record.roles ?? []).pipe(
+            map((roles) => ({ user, roleNames: roles.map((r) => r.name) })),
+            catchError(() => of({ user, roleNames: (user.roles ?? []).map((r) => r.name) })),
+          ),
+        ),
+      )
+      .subscribe({
+        next: (result) => {
+          this.aliasResult.set(result);
+          this.aliasSearching.set(false);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.aliasSearching.set(false);
+          if (err.status === 404) {
+            this.aliasNotFound.set(true);
+          } else {
+            this.toast.error('Error al buscar el alias');
+          }
+        },
+      });
+  }
+
+  protected clearAlias(): void {
+    this.aliasQuery.set('');
+    this.aliasNotFound.set(false);
+    this.aliasResult.set(null);
   }
 
   protected confirmDelete(): void {

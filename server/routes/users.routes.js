@@ -21,6 +21,9 @@ router.get('/check/email/:email/application/:applicationId', (req, res) =>
 router.get('/userByAlias/:alias/application/:applicationId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/users/userByAlias/${req.params['alias']}/application/${req.params['applicationId']}`)
 );
+router.get('/alias/:alias/application/:applicationId', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/users/alias/${req.params['alias']}/application/${req.params['applicationId']}`)
+);
 router.put('/:userId/full-detail', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/users/${req.params['userId']}/full-detail`)
 );

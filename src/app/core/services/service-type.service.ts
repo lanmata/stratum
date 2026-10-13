@@ -12,6 +12,10 @@ export class ServiceTypeService {
     return this.http.getList<ServiceType>(API.SERVICE_TYPES.LIST_ALL);
   }
 
+  getByStatus(active: boolean): Observable<ServiceType[]> {
+    return this.http.getList<ServiceType>(API.SERVICE_TYPES.BY_STATUS(active));
+  }
+
   getById(id: string): Observable<ServiceType> {
     return this.http.get<ServiceType>(API.SERVICE_TYPES.FIND_BY_ID(id));
   }

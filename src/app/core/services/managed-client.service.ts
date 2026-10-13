@@ -8,6 +8,9 @@ import {
   ManagedClientCreateResponse,
   ManagedClientUpdateRequest,
   ManagedClientSecretRotateResponse,
+  ManagedClientTokenRequest,
+  ManagedClientTokenResponse,
+  ManagedClientTokenIntrospectResponse,
 } from '@shared/models/managed-client.model';
 
 @Injectable({ providedIn: 'root' })
@@ -40,6 +43,16 @@ export class ManagedClientService {
       API.MANAGED_CLIENTS.ROTATE_SECRET(clientId),
       {}
     );
+  }
+
+  issueToken(req: ManagedClientTokenRequest): Observable<ManagedClientTokenResponse> {
+    return this.http.post<ManagedClientTokenResponse>(API.MANAGED_CLIENTS.TOKEN, req);
+  }
+
+  introspectToken(token: string): Observable<ManagedClientTokenIntrospectResponse> {
+    return this.http.post<ManagedClientTokenIntrospectResponse>(API.MANAGED_CLIENTS.INTROSPECT, {
+      token,
+    });
   }
 
   revokeAllTokens(clientId: string): Observable<void> {

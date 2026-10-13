@@ -1,19 +1,21 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ServiceTypeService } from '@core/services/service-type.service';
 import { ToastService } from '@core/services/toast.service';
 import { ServiceType } from '@shared/models/service-type.model';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
+type StatusFilter = 'all' | 'active' | 'inactive';
+
 @Component({
   selector: 'app-service-types-list',
   standalone: true,
-  imports: [RouterLink, ConfirmDialogComponent],
+  imports: [RouterLink, FormsModule, ConfirmDialogComponent],
   template: `
-    <div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
+    <div>
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <a routerLink="/dashboard" class="text-sm text-blue-600 hover:underline">← Dashboard</a>
           <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Tipos de Servicio</h1>
         </div>
         <a
@@ -22,6 +24,19 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
         >
           Nuevo Tipo de Servicio
         </a>
+      </div>
+
+      <div class="mb-4 flex flex-wrap gap-3">
+        <select
+          [ngModel]="statusFilter()"
+          (ngModelChange)="onStatusChange($event)"
+          aria-label="Filtrar por estado"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+        >
+          <option value="all">Todos</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Inactivos</option>
+        </select>
       </div>
 
       @if (loading()) {
@@ -111,6 +126,7 @@ export class ServiceTypesListComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly showConfirm = signal(false);
   private readonly pendingServiceType = signal<ServiceType | null>(null);
+  protected readonly statusFilter = signal<StatusFilter>('all');
 
   ngOnInit(): void {
     this.load();
@@ -134,11 +150,21 @@ export class ServiceTypesListComponent implements OnInit {
     });
   }
 
+  protected onStatusChange(status: StatusFilter): void {
+    this.statusFilter.set(status);
+    this.load();
+  }
+
   private load(): void {
     this.loading.set(true);
-    this.service.getAll().subscribe({
+    const status = this.statusFilter();
+    const source$ =
+      status === 'all' ? this.service.getAll() : this.service.getByStatus(status === 'active');
+    source$.subscribe({
       next: (data) => {
-        this.serviceTypes.set(data);
+        this.serviceTypes.set(
+          status === 'all' ? data : data.filter((st) => st.active === (status === 'active')),
+        );
         this.loading.set(false);
       },
       error: () => {

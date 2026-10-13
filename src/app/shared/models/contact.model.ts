@@ -6,6 +6,15 @@ export interface Contact {
   active: boolean;
 }
 
+export interface ContactWriteRequest {
+  id?: string;
+  content: string;
+  contentTypeId: string;
+  personId: string;
+  applicationId?: string;
+  active: boolean;
+}
+
 export interface ContactType {
   id: string;
   name: string;
