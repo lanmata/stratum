@@ -13,6 +13,7 @@ describe('API constants', () => {
     expect(API.USERS.LINK_ROLE('u', 'r')).toBe('/v1/users/link/user/u/role/r');
     expect(API.USERS.UNLINK_ROLE('u', 'r')).toBe('/v1/users/unlink/user/u/role/r');
     expect(API.USERS.DELETE('a', 'u')).toBe('/v1/users/application/a/user/u');
+    expect(API.USERS.ACTIVATE('a', 'u')).toBe('/v1/users/application/a/user/u/activate');
   });
 
   it('builds role and feature paths, including id lists', () => {
@@ -27,12 +28,15 @@ describe('API constants', () => {
     expect(API.FEATURES.BY_ROLE('r')).toBe('/v1/features/role/r');
     expect(API.FEATURES.BY_STATUS_AND_IDS(true, ['x'])).toBe('/v1/features/true/x');
     expect(API.FEATURES.UPDATE('f')).toBe('/v1/features/f');
+    expect(API.FEATURES.ROOT).toBe('/v1/features');
+    expect(API.FEATURES.ROLES('f')).toBe('/v1/features/f/roles');
   });
 
   it('builds contact, people and catalogue paths', () => {
     expect(API.CONTACTS.BY_ID('c')).toBe('/v1/contacts/c');
     expect(API.CONTACTS.BY_PERSON('p')).toBe('/v1/contacts/person/p');
     expect(API.CONTACTS.BY_IDS(['a', 'b'])).toBe('/v1/contacts/list/a,b');
+    expect(API.CONTACTS.BY_OWNER('MERCHANT', 'o')).toBe('/v1/contacts/owner/MERCHANT/o');
     expect(API.PEOPLE.BY_ID('p')).toBe('/v1/people/p');
     expect(API.CONTACT_TYPES.BY_ID('t')).toBe('/v1/contact-types/t');
     expect(API.CONTACT_TYPES.BY_IDS(['a'])).toBe('/v1/contact-types/list/a');

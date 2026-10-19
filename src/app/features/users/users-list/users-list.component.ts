@@ -172,6 +172,19 @@ interface AliasLookupResult {
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                         </svg>
                       </a>
+                      @if (!user.active) {
+                        <button
+                          type="button"
+                          title="Activar"
+                          [disabled]="activatingId() === user.id"
+                          (click)="activate(user)"
+                          class="rounded-lg p-1.5 text-green-600 transition-colors hover:bg-green-50 disabled:opacity-50 dark:text-green-400 dark:hover:bg-green-900/20"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                          </svg>
+                        </button>
+                      }
                       <button
                         type="button"
                         title="Eliminar"
@@ -243,6 +256,7 @@ export class UsersListComponent implements OnInit {
   protected readonly loading = signal(true);
   private readonly allUsers = signal<UserTO[]>([]);
   protected readonly deleteTarget = signal<UserTO | null>(null);
+  protected readonly activatingId = signal<string | null>(null);
 
   protected readonly aliasQuery = signal('');
   protected readonly aliasSearching = signal(false);
@@ -345,6 +359,23 @@ export class UsersListComponent implements OnInit {
     this.aliasQuery.set('');
     this.aliasNotFound.set(false);
     this.aliasResult.set(null);
+  }
+
+  protected activate(user: UserTO): void {
+    if (this.activatingId()) return;
+    this.activatingId.set(user.id);
+    this.userService.activate(this.applicationId, user.id).subscribe({
+      next: () => {
+        this.allUsers.update((list) => list.map((u) => (u.id === user.id ? { ...u, active: true } : u)));
+        this.aliasResult.update((r) => (r?.user.id === user.id ? { ...r, user: { ...r.user, active: true } } : r));
+        this.activatingId.set(null);
+        this.toast.success(`Usuario "${user.alias}" activado`);
+      },
+      error: () => {
+        this.activatingId.set(null);
+        this.toast.error('Error al activar el usuario');
+      },
+    });
   }
 
   protected confirmDelete(): void {

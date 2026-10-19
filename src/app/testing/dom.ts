@@ -67,10 +67,18 @@ export class Dom<T> {
     this.fixture.detectChanges();
   }
 
-  submit(selector = 'form'): void {
-    const form = this.q<HTMLFormElement>(selector);
+  submit(selector: string | HTMLFormElement = 'form'): void {
+    const form = typeof selector === 'string' ? this.q<HTMLFormElement>(selector) : selector;
     if (!form) throw new Error(`Form not found: ${selector}`);
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     this.fixture.detectChanges();
+  }
+
+  /** Submits the form that holds the button with the given text. */
+  submitByText(text: string): void {
+    const button = this.qa('button').find((b) => (b.textContent ?? '').includes(text));
+    const form = button?.closest('form');
+    if (!form) throw new Error(`No form with a button containing "${text}"`);
+    this.submit(form);
   }
 }

@@ -32,11 +32,12 @@ describe('UsersListComponent', () => {
   let toast: jasmine.SpyObj<ToastService>;
 
   async function create(list: unknown = of(users)) {
-    userService = jasmine.createSpyObj('UserService', ['getByApplication', 'delete', 'getByAlias', 'findAliasRecord']);
+    userService = jasmine.createSpyObj('UserService', ['getByApplication', 'delete', 'activate', 'getByAlias', 'findAliasRecord']);
     roleService = jasmine.createSpyObj('RoleService', ['getByStatusAndIds']);
     toast = jasmine.createSpyObj('ToastService', ['success', 'error']);
     userService.getByApplication.and.returnValue(list as never);
     userService.delete.and.returnValue(of(undefined));
+    userService.activate.and.returnValue(of(undefined));
     userService.getByAlias.and.returnValue(of(users[0]));
     userService.findAliasRecord.and.returnValue(of({ userId: 'u1', alias: 'alias1', roles: ['r1'] }));
     roleService.getByStatusAndIds.and.returnValue(of([{ id: 'r1', name: 'Admin', active: true }]));
@@ -88,6 +89,24 @@ describe('UsersListComponent', () => {
     TestBed.resetTestingModule();
     await create(throwError(() => new Error('x')));
     expect(toast.error).toHaveBeenCalledWith('Error al cargar los usuarios');
+  });
+
+  it('activates an inactive user and only offers the action for inactive ones', async () => {
+    const dom = await create();
+    expect(dom.qa('button[title=Activar]').length).toBe(1);
+    dom.click('button[title=Activar]');
+    expect(userService.activate).toHaveBeenCalledWith('a1', 'u2');
+    expect(toast.success).toHaveBeenCalledWith('Usuario "alias2" activado');
+    expect(dom.qa('button[title=Activar]').length).toBe(0);
+  });
+
+  it('keeps the user inactive and reports activation errors', async () => {
+    const dom = await create();
+    userService.activate.and.returnValue(throwError(() => ({ status: 500 })));
+    dom.click('button[title=Activar]');
+    expect(toast.error).toHaveBeenCalledWith('Error al activar el usuario');
+    expect(dom.qa('button[title=Activar]').length).toBe(1);
+    expect((dom.q('button[title=Activar]') as HTMLButtonElement).disabled).toBeFalse();
   });
 
   it('deletes a user after confirmation', async () => {

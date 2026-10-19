@@ -20,6 +20,22 @@ import { PersonContactsComponent } from '@shared/components/person-contacts/pers
 import { PersonAddressesComponent } from '@shared/components/person-addresses/person-addresses.component';
 import { PersonIdentificationDocumentsComponent } from '@shared/components/person-identification-documents/person-identification-documents.component';
 
+// Backbone answers 409 when an alias / e-mail is taken; older versions answered 404.
+function isTakenStatus(status: number): boolean {
+  return status === 404 || status === 409;
+}
+
+function createErrorMessage(status: number): string {
+  switch (status) {
+    case 409:
+      return 'El alias o el correo ya están registrados en esta aplicación';
+    case 422:
+      return 'La contraseña no cumple la política de contraseñas';
+    default:
+      return 'Error al crear el usuario';
+  }
+}
+
 @Component({
   selector: 'app-user-form',
   standalone: true,
@@ -138,24 +154,27 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
 
               <!-- Estado + Toggles -->
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                @if (isEdit()) {
-                  <div class="flex items-center gap-3">
-                    <button
-                      type="button"
-                      (click)="form.controls.active.setValue(!form.controls.active.value)"
-                      class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none"
-                      [class]="form.controls.active.value ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'"
-                    >
-                      <span
-                        class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
-                        [class]="form.controls.active.value ? 'translate-x-6' : 'translate-x-1'"
-                      ></span>
-                    </button>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">
-                      {{ form.controls.active.value ? 'Activo' : 'Inactivo' }}
+                <div class="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    (click)="form.controls.active.setValue(!form.controls.active.value)"
+                    class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none"
+                    [class]="form.controls.active.value ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'"
+                  >
+                    <span
+                      class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+                      [class]="form.controls.active.value ? 'translate-x-6' : 'translate-x-1'"
+                    ></span>
+                  </button>
+                  <span class="text-sm text-gray-700 dark:text-gray-300">
+                    {{ form.controls.active.value ? 'Activo' : 'Inactivo' }}
+                  </span>
+                  @if (!isEdit() && !form.controls.active.value) {
+                    <span class="w-full text-xs text-gray-500 dark:text-gray-400">
+                      El usuario se crea inactivo: no podrá iniciar sesión hasta que lo actives.
                     </span>
-                  </div>
-                }
+                  }
+                </div>
 
                 <div class="flex items-center gap-3">
                   <button
@@ -595,7 +614,7 @@ export class UserFormComponent implements OnInit {
             ].join('; ');
             this.toast.warning(warnings);
           } else {
-            this.toast.error('Error al crear el usuario');
+            this.toast.error(createErrorMessage(err.status));
           }
           this.saving.set(false);
         },
@@ -693,7 +712,7 @@ export class UserFormComponent implements OnInit {
         switchMap(() => this.userService.checkAlias(value, this.applicationId)),
         map(() => null),
         catchError((err: HttpErrorResponse) =>
-          of(err.status === 404 ? { aliasUnavailable: true } : null)
+          of(isTakenStatus(err.status) ? { aliasUnavailable: true } : null)
         )
       );
     };
@@ -707,7 +726,7 @@ export class UserFormComponent implements OnInit {
         switchMap(() => this.userService.checkEmail(value, this.applicationId)),
         map(() => null),
         catchError((err: HttpErrorResponse) =>
-          of(err.status === 404 ? { emailUnavailable: true } : null)
+          of(isTakenStatus(err.status) ? { emailUnavailable: true } : null)
         )
       );
     };

@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap, map, catchError, of, throwError } from 'rxjs';
+import { Observable, tap, map, catchError, combineLatest, of, take, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpService } from './http.service';
 import { SessionStoreService } from '@core/store/session/session.store.service';
@@ -64,7 +64,20 @@ export class AuthService {
     );
   }
 
+  /**
+   * Ends the session: backbone puts the session and refresh tokens on its deny-list (best effort —
+   * an unreachable backend must not keep the user signed in), then the local session is dropped.
+   */
   logout(): void {
+    combineLatest([this.store.token$, this.store.refreshToken$])
+      .pipe(take(1))
+      .subscribe(([token, refreshToken]) => {
+        if (!token) return;
+        this.http
+          .post<void>(API.SESSION.LOGOUT, refreshToken ? { refreshToken } : {})
+          .pipe(catchError(() => of(undefined)))
+          .subscribe();
+      });
     this.store.clear();
     this.router.navigate(['/auth/login']);
   }

@@ -170,6 +170,28 @@ describe('UserFormComponent', () => {
       expect(dom.q<HTMLButtonElement>('button[type=submit]')!.disabled).toBeFalse();
     }));
 
+    it('explains the 409 and 422 create errors when the backend sends no warning', fakeAsync(() => {
+      const dom = create(null);
+      fillCreate(dom);
+      users.create.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+      dom.submit();
+      expect(toast.error).toHaveBeenCalledWith('El alias o el correo ya están registrados en esta aplicación');
+      users.create.and.returnValue(throwError(() => new HttpErrorResponse({ status: 422 })));
+      dom.submit();
+      expect(toast.error).toHaveBeenCalledWith('La contraseña no cumple la política de contraseñas');
+    }));
+
+    it('creates the user inactive when the status switch is turned off', fakeAsync(() => {
+      const dom = create(null);
+      expect(dom.text).toContain('Activo');
+      fillCreate(dom);
+      dom.click('button[role=switch], button.relative');
+      dom.fixture.detectChanges();
+      expect(dom.text).toContain('se crea inactivo');
+      dom.submit();
+      expect(users.create.calls.mostRecent().args[0].active).toBeFalse();
+    }));
+
     it('blocks submit while the form is invalid', () => {
       const dom = create(null);
       dom.submit();
@@ -190,6 +212,20 @@ describe('UserFormComponent', () => {
       expect(dom.text).toContain('Mínimo 8 caracteres');
       expect(users.checkAlias).not.toHaveBeenCalled();
       expect(users.checkEmail).not.toHaveBeenCalled();
+    }));
+
+    it('flags aliases and emails taken according to the 409 the backend answers now', fakeAsync(() => {
+      const dom = create(null);
+      users.checkAlias.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+      users.checkEmail.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+      dom.type('input[formControlName=alias]', 'taken1');
+      dom.type('input[formControlName=email]', 'taken@x.com');
+      dom.q('input[formControlName=alias]')!.dispatchEvent(new Event('blur'));
+      dom.q('input[formControlName=email]')!.dispatchEvent(new Event('blur'));
+      tick(400);
+      dom.fixture.detectChanges();
+      expect(dom.text).toContain('alias ya está en uso');
+      expect(dom.text).toContain('email ya está registrado');
     }));
 
     it('flags unavailable aliases and emails (404) and accepts available ones', fakeAsync(() => {
@@ -216,7 +252,7 @@ describe('UserFormComponent', () => {
       expect(dom.text).toContain('Alias disponible');
     }));
 
-    it('treats availability check failures other than 404 as available', fakeAsync(() => {
+    it('treats availability check failures other than 404 and 409 as available', fakeAsync(() => {
       const dom = create(null);
       users.checkAlias.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
       users.checkEmail.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));

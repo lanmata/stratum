@@ -2,14 +2,18 @@ import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpService } from './http.service';
 import { API } from '@shared/constants/api.constants';
-import { Contact, ContactWriteRequest } from '@shared/models/contact.model';
+import { Contact, ContactSearchParams, ContactWriteRequest } from '@shared/models/contact.model';
+import { PageResponse } from '@shared/models/page.model';
 
 function toWriteRequest(contact: Contact): ContactWriteRequest {
   return {
     id: contact.id,
     content: contact.content,
     contentTypeId: contact.contactType.id,
-    personId: contact.personId,
+    ...(contact.personId ? { personId: contact.personId } : {}),
+    ...(contact.applicationId ? { applicationId: contact.applicationId } : {}),
+    ...(contact.ownerType ? { ownerType: contact.ownerType } : {}),
+    ...(contact.ownerId ? { ownerId: contact.ownerId } : {}),
     active: contact.active,
   };
 }
@@ -26,8 +30,14 @@ export class ContactService {
     return this.http.get<Contact>(API.CONTACTS.BY_ID(contactId));
   }
 
-  getAll(): Observable<Contact[]> {
-    return this.http.getList<Contact>(API.CONTACTS.LIST);
+  /** Server-side paginated directory of one application (`applicationId` is mandatory). */
+  search(params: ContactSearchParams): Observable<PageResponse<Contact>> {
+    return this.http.get<PageResponse<Contact>>(API.CONTACTS.ROOT, { ...params });
+  }
+
+  /** Contacts of an external owner, optionally limited to one application. */
+  getByOwner(ownerType: string, ownerId: string, applicationId?: string): Observable<Contact[]> {
+    return this.http.getList<Contact>(API.CONTACTS.BY_OWNER(ownerType, ownerId), { applicationId });
   }
 
   getByIds(contactIds: string[]): Observable<Contact[]> {
@@ -35,8 +45,8 @@ export class ContactService {
     return this.http.getList<Contact>(API.CONTACTS.BY_IDS(contactIds));
   }
 
-  getByPerson(personId: string): Observable<Contact[]> {
-    return this.http.getList<Contact>(API.CONTACTS.BY_PERSON(personId));
+  getByPerson(personId: string, applicationId?: string): Observable<Contact[]> {
+    return this.http.getList<Contact>(API.CONTACTS.BY_PERSON(personId), { applicationId });
   }
 
   update(contactId: string, contact: Contact): Observable<Contact> {

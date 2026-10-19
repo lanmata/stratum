@@ -45,10 +45,10 @@ describe('person-scoped services', () => {
       expect(http.post).toHaveBeenCalledWith(`${API.CONTACTS.ROOT}/`, wireContact);
       svc.getById('c1').subscribe();
       expect(http.get).toHaveBeenCalledWith(API.CONTACTS.BY_ID('c1'));
-      svc.getAll().subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.LIST);
-      svc.getByPerson('p1').subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_PERSON('p1'));
+      svc.getByPerson('p1', 'app1').subscribe();
+      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_PERSON('p1'), {
+        applicationId: 'app1',
+      });
       svc.update('c1', contact).subscribe();
       expect(http.put).toHaveBeenCalledWith(API.CONTACTS.BY_ID('c1'), wireContact);
       svc.delete('c1').subscribe();

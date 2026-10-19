@@ -8,6 +8,7 @@ export const API = {
     VALIDATE: '/v1/session/validate',
     RENEW: '/v1/session/renew',
     REFRESH: '/v1/session/refresh',
+    LOGOUT: '/v1/session/logout',
   },
   USERS: {
     ROOT: '/v1/users',
@@ -21,6 +22,8 @@ export const API = {
     LINK_ROLE: (userId: string, roleId: string) => `/v1/users/link/user/${userId}/role/${roleId}`,
     UNLINK_ROLE: (userId: string, roleId: string) => `/v1/users/unlink/user/${userId}/role/${roleId}`,
     DELETE: (appId: string, userId: string) => `/v1/users/application/${appId}/user/${userId}`,
+    ACTIVATE: (appId: string, userId: string) =>
+      `/v1/users/application/${appId}/user/${userId}/activate`,
   },
   ROLES: {
     ROOT: '/v1/roles',
@@ -36,6 +39,7 @@ export const API = {
     WITH_INACTIVE: (include: boolean) => `/v1/features/${include}`,
     BY_ID: (id: string) => `/v1/features/find/${id}`,
     BY_ROLE: (roleId: string) => `/v1/features/role/${roleId}`,
+    ROLES: (featureId: string) => `/v1/features/${featureId}/roles`,
     BY_STATUS_AND_IDS: (include: boolean, ids: string[]) =>
       `/v1/features/${include}/${ids.join(',')}`,
     UPDATE: (id: string) => `/v1/features/${id}`,
@@ -43,9 +47,10 @@ export const API = {
   CONTACTS: {
     ROOT: '/v1/contacts',
     BY_ID: (id: string) => `/v1/contacts/${id}`,
-    LIST: '/v1/contacts/list-all',
     BY_IDS: (ids: string[]) => `/v1/contacts/list/${ids.join(',')}`,
     BY_PERSON: (personId: string) => `/v1/contacts/person/${personId}`,
+    BY_OWNER: (ownerType: string, ownerId: string) =>
+      `/v1/contacts/owner/${encodeURIComponent(ownerType)}/${ownerId}`,
   },
   PEOPLE: {
     ROOT: '/v1/people',
