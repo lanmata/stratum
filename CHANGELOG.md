@@ -12,9 +12,11 @@
 - Header avatar from `GET /profile/image/`.
 - BFF: routes for every endpoint above, multipart/binary proxying (`proxyMultipart`, `responseType: 'arraybuffer'`) and 302→200 mapping for `report/placeholdervalues`.
 - Tests: Karma specs for every file (statements ≥ 99 %, branches ≥ 89 %, 85 % enforced in `karma.conf.js`) and `node:test` specs for the BFF (`pnpm run test:server`).
+- Sync with backbone-rest (T-79 → T-92): application-scoped, server-paginated contacts directory and owner lookup (`GET /contacts/`, `/contacts/owner/{type}/{id}`), paginated feature catalog with roles-per-feature (`GET /features/`, `/features/{id}/roles`), user activation (`PUT /users/application/{a}/user/{u}/activate`), 409 handling on repeated alias/e-mail, and session logout that revokes tokens (`POST /session/logout`, validate/renew via `session-token` header).
 
 ### Changed
 - `401` responses now clear the session before redirecting to the login page.
+- Contacts: `GET /contacts/list-all` and `ContactService.getAll` removed in favour of the paginated directory.
 - `api.yaml` re-synced with `backbone-rest`.
 
 ### Known issues

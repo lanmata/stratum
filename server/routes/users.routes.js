@@ -36,6 +36,9 @@ router.put('/link/user/:userId/role/:roleId', (req, res) =>
 router.put('/unlink/user/:userId/role/:roleId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/users/unlink/user/${req.params['userId']}/role/${req.params['roleId']}`)
 );
+router.put('/application/:applicationId/user/:userId/activate', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/users/application/${req.params['applicationId']}/user/${req.params['userId']}/activate`)
+);
 router.delete('/application/:applicationId/user/:userId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/users/application/${req.params['applicationId']}/user/${req.params['userId']}`)
 );

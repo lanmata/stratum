@@ -59,6 +59,10 @@ export class UserService {
     return this.http.put<UserTO>(API.USERS.UNLINK_ROLE(userId, roleId), {});
   }
 
+  activate(applicationId: string, userId: string): Observable<void> {
+    return this.http.put<void>(API.USERS.ACTIVATE(applicationId, userId), {});
+  }
+
   delete(applicationId: string, userId: string): Observable<void> {
     return this.http.delete<void>(API.USERS.DELETE(applicationId, userId));
   }

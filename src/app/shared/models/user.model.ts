@@ -28,7 +28,8 @@ export interface UserCreateRequest {
   notificationEmail: boolean;
   notificationSms: boolean;
   privacyDataOutActive: boolean;
-  active: boolean;
+  /** Omitted = active. `false` creates the user inactive: it cannot sign in until activated. */
+  active?: boolean;
   person?: Person;
   roleId: string;
   applicationId: string;

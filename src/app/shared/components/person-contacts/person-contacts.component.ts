@@ -155,6 +155,7 @@ export class PersonContactsComponent implements OnChanges {
   protected readonly showForm = signal(false);
   protected readonly deleteTarget = signal<Contact | null>(null);
   private editingId: string | null = null;
+  private editing: Contact | null = null;
 
   protected readonly form = this.fb.nonNullable.group({
     content: [
@@ -202,6 +203,7 @@ export class PersonContactsComponent implements OnChanges {
 
   protected startCreate(): void {
     this.editingId = null;
+    this.editing = null;
     this.submitted.set(false);
     this.form.reset({ content: '', contactTypeId: '', active: true });
     this.showForm.set(true);
@@ -209,6 +211,7 @@ export class PersonContactsComponent implements OnChanges {
 
   protected startEdit(contact: Contact): void {
     this.editingId = contact.id ?? null;
+    this.editing = contact;
     this.submitted.set(false);
     this.form.setValue({
       content: contact.content,
@@ -234,6 +237,7 @@ export class PersonContactsComponent implements OnChanges {
       content: content.trim(),
       contactType,
       personId: this.personId(),
+      ...(this.editing?.applicationId ? { applicationId: this.editing.applicationId } : {}),
       active,
     };
 

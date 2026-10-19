@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { SessionStoreService } from '@core/store/session/session.store.service';
 import { API } from '@shared/constants/api.constants';
 import { createHttpSpy, HttpSpy, provideHttpSpy } from '@app/testing/http-spy';
@@ -13,12 +13,19 @@ function jwt(payload: object): string {
 describe('AuthService', () => {
   let http: HttpSpy;
   let store: jasmine.SpyObj<SessionStoreService>;
+  let token$: BehaviorSubject<string | null>;
+  let refreshToken$: BehaviorSubject<string | null>;
   let router: jasmine.SpyObj<Router>;
   let auth: AuthService;
 
   beforeEach(() => {
     http = createHttpSpy();
-    store = jasmine.createSpyObj('SessionStoreService', ['save', 'refresh', 'clear']);
+    token$ = new BehaviorSubject<string | null>(null);
+    refreshToken$ = new BehaviorSubject<string | null>(null);
+    store = Object.assign(jasmine.createSpyObj('SessionStoreService', ['save', 'refresh', 'clear']), {
+      token$,
+      refreshToken$,
+    });
     router = jasmine.createSpyObj('Router', ['navigate']);
     TestBed.configureTestingModule({
       providers: [
@@ -157,6 +164,25 @@ describe('AuthService', () => {
 
   it('logout clears the session and goes to the login page', () => {
     auth.logout();
+    expect(http.post).not.toHaveBeenCalled();
+    expect(store.clear).toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/auth/login']);
+  });
+
+  it('logout revokes the tokens in backbone before dropping the session', () => {
+    token$.next('t');
+    refreshToken$.next('r');
+    http.post.and.returnValue(of(undefined) as never);
+    auth.logout();
+    expect(http.post).toHaveBeenCalledWith(API.SESSION.LOGOUT, { refreshToken: 'r' });
+    expect(store.clear).toHaveBeenCalled();
+  });
+
+  it('logout still signs the user out when the revocation fails', () => {
+    token$.next('t');
+    http.post.and.returnValue(throwError(() => ({ status: 500 })) as never);
+    auth.logout();
+    expect(http.post).toHaveBeenCalledWith(API.SESSION.LOGOUT, {});
     expect(store.clear).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login']);
   });

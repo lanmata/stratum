@@ -69,12 +69,20 @@ describe('feature services', () => {
   });
 
   describe('ContactService', () => {
-    it('resolves contacts by ids and lists all as a list', () => {
+    it('resolves contacts by ids and owner and paginated directory', () => {
       const svc = TestBed.inject(ContactService);
       svc.getByIds(['a', 'b']).subscribe();
       expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_IDS(['a', 'b']));
-      svc.getAll().subscribe();
-      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.LIST);
+      svc.getByOwner('MERCHANT', 'o1', 'app1').subscribe();
+      expect(http.getList).toHaveBeenCalledWith(API.CONTACTS.BY_OWNER('MERCHANT', 'o1'), {
+        applicationId: 'app1',
+      });
+      svc.search({ applicationId: 'app1', page: 1, size: 5 }).subscribe();
+      expect(http.get).toHaveBeenCalledWith(API.CONTACTS.ROOT, {
+        applicationId: 'app1',
+        page: 1,
+        size: 5,
+      });
     });
 
     it('short-circuits an empty id list', () => {

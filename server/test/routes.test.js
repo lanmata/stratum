@@ -111,6 +111,12 @@ describe('BFF routes proxy to the matching backbone-rest path', () => {
       'GET /api/v1/roles/:includeInactive/:roleIds',
       'GET /api/v1/features/:includeInactive/:featureIds',
       'GET /api/v1/contacts/list/:contactIds',
+      'GET /api/v1/contacts',
+      'GET /api/v1/contacts/owner/:ownerType/:ownerId',
+      'GET /api/v1/features',
+      'GET /api/v1/features/:featureId/roles',
+      'POST /api/v1/session/logout',
+      'PUT /api/v1/users/application/:applicationId/user/:userId/activate',
       'GET /api/v1/contact-types/list/:contactTypeIds',
       'GET /api/v1/service-types/:active',
       'POST /api/v1/managed-clients/token',
@@ -123,6 +129,32 @@ describe('BFF routes proxy to the matching backbone-rest path', () => {
       'POST /api/v1/report/placeholdervalues',
     ]) {
       assert.ok(all.includes(expected), `missing route ${expected}`);
+    }
+  });
+
+  it('does not let the generic two-segment feature route shadow /features/:id/roles', async () => {
+    backbone.requests.length = 0;
+    await fetch(`${bff.url}/api/v1/features/f-1/roles?page=1&size=5`);
+    const seen = backbone.requests.at(-1);
+    assert.equal(seen.path, '/api/v1/features/f-1/roles');
+    assert.equal(new URL(`http://x${seen.url}`).searchParams.get('size'), '5');
+    await fetch(`${bff.url}/api/v1/features/true/a,b`);
+    assert.equal(backbone.requests.at(-1).path, '/api/v1/features/true/a,b');
+  });
+
+  it('forwards the session token in its own header on validate, renew and logout', async () => {
+    for (const [method, path] of [
+      ['GET', '/api/v1/session/validate'],
+      ['GET', '/api/v1/session/renew'],
+      ['POST', '/api/v1/session/logout'],
+    ]) {
+      backbone.requests.length = 0;
+      await fetch(`${bff.url}${path}`, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'session-token': 'tok-9' },
+        body: method === 'POST' ? JSON.stringify({ refreshToken: 'r' }) : undefined,
+      });
+      assert.equal(backbone.requests.at(-1).headers['session-token'], 'tok-9', path);
     }
   });
 

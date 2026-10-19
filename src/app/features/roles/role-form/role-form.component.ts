@@ -5,6 +5,7 @@ import { forkJoin, Observable, of } from 'rxjs';
 import { RoleService } from '@core/services/role.service';
 import { FeatureService } from '@core/services/feature.service';
 import { ToastService } from '@core/services/toast.service';
+import { FeatureSummary } from '@shared/models/feature.model';
 import { environment } from '@env/environment';
 
 interface FeatureEntry {
@@ -103,6 +104,53 @@ interface FeatureEntry {
               </button>
             </div>
 
+            @if (!isEdit()) {
+              <form class="mb-4 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600" (submit)="$event.preventDefault(); searchCatalog()">
+                <p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">Reutilizar una funcionalidad existente</p>
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    name="catalogQuery"
+                    [value]="catalogQuery()"
+                    (input)="catalogQuery.set($any($event.target).value)"
+                    placeholder="Buscar en el catálogo por nombre…"
+                    aria-label="Buscar funcionalidad existente"
+                    class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+                  />
+                  <button
+                    type="submit"
+                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    Buscar
+                  </button>
+                </div>
+                @if (catalogSearched()) {
+                  <ul class="mt-2 space-y-1">
+                    @for (item of catalogResults(); track item.id) {
+                      <li class="flex items-center justify-between rounded px-2 py-1 text-sm text-gray-700 dark:text-gray-300">
+                        <span>
+                          <span class="font-medium">{{ item.name }}</span>
+                          @if (item.description) {
+                            <span class="text-xs text-gray-500 dark:text-gray-400"> — {{ item.description }}</span>
+                          }
+                        </span>
+                        <button
+                          type="button"
+                          (click)="addExisting(item)"
+                          [disabled]="isSelected(item.id)"
+                          class="rounded border border-blue-300 px-2 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-40 dark:border-blue-700 dark:text-blue-400"
+                        >
+                          {{ isSelected(item.id) ? 'Agregada' : 'Agregar' }}
+                        </button>
+                      </li>
+                    } @empty {
+                      <li class="text-xs text-gray-500 dark:text-gray-400">Sin coincidencias en el catálogo.</li>
+                    }
+                  </ul>
+                }
+              </form>
+            }
+
             <div class="space-y-3">
               @for (entry of featureEntries(); track entry.id; let i = $index) {
                 <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/40">
@@ -111,8 +159,8 @@ interface FeatureEntry {
                     <button
                       type="button"
                       (click)="removeFeature(i)"
-                      [disabled]="featureEntries().length === 1 || (entry.backendId && !entry.active)"
-                      [title]="entry.backendId ? 'Desactivar' : 'Eliminar'"
+                      [disabled]="featureEntries().length === 1 || (isEdit() && entry.backendId && !entry.active)"
+                      [title]="isEdit() && entry.backendId ? 'Desactivar' : 'Eliminar'"
                       class="rounded p-0.5 text-red-400 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-red-900/20"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -128,6 +176,7 @@ interface FeatureEntry {
                         maxlength="128"
                         placeholder="Nombre *"
                         [value]="entry.name"
+                        [disabled]="!isEdit() && !!entry.backendId"
                         (input)="updateFeature(i, 'name', $any($event.target).value)"
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                         [class.border-red-400]="submitted() && !entry.name.trim()"
@@ -141,6 +190,7 @@ interface FeatureEntry {
                       maxlength="512"
                       placeholder="Descripción (opcional)"
                       [value]="entry.description"
+                      [disabled]="!isEdit() && !!entry.backendId"
                       (input)="updateFeature(i, 'description', $any($event.target).value)"
                       class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                     />
@@ -202,6 +252,9 @@ export class RoleFormComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly submitted = signal(false);
   protected readonly featureEntries = signal<FeatureEntry[]>([this.emptyFeature()]);
+  protected readonly catalogQuery = signal('');
+  protected readonly catalogResults = signal<FeatureSummary[]>([]);
+  protected readonly catalogSearched = signal(false);
   private roleId: string | null = null;
 
   protected readonly form = this.fb.nonNullable.group({
@@ -255,11 +308,42 @@ export class RoleFormComponent implements OnInit {
     // The API has no DELETE for features — an already-persisted feature can
     // only be deactivated, not removed, or it would silently reappear the
     // next time this role is loaded (GET still returns inactive features).
-    if (entry.backendId) {
+    if (entry.backendId && this.isEdit()) {
       this.updateFeature(index, 'active', false);
       return;
     }
     this.featureEntries.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  /** Searches the paginated feature catalog so a new role can reuse an existing feature. */
+  protected searchCatalog(): void {
+    const q = this.catalogQuery().trim();
+    this.featureService.search({ ...(q ? { q } : {}), active: true, size: 10 }).subscribe({
+      next: (res) => {
+        this.catalogResults.set(res.content);
+        this.catalogSearched.set(true);
+      },
+      error: () => this.toast.error('Error al buscar en el catálogo de funcionalidades'),
+    });
+  }
+
+  protected isSelected(featureId: string): boolean {
+    return this.featureEntries().some((e) => e.backendId === featureId);
+  }
+
+  protected addExisting(item: FeatureSummary): void {
+    if (this.isSelected(item.id)) return;
+    const entry: FeatureEntry = {
+      id: item.id,
+      backendId: item.id,
+      name: item.name,
+      description: item.description ?? '',
+      active: item.active,
+    };
+    this.featureEntries.update((list) => {
+      const blank = list.length === 1 && !list[0].backendId && !list[0].name.trim() && !list[0].description.trim();
+      return blank ? [entry] : [...list, entry];
+    });
   }
 
   protected updateFeature(index: number, field: keyof FeatureEntry, value: string | boolean): void {
@@ -304,6 +388,7 @@ export class RoleFormComponent implements OnInit {
           applicationId: this.applicationId,
           active,
           features: this.featureEntries().map((e) => ({
+            ...(e.backendId ? { id: e.backendId } : {}),
             name: e.name.trim(),
             description: e.description.trim() || undefined,
             active: e.active,

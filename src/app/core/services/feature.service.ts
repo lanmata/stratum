@@ -2,12 +2,30 @@ import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpService } from './http.service';
 import { API } from '@shared/constants/api.constants';
-import { Feature, FeatureRequest } from '@shared/models/feature.model';
+import { PageResponse } from '@shared/models/page.model';
+import {
+  Feature,
+  FeatureRequest,
+  FeatureRoleLink,
+  FeatureSearchParams,
+  FeatureSummary,
+} from '@shared/models/feature.model';
 
 @Injectable({ providedIn: 'root' })
 export class FeatureService {
   private readonly http = inject(HttpService);
 
+  /** Paginated, filtered catalog (`GET /features/`); the whole catalog is never listed at once. */
+  search(params: FeatureSearchParams = {}): Observable<PageResponse<FeatureSummary>> {
+    return this.http.get<PageResponse<FeatureSummary>>(API.FEATURES.ROOT, { ...params });
+  }
+
+  /** Roles — and the application owning each — a feature is linked to (paginated). */
+  getRoles(featureId: string, page = 0, size = 20): Observable<PageResponse<FeatureRoleLink>> {
+    return this.http.get<PageResponse<FeatureRoleLink>>(API.FEATURES.ROLES(featureId), { page, size });
+  }
+
+  /** @deprecated unbounded listing of the whole catalog; use {@link search}. */
   getAll(includeInactive = false): Observable<Feature[]> {
     return this.http.getList<Feature>(API.FEATURES.WITH_INACTIVE(includeInactive));
   }
