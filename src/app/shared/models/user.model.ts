@@ -28,7 +28,8 @@ export interface UserCreateRequest {
   notificationEmail: boolean;
   notificationSms: boolean;
   privacyDataOutActive: boolean;
-  active: boolean;
+  /** Omitted = active. `false` creates the user inactive: it cannot sign in until activated. */
+  active?: boolean;
   person?: Person;
   roleId: string;
   applicationId: string;
@@ -53,18 +54,14 @@ export interface PutUserUpdateRequest {
   middleName?: string;
   gender?: string;
   birthdate?: string;
-  contacts?: Contact[];
   roleIds?: string[];
   application?: string;
 }
 
 export interface UserAliasTO {
+  userId: string;
   alias: string;
-  applicationId: string;
-}
-
-export interface Contact {
-  id?: string;
-  value: string;
-  contactTypeId: string;
+  firstname?: string | null;
+  lastname?: string | null;
+  roles?: string[];
 }

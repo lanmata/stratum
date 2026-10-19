@@ -6,7 +6,14 @@ const { proxyToBackbone } = require('../shared/proxy');
 const router = Router();
 
 router.post('/', (req, res) => proxyToBackbone(req, res, '/api/v1/contacts/'));
-router.get('/list-all', (req, res) => proxyToBackbone(req, res, '/api/v1/contacts/list-all'));
+// Application-scoped, server-side paginated directory (`?applicationId=` is mandatory upstream).
+router.get('/', (req, res) => proxyToBackbone(req, res, '/api/v1/contacts/'));
+router.get('/owner/:ownerType/:ownerId', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/contacts/owner/${req.params['ownerType']}/${req.params['ownerId']}`)
+);
+router.get('/list/:contactIds', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/contacts/list/${req.params['contactIds']}`)
+);
 router.get('/person/:personId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/contacts/person/${req.params['personId']}`)
 );

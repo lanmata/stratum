@@ -11,4 +11,8 @@ export class AuditService {
   getEvents(query: AuditQuery = {}): Observable<AuditEvent[]> {
     return this.http.get<AuditEvent[]>(API.AUDIT.EVENTS, query as Record<string, string | number | boolean | string[] | undefined>);
   }
+
+  exportEvents(query: Omit<AuditQuery, 'page' | 'size'>): Observable<AuditEvent[]> {
+    return this.http.get<AuditEvent[]>(API.AUDIT.EXPORT, query as Record<string, string | number | boolean | string[] | undefined>);
+  }
 }

@@ -1,15 +1,22 @@
 import { inject, Injectable } from '@angular/core';
+import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HttpService } from './http.service';
 import { API } from '@shared/constants/api.constants';
-import { UserTO, UserCreateRequest, UserCreateResponse, PutUserUpdateRequest } from '@shared/models/user.model';
+import {
+  UserTO,
+  UserAliasTO,
+  UserCreateRequest,
+  UserCreateResponse,
+  PutUserUpdateRequest,
+} from '@shared/models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpService);
 
-  create(req: UserCreateRequest): Observable<UserCreateResponse> {
-    return this.http.post<UserCreateResponse>(API.USERS.ROOT, req);
+  create(req: UserCreateRequest): Observable<HttpResponse<UserCreateResponse>> {
+    return this.http.postWithResponse<UserCreateResponse>(API.USERS.ROOT, req);
   }
 
   getById(userId: string): Observable<UserTO> {
@@ -17,11 +24,15 @@ export class UserService {
   }
 
   getByApplication(applicationId: string): Observable<UserTO[]> {
-    return this.http.get<UserTO[]>(API.USERS.BY_APPLICATION(applicationId));
+    return this.http.getList<UserTO>(API.USERS.BY_APPLICATION(applicationId));
   }
 
   getByAlias(alias: string, applicationId: string): Observable<UserTO> {
     return this.http.get<UserTO>(API.USERS.BY_ALIAS(alias, applicationId));
+  }
+
+  findAliasRecord(alias: string, applicationId: string): Observable<UserAliasTO> {
+    return this.http.get<UserAliasTO>(API.USERS.ALIAS_RECORD(alias, applicationId));
   }
 
   checkAlias(alias: string, applicationId: string): Observable<void> {
@@ -46,6 +57,10 @@ export class UserService {
 
   unlinkRole(userId: string, roleId: string): Observable<UserTO> {
     return this.http.put<UserTO>(API.USERS.UNLINK_ROLE(userId, roleId), {});
+  }
+
+  activate(applicationId: string, userId: string): Observable<void> {
+    return this.http.put<void>(API.USERS.ACTIVATE(applicationId, userId), {});
   }
 
   delete(applicationId: string, userId: string): Observable<void> {

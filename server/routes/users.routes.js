@@ -21,6 +21,9 @@ router.get('/check/email/:email/application/:applicationId', (req, res) =>
 router.get('/userByAlias/:alias/application/:applicationId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/users/userByAlias/${req.params['alias']}/application/${req.params['applicationId']}`)
 );
+router.get('/alias/:alias/application/:applicationId', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/users/alias/${req.params['alias']}/application/${req.params['applicationId']}`)
+);
 router.put('/:userId/full-detail', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/users/${req.params['userId']}/full-detail`)
 );
@@ -32,6 +35,9 @@ router.put('/link/user/:userId/role/:roleId', (req, res) =>
 );
 router.put('/unlink/user/:userId/role/:roleId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/users/unlink/user/${req.params['userId']}/role/${req.params['roleId']}`)
+);
+router.put('/application/:applicationId/user/:userId/activate', (req, res) =>
+  proxyToBackbone(req, res, `/api/v1/users/application/${req.params['applicationId']}/user/${req.params['userId']}/activate`)
 );
 router.delete('/application/:applicationId/user/:userId', (req, res) =>
   proxyToBackbone(req, res, `/api/v1/users/application/${req.params['applicationId']}/user/${req.params['userId']}`)

@@ -1,0 +1,52 @@
+services:
+  stratum:
+    container_name: stratum
+    image: lamata/stratum:${STRATUM_VERSION:-0.0.1}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: stratum
+    domainname: umdc-qa.tst
+    dns_search:
+      - tst
+    extra_hosts:
+      - "config-server.umdc-qa.tst:172.22.0.2"
+      - "vault.umdc-qa.tst:172.22.0.2"
+      - "monitor.umdc-qa.tst:172.22.0.2"
+      - "api.umdc-qa.tst:172.22.0.2"
+    restart: unless-stopped
+    expose:
+      - "7008"
+    environment:
+      NODE_ENV: production
+      PORT: 7008
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TRUST_PROXY: 1
+      NG_TRUST_PROXY_HEADERS: x-forwarded-host,x-forwarded-proto,x-forwarded-for
+      NG_ALLOWED_HOSTS: ${NG_ALLOWED_HOSTS:-stratum.umdc-qa.tst}
+      BACKBONE_BASE_URL: ${BACKBONE_BASE_URL:-https://backbone.umdc-qa.tst}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://stratum.umdc-qa.tst}
+      REDIS_URL: ${REDIS_URL:?Definir REDIS_URL (Redis en la nube) en .env}
+      SSL_CERT_PATH: /app/ssl/wildcard.umdc-qa.tst.crt
+      SSL_KEY_PATH: /app/ssl/wildcard.umdc-qa.tst.key
+      # Descomentar si backbone usa una CA privada no incluida en el sistema:
+      # NODE_EXTRA_CA_CERTS: /app/ssl/ca.crt
+    volumes:
+      - type: bind
+        source: ./ssl
+        target: /app/ssl
+        read_only: true
+        bind:
+          create_host_path: false
+    networks:
+      nginx_umdc-net:
+        aliases:
+          - stratum.umdc-qa.tst
+
+# Red compartida con el resto de servicios umdc-qa (ver backbone-rest/NETWORK_SETUP.md).
+# Crear UNA vez en el host:
+#   docker network create --driver bridge --subnet 172.22.0.0/16 --gateway 172.22.0.1 nginx_umdc-net
+networks:
+  nginx_umdc-net:
+    external: true
+    name: nginx_umdc-net

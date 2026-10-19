@@ -1,11 +1,17 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, tap, map, catchError, of } from 'rxjs';
+import { Observable, tap, map, catchError, combineLatest, of, take, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpService } from './http.service';
 import { SessionStoreService } from '@core/store/session/session.store.service';
 import { API } from '@shared/constants/api.constants';
 import { SessionRequest, SessionEmailRequest, SessionRefreshRequest, SessionResponse } from '@shared/models/session.model';
-import { UserTO } from '@shared/models/user.model';
+import { decodeUserFromToken } from '@shared/utils/jwt.util';
+
+const AUTH_FAILURE_STATUSES = [400, 401, 403, 404];
+
+function falseOnAuthFailure(error: { status?: number }): Observable<boolean> {
+  return AUTH_FAILURE_STATUSES.includes(error?.status ?? 0) ? of(false) : throwError(() => error);
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -18,7 +24,7 @@ export class AuthService {
   loginWithAlias(credentials: SessionRequest): Observable<boolean> {
     this.isLoading.set(true);
     return this.http.post<SessionResponse>(API.SESSION.ROOT, credentials).pipe(
-      tap((res) => this.handleSessionResponse(res)),
+      tap((res) => this.handleSessionResponse(res, credentials.alias)),
       map(() => true),
       catchError(() => of(false)),
       tap(() => this.isLoading.set(false))
@@ -39,46 +45,46 @@ export class AuthService {
     return this.http.post<SessionResponse>(API.SESSION.REFRESH, req).pipe(
       tap((res) => this.store.refresh(res.token, res.refreshToken)),
       map(() => true),
-      catchError(() => of(false))
+      catchError(falseOnAuthFailure)
     );
   }
 
+  validate(): Observable<boolean> {
+    return this.http.get<boolean>(API.SESSION.VALIDATE).pipe(
+      map((valid) => valid === true),
+      catchError(falseOnAuthFailure)
+    );
+  }
+
+  renew(): Observable<boolean> {
+    return this.http.get<SessionResponse>(API.SESSION.RENEW).pipe(
+      tap((res) => this.store.refresh(res.token, res.refreshToken)),
+      map(() => true),
+      catchError(falseOnAuthFailure)
+    );
+  }
+
+  /**
+   * Ends the session: backbone puts the session and refresh tokens on its deny-list (best effort —
+   * an unreachable backend must not keep the user signed in), then the local session is dropped.
+   */
   logout(): void {
+    combineLatest([this.store.token$, this.store.refreshToken$])
+      .pipe(take(1))
+      .subscribe(([token, refreshToken]) => {
+        if (!token) return;
+        this.http
+          .post<void>(API.SESSION.LOGOUT, refreshToken ? { refreshToken } : {})
+          .pipe(catchError(() => of(undefined)))
+          .subscribe();
+      });
     this.store.clear();
     this.router.navigate(['/auth/login']);
   }
 
-  private handleSessionResponse(res: SessionResponse): void {
-    // token carries user claims; decode to get user info
-    const user = this.decodeUserFromToken(res.token);
+  private handleSessionResponse(res: SessionResponse, alias?: string): void {
+    const decoded = decodeUserFromToken(res.token);
+    const user = alias ? { ...decoded, alias } : decoded;
     this.store.save(res.token, res.refreshToken, user);
-  }
-
-  private decodeUserFromToken(token: string): UserTO {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return {
-        id: payload.sub ?? '',
-        alias: payload.alias ?? '',
-        email: payload.email ?? '',
-        displayName: payload.displayName ?? payload.alias ?? '',
-        active: true,
-        notificationEmail: false,
-        notificationSms: false,
-        privacyDataOutActive: false,
-        roles: payload.roles ?? [],
-      };
-    } catch {
-      return {
-        id: '',
-        alias: '',
-        email: '',
-        displayName: '',
-        active: true,
-        notificationEmail: false,
-        notificationSms: false,
-        privacyDataOutActive: false,
-      };
-    }
   }
 }
