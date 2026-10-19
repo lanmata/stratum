@@ -13,3 +13,10 @@ El dashboard siempre documentó las features como algo "de cada rol" ("Aplicacio
 ## Restricción de API (sigue vigente)
 
 `DELETE /api/v1/features/{featureId}` no existe. Una feature ya persistida en un rol solo puede desactivarse, no eliminarse — si se elimina del array sin desactivar, la próxima carga del rol la trae de vuelta activa.
+
+## Catálogo paginado (backbone T-79)
+
+El catálogo ya no se lista completo: `GET /features/?q=&active=&page=&size=` (máx. 50) alimenta la vista de Features
+y el selector "Reutilizar una funcionalidad existente" del formulario de rol (solo al crear; las features con `id`
+se envían como referencia). `GET /features/{id}/roles` muestra qué roles y aplicaciones usan cada feature.
+`GET /features/{includeInactive}` está deprecado.

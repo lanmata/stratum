@@ -241,3 +241,9 @@ export const usersRoutes: Routes = [
 - Las validaciones async de alias/email deben implementarse como `AsyncValidatorFn` de Angular Reactive Forms con `debounceTime(400)` y `distinctUntilChanged()` para evitar llamadas redundantes.
 - En modo edición, las operaciones de link/unlink de roles no usan `update()` con `roleIds[]` — se usan los endpoints dedicados `PUT .../link/...` y `PUT .../unlink/...` para cambios individuales, lo que permite mejor feedback granular.
 - El campo `applicationId` en los requests de update debe ser el objeto `Application` completo (campo requerido en `PutUserUpdateRequest`), no solo el ID.
+
+## Activación y conflictos (backbone T-92)
+
+- `PUT /users/application/{app}/user/{id}/activate` (idempotente, `204`): botón "Activar" en la lista para usuarios inactivos.
+- Al crear, el interruptor de estado permite crear el usuario inactivo (no puede iniciar sesión hasta activarlo).
+- Alias o correo repetidos responden `409` (los chequeos `check/alias|email` también); `422` indica política de contraseña.

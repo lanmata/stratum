@@ -27,7 +27,7 @@ describe('RoleFormComponent', () => {
 
   function create(roleId: string | null) {
     roles = jasmine.createSpyObj('RoleService', ['getById', 'create', 'update']);
-    features = jasmine.createSpyObj('FeatureService', ['create', 'update']);
+    features = jasmine.createSpyObj('FeatureService', ['create', 'update', 'search']);
     toast = jasmine.createSpyObj('ToastService', ['success', 'error']);
     roles.getById.and.returnValue(of(role));
     roles.create.and.returnValue(of(role));
@@ -99,6 +99,31 @@ describe('RoleFormComponent', () => {
     expect(req.dateTime).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
     expect(toast.success).toHaveBeenCalledWith('Rol creado correctamente');
     expect(router.navigate).toHaveBeenCalledWith(['/applications', 'a1', 'roles']);
+  });
+
+  it('reuses a catalog feature by id when creating a role', () => {
+    const dom = create(null);
+    features.search.and.returnValue(
+      of({ content: [{ id: 'f9', name: 'Exportar', active: true }], page: 0, size: 10, totalElements: 1, totalPages: 1 }),
+    );
+    dom.type('input[aria-label="Buscar funcionalidad existente"]', 'exp');
+    dom.submitByText('Buscar');
+    expect(features.search).toHaveBeenCalledWith({ q: 'exp', active: true, size: 10 });
+    dom.click('li button');
+    expect(dom.text).toContain('Agregada');
+    expect(dom.qa('input[placeholder="Nombre *"]').length).toBe(1);
+    dom.type('input[formControlName=name]', 'Editor');
+    dom.clickByText('button', 'Crear rol');
+    expect(roles.create.calls.mostRecent().args[0].role.features).toEqual([
+      { id: 'f9', name: 'Exportar', description: undefined, active: true },
+    ]);
+  });
+
+  it('reports catalog search errors', () => {
+    const dom = create(null);
+    features.search.and.returnValue(throwError(() => new Error('x')));
+    dom.submitByText('Buscar');
+    expect(toast.error).toHaveBeenCalledWith('Error al buscar en el catálogo de funcionalidades');
   });
 
   it('reports create errors', () => {
