@@ -1,11 +1,23 @@
 'use strict';
 
-const https = require('node:https');
 const axios = require('axios');
 const logger = require('../config/logger');
-const { BACKBONE_BASE_URL, SESSION_HEADER, AUTHORIZATION } = require('../config/constants');
+const {
+  BACKBONE_BASE_URL,
+  BACKBONE_CA_PATH,
+  BACKBONE_TLS_INSECURE,
+  BACKBONE_TLS_SERVERNAME,
+  SESSION_HEADER,
+  AUTHORIZATION,
+} = require('../config/constants');
+const { buildHttpsAgent } = require('../config/tls');
+const { clientOriginHeaders } = require('./client-origin');
 
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+const { agent: httpsAgent } = buildHttpsAgent({
+  caPath: BACKBONE_CA_PATH,
+  servername: BACKBONE_TLS_SERVERNAME,
+  insecure: BACKBONE_TLS_INSECURE,
+});
 
 function buildHeaders(req, url, { sessionHeader = false, ...extra } = {}) {
   const sessionToken = req.headers[SESSION_HEADER];
@@ -15,6 +27,7 @@ function buildHeaders(req, url, { sessionHeader = false, ...extra } = {}) {
     host,
     ...(sessionToken ? { [AUTHORIZATION]: `Bearer ${sessionToken}` } : {}),
     ...(sessionToken && sessionHeader ? { [SESSION_HEADER]: sessionToken } : {}),
+    ...clientOriginHeaders(req),
     ...extra,
   };
 }

@@ -19,6 +19,7 @@ const https = require('node:https');
 const { readFileSync } = require('node:fs');
 
 const logger = require('./server/config/logger');
+const { resolveCorsOrigin } = require('./server/config/cors');
 const { connectRedis } = require('./server/shared/redis-session-store');
 const {
   PORT,
@@ -31,6 +32,7 @@ const {
   SSL_KEY_PATH,
 } = require('./server/config/constants');
 
+const healthRoutes = require('./server/routes/health.routes');
 const sessionRoutes = require('./server/routes/session.routes');
 const usersRoutes = require('./server/routes/users.routes');
 const rolesRoutes = require('./server/routes/roles.routes');
@@ -57,9 +59,13 @@ if (TRUST_PROXY) app.set('trust proxy', TRUST_PROXY);
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(helmet());
 app.use(compression());
-app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+const corsOrigin = resolveCorsOrigin(CORS_ORIGIN, NODE_ENV);
+if (corsOrigin) app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Liveness probe, before the rate limit and the logger.
+app.use('/healthz', healthRoutes);
 
 // Only the API is rate limited: static assets (dozens of chunks per page load) must not
 // consume the quota.
