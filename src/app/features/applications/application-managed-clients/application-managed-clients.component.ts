@@ -99,10 +99,10 @@ import { ManagedClientTokenToolsComponent } from './managed-client-token-tools.c
           <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-3">
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                <label for="application-managed-clients-name" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
                   Nombre <span class="text-red-500">*</span>
                 </label>
-                <input
+                <input id="application-managed-clients-name"
                   formControlName="name"
                   type="text"
                   maxlength="128"
@@ -112,11 +112,11 @@ import { ManagedClientTokenToolsComponent } from './managed-client-token-tools.c
                 />
               </div>
               <div>
-                <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                <label for="application-managed-clients-scopes" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
                   Scopes <span class="text-red-500">*</span>
                   <span class="font-normal text-gray-400"> (separados por coma)</span>
                 </label>
-                <input
+                <input id="application-managed-clients-scopes"
                   formControlName="scopes"
                   type="text"
                   placeholder="read:data, write:data"
@@ -126,8 +126,8 @@ import { ManagedClientTokenToolsComponent } from './managed-client-token-tools.c
               </div>
             </div>
             <div>
-              <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Descripción</label>
-              <input
+              <label for="application-managed-clients-description" class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Descripción</label>
+              <input id="application-managed-clients-description"
                 formControlName="description"
                 type="text"
                 maxlength="512"

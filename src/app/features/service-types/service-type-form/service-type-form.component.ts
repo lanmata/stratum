@@ -23,10 +23,10 @@ import { ServiceTypeRequest } from '@shared/models/service-type.model';
         } @else {
           <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="service-type-form-name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Nombre <span class="text-red-500">*</span>
               </label>
-              <input
+              <input id="service-type-form-name"
                 formControlName="name"
                 type="text"
                 maxlength="128"
@@ -39,10 +39,10 @@ import { ServiceTypeRequest } from '@shared/models/service-type.model';
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="service-type-form-description" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Descripción
               </label>
-              <textarea
+              <textarea id="service-type-form-description"
                 formControlName="description"
                 rows="3"
                 maxlength="512"

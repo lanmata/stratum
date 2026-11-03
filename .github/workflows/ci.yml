@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast checks that need no browser: lint, BFF tests with their coverage gate, dependency audit.
+  quality:
+    name: Lint, BFF tests, audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint (TypeScript, templates, accessibility, BFF)
+        run: pnpm run lint
+      - name: BFF tests (node:test, 85 % gate)
+        run: pnpm run test:server
+      - name: Dependency audit (fails on high or critical)
+        run: pnpm audit --audit-level high
+
+  # Angular unit tests in headless Chrome (85 % gate in karma.conf.js) and the production build.
+  web:
+    name: Angular tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Unit tests with coverage
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: pnpm run test:headless
+      - name: Production build (SSR)
+        run: pnpm run build:ssr
+      - name: Keep the coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/

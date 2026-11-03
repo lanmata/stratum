@@ -1,59 +1,53 @@
-# FrontBackboneRest
+# Stratum
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.4.
+Interfaz de administración de **backbone-rest**: usuarios, roles, personas, contactos, aplicaciones, clientes gestionados,
+auditoría y reportes de uso. Es una aplicación Angular 22 con un servidor Node (BFF, *backend for frontend*) que sirve la
+aplicación y reenvía las llamadas al API.
 
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
+```mermaid
+flowchart LR
+    N[Navegador] -->|HTTPS| B["BFF Express<br/>server.js + server/"]
+    B -->|sirve| A["Angular 22 + SSR"]
+    B -->|"/api/v1/** con session-token"| R["backbone-rest<br/>(Spring Boot 4, Java 25)"]
+    B --- S[("Redis: sesiones")]
+    R --- D[("PostgreSQL / Supabase")]
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Requisitos
 
-## Code scaffolding
+- Node 24 y pnpm 12 (`corepack enable`)
+- Un backbone-rest accesible (`BACKBONE_BASE_URL`)
+- Chrome, para las pruebas de Angular
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Primeros pasos
 
 ```bash
-ng generate --help
+pnpm install
+pnpm run dev            # compila en modo watch y arranca el BFF en https://localhost:4000
+pnpm run start          # solo el servidor de desarrollo de Angular (:4200), sin BFF
 ```
 
-## Building
+## Scripts
 
-To build the project run:
+| Script | Qué hace |
+|--------|----------|
+| `pnpm run lint` | ESLint: TypeScript, plantillas, accesibilidad y BFF |
+| `pnpm run test:headless` | Pruebas de Angular con cobertura (mínimo 85 %) |
+| `pnpm run test:server` | Pruebas del BFF con `node:test` (mínimo 85 %) |
+| `pnpm run test:all` | Las dos anteriores |
+| `pnpm run build:ssr` | Build de producción |
+| `pnpm run serve:ssr` | Arranca el BFF con la aplicación compilada |
 
-```bash
-ng build
-```
+## Variables de entorno del BFF
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+| Variable | Por defecto | Para qué |
+|----------|-------------|----------|
+| `BACKBONE_BASE_URL` | `http://localhost:8443` | URL del API backbone-rest |
+| `BACKBONE_CA_PATH` | vacía | CA que firmó el certificado de backbone; con ella el BFF **verifica** el certificado |
+| `BACKBONE_TLS_SERVERNAME` | vacía | Nombre contra el que se verifica el certificado |
+| `CORS_ORIGIN` | vacía | Orígenes permitidos (lista); en producción no admite `*` |
+| `REDIS_URL` | `redis://localhost:6379` | Almacén de sesiones (sin Redis usa memoria) |
+| `PORT`, `NODE_ENV`, `TRUST_PROXY`, `LOG_LEVEL` | ver `server/config/constants.js` | Puerto, entorno, saltos de proxy de confianza, nivel de log |
 
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Detalle de despliegue y operación: `docs/09-guia-tecnica-docker.md` y `docs/10-guia-usuario-docker.md`. CI y calidad:
+`docs/11-guia-tecnica-ci.md`. Guías funcionales por módulo: `docs/00-indice.md`.

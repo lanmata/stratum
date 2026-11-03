@@ -28,7 +28,7 @@ const LINK_ACTIVE = LINK_BASE + 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 da
   template: `
     <div class="flex h-dvh overflow-hidden bg-gray-50 dark:bg-gray-900">
       @if (mobileOpen()) {
-        <div class="animate-fade-in fixed inset-0 z-30 bg-gray-900/50 backdrop-blur-sm lg:hidden" (click)="mobileOpen.set(false)"></div>
+        <div class="animate-fade-in fixed inset-0 z-30 bg-gray-900/50 backdrop-blur-sm lg:hidden" role="presentation" (click)="mobileOpen.set(false)"></div>
       }
 
       <aside [class]="sidebarClass()" aria-label="Navegación principal">

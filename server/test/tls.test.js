@@ -30,7 +30,7 @@ function makePki(dir, name) {
   };
 }
 
-function get(agent, port, servername) {
+function get(agent, port) {
   return new Promise((resolve, reject) => {
     const req = https.get({ host: '127.0.0.1', port, path: '/', agent, headers: { host: 'backbone.test' } }, (res) => {
       res.resume();

@@ -24,6 +24,7 @@ const ENTRIES: PaletteEntry[] = [
   imports: [IconComponent],
   template: `
     <div
+      role="presentation"
       class="animate-fade-in fixed inset-0 z-[70] flex items-start justify-center bg-gray-900/50 p-4 pt-[12vh] backdrop-blur-sm"
       (click)="closed.emit()"
       (keydown.escape)="closed.emit()"
@@ -34,6 +35,7 @@ const ENTRIES: PaletteEntry[] = [
         aria-modal="true"
         aria-label="Búsqueda rápida"
         (click)="$event.stopPropagation()"
+        (keyup)="$event.stopPropagation()"
       >
         <div class="flex items-center gap-3 border-b border-gray-200 px-4 dark:border-gray-700">
           <app-icon name="search" class="text-gray-400" />

@@ -69,10 +69,10 @@ function createErrorMessage(status: number): string {
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <!-- Alias -->
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="user-form-alias" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Alias @if (!isEdit()) { <span class="text-red-500">*</span> }
                   </label>
-                  <input
+                  <input id="user-form-alias"
                     formControlName="alias"
                     type="text"
                     minlength="5"
@@ -103,10 +103,10 @@ function createErrorMessage(status: number): string {
 
                 <!-- Display Name -->
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="user-form-displayName" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Nombre de Visualización <span class="text-red-500">*</span>
                   </label>
-                  <input
+                  <input id="user-form-displayName"
                     formControlName="displayName"
                     type="text"
                     maxlength="256"
@@ -123,10 +123,10 @@ function createErrorMessage(status: number): string {
               <!-- Email -->
               @if (!isEdit()) {
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="user-form-email" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Email <span class="text-red-500">*</span>
                   </label>
-                  <input
+                  <input id="user-form-email"
                     formControlName="email"
                     type="email"
                     placeholder="usuario@dominio.com"
@@ -271,10 +271,10 @@ function createErrorMessage(status: number): string {
             <div class="space-y-4">
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="user-form-firstName" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Nombre <span class="text-red-500">*</span>
                   </label>
-                  <input
+                  <input id="user-form-firstName"
                     formControlName="firstName"
                     type="text"
                     placeholder="Nombre"
@@ -286,10 +286,10 @@ function createErrorMessage(status: number): string {
                   }
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="user-form-lastName" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Apellido <span class="text-red-500">*</span>
                   </label>
-                  <input
+                  <input id="user-form-lastName"
                     formControlName="lastName"
                     type="text"
                     placeholder="Apellido"
@@ -304,10 +304,10 @@ function createErrorMessage(status: number): string {
 
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="user-form-middleName" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Segundo Nombre
                   </label>
-                  <input
+                  <input id="user-form-middleName"
                     formControlName="middleName"
                     type="text"
                     placeholder="Opcional"
@@ -315,8 +315,8 @@ function createErrorMessage(status: number): string {
                   />
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Género</label>
-                  <select
+                  <label for="user-form-gender" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Género</label>
+                  <select id="user-form-gender"
                     formControlName="gender"
                     class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                   >
@@ -327,10 +327,10 @@ function createErrorMessage(status: number): string {
                   </select>
                 </div>
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="user-form-birthdate" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Fecha de Nacimiento
                   </label>
-                  <input
+                  <input id="user-form-birthdate"
                     formControlName="birthdate"
                     type="date"
                     class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
