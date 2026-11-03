@@ -51,6 +51,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/reports/reports.routes').then((m) => m.reportsRoutes),
       },
       {
+        path: 'usage',
+        data: { breadcrumb: 'Uso y accesos' },
+        loadChildren: () => import('./features/usage/usage.routes').then((m) => m.usageRoutes),
+      },
+      {
         path: 'audit',
         data: { breadcrumb: 'Auditoría' },
         loadChildren: () => import('./features/audit/audit.routes').then((m) => m.auditRoutes),

@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 ### Added
+- **Usage and access reports** (`/usage`, menu *Herramientas*, "Uso y accesos"): how many people use the platform, when they connect
+  and from which kind of client, application by application, to size the platform and decide its scope. Dark gradient board with four
+  headline tiles, logins per week (gradient area with failed attempts and hover tooltip), who connects (donut by device class and
+  browser), activity per application, a sizing panel (average and peak week, peak hour), logins per hour of the day, a weekday by
+  time-slot heat map, logins per month and a reach table (registered people, active people, roles). Period presets or custom dates and
+  an application filter. Aggregated numbers only.
+- Charts are plain SVG components with signals and pure, tested drawing functions (no charting library; the lazy chunk is ~35 kB).
+  The palette was validated for colour-blind separation and contrast; charts carry roles, labels and `<title>` tooltips.
+- BFF routes for the six report endpoints of backbone-rest (`/api/v1/iam/audit/reports/*`), covered by the table-driven route test.
+- `docs/12-reportes-uso.md` (user and technical guide in Spanish, with a Mermaid diagram) and index entries for the CI guide and the
+  reports.
+- 55 new Angular tests and 6 BFF tests; overall Angular coverage stays at 98.9 % statements.
+
+### Notes
+- Needs the `AUDIT_READ` feature in backbone-rest. A banner explains when most events come from API clients (the BFF forwards the
+  person's browser since the previous change, but earlier events cannot be corrected).
+- Verified live in Chrome against backbone-rest on `remote-supabase`: real data in every chart, tooltip on hover, no horizontal
+  overflow at 400 px, no console errors. Found and fixed two defects that way (a month label cut at the right edge, non-round ticks on
+  the hour chart).
+
+### Added
 - **CI**: `.github/workflows/ci.yml` runs on pull requests and on pushes to `develop`: a `quality` job (ESLint, BFF tests with the
   85 % gate, `pnpm audit --audit-level high`) and a `web` job (Karma in headless Chrome with the 85 % gate, production SSR build,
   coverage artifact).

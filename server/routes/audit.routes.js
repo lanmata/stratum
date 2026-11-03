@@ -14,4 +14,11 @@ router.get('/export', (req, res) =>
   }),
 );
 
+// Usage and access reports (backbone needs the AUDIT_READ feature): aggregated numbers only.
+for (const report of ['summary', 'timeseries', 'hours', 'heatmap', 'applications', 'clients']) {
+  router.get(`/reports/${report}`, (req, res) =>
+    proxyToBackbone(req, res, `/api/v1/iam/audit/reports/${report}`),
+  );
+}
+
 module.exports = router;

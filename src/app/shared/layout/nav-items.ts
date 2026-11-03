@@ -105,6 +105,13 @@ export const NAV_GROUPS: NavGroup[] = [
         accent: 'from-slate-600 to-gray-800',
       },
       {
+        path: '/usage',
+        label: 'Uso y accesos',
+        description: 'Cuántas personas usan la plataforma, cuándo y desde dónde',
+        icon: 'chart',
+        accent: 'from-cyan-500 to-violet-600',
+      },
+      {
         path: '/reports',
         label: 'Reportes',
         description: 'Genera documentos Word desde plantillas',
