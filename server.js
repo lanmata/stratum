@@ -33,6 +33,7 @@ const {
 } = require('./server/config/constants');
 
 const healthRoutes = require('./server/routes/health.routes');
+const { cookieSession } = require('./server/shared/cookie-session');
 const sessionRoutes = require('./server/routes/session.routes');
 const usersRoutes = require('./server/routes/users.routes');
 const rolesRoutes = require('./server/routes/roles.routes');
@@ -94,6 +95,9 @@ app.use((req, res, next) => {
   });
   next();
 });
+
+// Server-side sessions (SESSION_COOKIE): loads the session of the cookie and applies the CSRF header rule.
+app.use('/api', cookieSession());
 
 // ── API Routes (BFF proxy layer) ────────────────────────────────────────────
 app.use('/api/v1/session', sessionRoutes);
