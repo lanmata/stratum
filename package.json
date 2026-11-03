@@ -19,7 +19,8 @@
     "lint": "eslint .",
     "api:types": "openapi-typescript api.yaml -o src/app/shared/api/backbone.d.ts",
     "api:check": "pnpm run api:types && git diff --exit-code -- src/app/shared/api/backbone.d.ts",
-    "api:sync": "scripts/sync-api.sh"
+    "api:sync": "scripts/sync-api.sh",
+    "test:e2e": "playwright test"
   },
   "prettier": {
     "printWidth": 100,
@@ -77,6 +78,7 @@
     "@angular/cli": "^22.2.5",
     "@angular/compiler-cli": "^22.2.4",
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.64.1",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
