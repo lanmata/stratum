@@ -40,4 +40,12 @@ module.exports = tseslint.config(
     extends: [js.configs.recommended],
     languageOptions: { sourceType: 'commonjs', globals: { ...globals.node } },
   }
+
+  ,
+  // End-to-end tests and their stack (ES modules on Node)
+  {
+    files: ['e2e/**/*.mjs', 'playwright.config.mjs'],
+    extends: [js.configs.recommended],
+    languageOptions: { sourceType: 'module', globals: { ...globals.node, ...globals.browser } },
+  }
 );

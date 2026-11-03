@@ -30,6 +30,7 @@ Este documento describe **lo que existe hoy**, no un plan a futuro.
 | 09 | [Guía técnica — Docker](./09-guia-tecnica-docker.md) | Dockerfile, docker-compose, HTTPS en 443 (`stratum.umdc-qa.tst`) | ✅ Documentado |
 | 10 | [Guía de usuario — Docker](./10-guia-usuario-docker.md) | Arranque y operación con Docker | ✅ Documentado |
 | 11 | [Guía técnica — CI y calidad](./11-guia-tecnica-ci.md) | GitHub Actions, ESLint, auditoría de dependencias | ✅ Documentado |
+| 13 | [Pruebas e2e](./13-pruebas-e2e.md) | Playwright contra el BFF real y un backbone falso | ✅ Documentado |
 | 12 | [Reportes de uso y accesos](./12-reportes-uso.md) | Página `/usage`: gráficas de accesos, clientes, aplicaciones y dimensionamiento (guía de usuario y técnica) | ✅ Implementado |
 | — | **Personas** | CRUD completo + contactos/direcciones/documentos de identificación (scoped a persona) | ✅ Implementado |
 | — | **Tipos de Aviso** | Catálogo global, CRUD completo (clon de Tipos de Contacto) | ✅ Implementado |

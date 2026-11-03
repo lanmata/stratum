@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 ### Added
+- **End-to-end tests** (Playwright, `pnpm run test:e2e`): the real BFF serving the built app against a fake backbone, driven by the
+  Chrome already installed (no browser download), with a throwaway TLS certificate. Five flows: wrong password, sign-in and menu, the
+  usage page (tiles, six charts, table), the hover tooltip and the period change. New `e2e` job in the CI that uploads traces on failure.
+- `docs/13-pruebas-e2e.md` (user and technical guide in Spanish, Mermaid).
+
+### Added
 - **Typed contract with backbone-rest**: `api.yaml` refreshed from the live OpenAPI (3,474 → 4,634 lines; it lacked the reports) and
   TypeScript types generated with `openapi-typescript` (`pnpm run api:types`, `api:sync`, `api:check`; the CI fails on drift). A spec
   checks at compile time that the usage-report models match the generated schemas.
