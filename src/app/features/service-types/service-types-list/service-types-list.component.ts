@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ServiceTypeService } from '@core/services/service-type.service';
@@ -9,6 +9,7 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-service-types-list',
   standalone: true,
   imports: [RouterLink, FormsModule, ConfirmDialogComponent],

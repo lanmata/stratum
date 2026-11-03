@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BreadcrumbService } from '@core/services/breadcrumb.service';
 import { IconComponent } from '@shared/components/icon/icon.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-breadcrumbs',
   standalone: true,
   imports: [RouterLink, IconComponent],

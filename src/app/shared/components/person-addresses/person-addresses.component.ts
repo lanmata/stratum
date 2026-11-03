@@ -1,4 +1,4 @@
-import { Component, inject, input, OnChanges, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, OnChanges, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AddressService } from '@core/services/address.service';
 import { ToastService } from '@core/services/toast.service';
@@ -7,6 +7,7 @@ import { notBlankValidator, zipcodeValidator } from '@shared/utils/contact-valid
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-person-addresses',
   standalone: true,
   host: { class: 'block' },

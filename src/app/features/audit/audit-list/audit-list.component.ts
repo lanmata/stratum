@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, computed, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuditService } from '@core/services/audit.service';
 import { AUDIT_EVENT_TYPES, AuditEvent, AuditQuery } from '@shared/models/audit.model';
@@ -25,6 +25,7 @@ export function toQuery(filters: AuditFilters): Omit<AuditQuery, 'page' | 'size'
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-audit-list',
   standalone: true,
   imports: [FormsModule],

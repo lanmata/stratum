@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ContactTypeService } from '@core/services/contact-type.service';
@@ -6,6 +6,7 @@ import { ToastService } from '@core/services/toast.service';
 import { ContactTypeRequest } from '@shared/models/contact.model';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-contact-type-form',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ServiceTypeService } from '@core/services/service-type.service';
@@ -6,6 +6,7 @@ import { ToastService } from '@core/services/toast.service';
 import { ServiceTypeRequest } from '@shared/models/service-type.model';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-service-type-form',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],

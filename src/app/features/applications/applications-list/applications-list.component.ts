@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApplicationService } from '@core/services/application.service';
@@ -18,6 +18,7 @@ function formatLocalDate(d: Date): string {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-applications-list',
   standalone: true,
   imports: [RouterLink, FormsModule, ConfirmDialogComponent],

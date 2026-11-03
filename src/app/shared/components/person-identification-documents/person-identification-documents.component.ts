@@ -1,4 +1,4 @@
-import { Component, inject, input, OnChanges, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, OnChanges, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdentificationDocumentService } from '@core/services/identification-document.service';
 import { ToastService } from '@core/services/toast.service';
@@ -11,6 +11,7 @@ import { documentNumberValidator, notBlankValidator } from '@shared/utils/contac
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-person-identification-documents',
   standalone: true,
   host: { class: 'block' },

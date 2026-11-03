@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { SlicePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -9,6 +9,7 @@ import { ManagedClientTO } from '@shared/models/managed-client.model';
 import { ManagedClientTokenToolsComponent } from './managed-client-token-tools.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-application-managed-clients',
   standalone: true,
   imports: [ReactiveFormsModule, SlicePipe, ConfirmDialogComponent, ManagedClientTokenToolsComponent],
