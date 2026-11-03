@@ -20,7 +20,8 @@ const { agent: httpsAgent } = buildHttpsAgent({
 });
 
 function buildHeaders(req, url, { sessionHeader = false, ...extra } = {}) {
-  const sessionToken = req.headers[SESSION_HEADER];
+  // With a server-side session the real token comes from it; the header (an unsigned copy) only tells that a person is signed in.
+  const sessionToken = req.stratumSession?.tokens?.token ?? req.headers[SESSION_HEADER];
   const { host } = new URL(url);
   return {
     Accept: 'application/json',
@@ -51,7 +52,7 @@ function sendBinary(res, response) {
  */
 async function proxyToBackbone(req, res, backendPath, overrides = {}) {
   const url = `${BACKBONE_BASE_URL}${backendPath}`;
-  const { sessionHeader, ...axiosOverrides } = overrides;
+  const { sessionHeader, afterResponse, ...axiosOverrides } = overrides;
 
   try {
     const response = await axios({
@@ -71,7 +72,8 @@ async function proxyToBackbone(req, res, backendPath, overrides = {}) {
     if (axiosOverrides.responseType === 'arraybuffer') {
       sendBinary(res, response);
     } else {
-      res.status(response.status).json(response.data);
+      const data = afterResponse ? await afterResponse(response) : response.data;
+      res.status(response.status).json(data);
     }
   } catch (err) {
     logger.error(`Proxy error → ${url}: ${err.code ?? ''} ${err.message}`.trim());

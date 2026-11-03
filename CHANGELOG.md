@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 ### Added
+- **Server-side sessions** (`SESSION_COOKIE=true`, off by default): the BFF keeps the real session and refresh tokens (Redis, memory
+  fallback) and hands the browser an opaque `HttpOnly; SameSite=Strict` cookie plus unsigned copies of the tokens, so injected script can
+  no longer steal a usable token. State-changing calls with the cookie must also carry the `session-token` header (CSRF) or get `403`.
+  Login, refresh, renew and logout are handled; old sessions keep working. 16 new BFF tests (160 total, coverage above the 85 % gates).
+- `docs/14-sesion-en-servidor.md` (guide in Spanish, Mermaid).
+
+### Added
 - **End-to-end tests** (Playwright, `pnpm run test:e2e`): the real BFF serving the built app against a fake backbone, driven by the
   Chrome already installed (no browser download), with a throwaway TLS certificate. Five flows: wrong password, sign-in and menu, the
   usage page (tiles, six charts, table), the hover tooltip and the period change. New `e2e` job in the CI that uploads traces on failure.

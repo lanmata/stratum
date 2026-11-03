@@ -27,6 +27,11 @@ module.exports = {
   TRUST_PROXY: parseTrustProxy(process.env['TRUST_PROXY']),
   LOG_LEVEL: process.env['LOG_LEVEL'] || (process.env['NODE_ENV'] === 'production' ? 'info' : 'debug'),
   CORS_ORIGIN: process.env['CORS_ORIGIN'],
+  // Server-side sessions: the real tokens stay in the BFF (Redis, or memory without it) and the browser only holds an opaque
+  // HttpOnly cookie plus an unsigned copy of the token for display. Off by default so a deployment opts in.
+  SESSION_COOKIE: process.env['SESSION_COOKIE'] === 'true',
+  SESSION_COOKIE_NAME: process.env['SESSION_COOKIE_NAME'] || 'stratum_sid',
+  SESSION_MAX_AGE_SECONDS: parseInt(process.env['SESSION_MAX_AGE_SECONDS'] || '28800', 10),
   RATE_LIMIT_WINDOW_MS: 15 * 60 * 1000,
   RATE_LIMIT_MAX: parseInt(process.env['RATE_LIMIT_MAX'] || '1000', 10),
   REDIS_URL: process.env['REDIS_URL'] || 'redis://localhost:6379',
