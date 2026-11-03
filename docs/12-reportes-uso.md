@@ -11,6 +11,10 @@ backbone-rest; son cifras **agregadas**: no se muestra ninguna persona, direcci�
 Quien tenga la feature `AUDIT_READ` en uno de sus roles. Si backbone está en modo `enforce` y falta, la página lleva a "Acceso
 denegado". Pida a quien administra backbone que se la asigne (ver `docs/architecture/feature-authorization.md` en backbone-rest).
 
+### Qué aplicaciones se ven
+
+Con el permiso `AUDIT_READ` se ve **solo la aplicación de su sesión**; el filtro "Todas" equivale a esa aplicación y pedir otra la rechaza (403). Para ver todas las aplicaciones hace falta `AUDIT_READ_ALL` (o `Universal`).
+
 ### Cómo se usa
 
 1. Elija el **periodo**: últimos 30 días, 90 días (por defecto), 6 meses, un año, o *Fechas a elegir*.
@@ -71,5 +75,7 @@ Decisiones:
   dato, y todos los controles tienen `label` asociado.
 - Las horas y los días son los del servidor de backbone; no se guarda zona horaria con cada evento.
 - 55 pruebas nuevas de Karma (utilidades, cada gráfica con sus interacciones, la página y el servicio) y 6 del BFF (rutas).
+
+Contrato: los modelos se comprueban en compilación contra los tipos generados del OpenAPI de backbone (`pnpm run api:types`, `src/app/shared/api/backbone.d.ts`; `pnpm run api:sync` los refresca desde un backbone en marcha y la CI verifica que no haya deriva con `pnpm run api:check`).
 
 Contrato de las respuestas: `docs/api/iam-audit-reports.md` en backbone-rest.

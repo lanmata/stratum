@@ -50,7 +50,8 @@ export function lastDays(days: number, today: Date = new Date()): { from: string
         <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-100">Uso y accesos</h1>
         <p class="mt-1 max-w-3xl text-sm text-gray-600 dark:text-gray-400">
           Cuántas personas usan la plataforma, cuándo se conectan y desde qué tipo de cliente. Sirve para dimensionarla y decidir su
-          alcance. Son cifras agregadas del registro de auditoría: no se muestra ninguna persona ni dirección.
+          alcance. Son cifras agregadas del registro de auditoría: no se muestra ninguna persona ni dirección. Sin el permiso
+          <code>AUDIT_READ_ALL</code> solo se ve la aplicación a la que pertenece la sesión.
         </p>
       </div>
 

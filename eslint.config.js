@@ -5,7 +5,7 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 
 module.exports = tseslint.config(
-  { ignores: ['dist/**', 'coverage/**', '.angular/**', 'node_modules/**', 'public/**'] },
+  { ignores: ['dist/**', 'coverage/**', '.angular/**', 'node_modules/**', 'public/**', 'src/app/shared/api/**'] },
 
   // Angular application (TypeScript)
   {

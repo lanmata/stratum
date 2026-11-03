@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 ### Added
+- **Typed contract with backbone-rest**: `api.yaml` refreshed from the live OpenAPI (3,474 → 4,634 lines; it lacked the reports) and
+  TypeScript types generated with `openapi-typescript` (`pnpm run api:types`, `api:sync`, `api:check`; the CI fails on drift). A spec
+  checks at compile time that the usage-report models match the generated schemas.
+
+### Changed
+- The usage page and its guide say that, without `AUDIT_READ_ALL`, only the session's own application is shown (backbone now scopes the
+  reports).
+
+### Added
 - **Usage and access reports** (`/usage`, menu *Herramientas*, "Uso y accesos"): how many people use the platform, when they connect
   and from which kind of client, application by application, to size the platform and decide its scope. Dark gradient board with four
   headline tiles, logins per week (gradient area with failed attempts and hover tooltip), who connects (donut by device class and
