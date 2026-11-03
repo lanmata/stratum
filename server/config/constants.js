@@ -13,13 +13,20 @@ function parseTrustProxy(value) {
 
 module.exports = {
   BACKBONE_BASE_URL: process.env['BACKBONE_BASE_URL'] || 'http://localhost:8443',
+  // TLS towards backbone-rest. With BACKBONE_CA_PATH (PEM of the CA that signed backbone's certificate, several
+  // certificates allowed) the certificate is verified. BACKBONE_TLS_SERVERNAME overrides the name checked (SNI and
+  // certificate), for reaching backbone through an address that is not in its certificate. BACKBONE_TLS_INSECURE=true
+  // switches verification off on purpose.
+  BACKBONE_CA_PATH: process.env['BACKBONE_CA_PATH'] || '',
+  BACKBONE_TLS_SERVERNAME: process.env['BACKBONE_TLS_SERVERNAME'] || '',
+  BACKBONE_TLS_INSECURE: process.env['BACKBONE_TLS_INSECURE'] === 'true',
   SESSION_HEADER: 'session-token',
   AUTHORIZATION: 'Authorization',
   PORT: parseInt(process.env['PORT'] || '4000', 10),
   NODE_ENV: process.env['NODE_ENV'] || 'development',
   TRUST_PROXY: parseTrustProxy(process.env['TRUST_PROXY']),
   LOG_LEVEL: process.env['LOG_LEVEL'] || (process.env['NODE_ENV'] === 'production' ? 'info' : 'debug'),
-  CORS_ORIGIN: process.env['CORS_ORIGIN'] || '*',
+  CORS_ORIGIN: process.env['CORS_ORIGIN'],
   RATE_LIMIT_WINDOW_MS: 15 * 60 * 1000,
   RATE_LIMIT_MAX: parseInt(process.env['RATE_LIMIT_MAX'] || '1000', 10),
   REDIS_URL: process.env['REDIS_URL'] || 'redis://localhost:6379',

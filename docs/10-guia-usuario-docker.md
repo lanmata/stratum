@@ -53,3 +53,17 @@ Se mostrará la pantalla de inicio de sesión; ingrese con su alias o correo y s
 - **No abre la página:** confirme que `docker compose ps` muestra `stratum` como `healthy` y que el nombre `stratum.umdc-qa.tst` resuelve a la máquina correcta.
 - **Error 502 al abrir la página:** reinicie `umdc-nginx` (`docker restart umdc-nginx`) y confirme que Stratum está `healthy`.
 - **Inicia sesión pero no cargan datos:** el servicio de backbone no es alcanzable; avise al equipo técnico (ver sección *Solución de problemas* de la guía técnica).
+
+## Conexión segura con backbone (para quien administra el servidor)
+
+Por defecto Stratum se conecta a backbone sin comprobar su certificado y lo avisa en el registro. Para que lo compruebe:
+
+1. Copie el archivo de la CA que firmó el certificado de backbone (por ejemplo `prx-internal-ca.crt`) a la carpeta `ssl/`.
+2. En el archivo `.env` escriba `BACKBONE_CA_PATH=/app/ssl/prx-internal-ca.crt`.
+3. Reinicie: `docker compose up -d`.
+
+Si después de hacerlo la aplicación responde "Backend unavailable", el certificado no corresponde a esa CA o el nombre no
+coincide: pida a quien administra backbone la CA correcta. Más detalles en `docs/09-guia-tecnica-docker.md`.
+
+También puede comprobar que Stratum está vivo abriendo `https://<servidor>/healthz`: debe mostrar `{"status":"UP"}`.
+

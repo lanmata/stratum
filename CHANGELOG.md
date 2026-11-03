@@ -1,6 +1,27 @@
 # Changelog
 
 ## [Unreleased]
+### Security
+- **The BFF can verify the TLS certificate of backbone-rest.** `proxy.js` created its agent with `rejectUnauthorized: false`, so
+  anyone between the BFF and backbone could read the session token. With `BACKBONE_CA_PATH` (PEM of the CA that signed backbone's
+  certificate) and, if needed, `BACKBONE_TLS_SERVERNAME`, the certificate and its name are verified; a wrong CA or name answers
+  `502`. `BACKBONE_TLS_INSECURE=true` turns it off on purpose. Without any of them the previous behaviour is kept and a warning is
+  logged at start, so existing deployments keep working until the CA is mounted. Checked live against backbone: right CA → login
+  `200`; wrong CA → `502`.
+- **CORS is explicit.** `CORS_ORIGIN` accepts a list of origins; `*` is refused in production (the BFF does not start) and an
+  empty value in production now means same origin only. In development an empty value still allows any origin.
+
+### Added
+- **The person's real IP and browser reach backbone's audit trail**: every proxied call carries `X-Forwarded-For` (always the
+  address Express resolved, never copied from the caller) and `X-Forwarded-User-Agent`. Until now 63 % of login events showed the
+  BFF's own `axios` user agent. Backbone honours them from `UMDC_AUDIT_TRUSTED_PROXIES`. Checked live: the audit event of a login
+  through the BFF stored the browser's user agent.
+- `GET /healthz`, a liveness probe that touches no dependency and is outside the rate limit.
+- 19 new BFF tests (TLS against a real HTTPS server with a generated CA, CORS, origin headers, health, proxy); the new modules
+  have 100 % coverage.
+- `docker-compose.yml` passes `BACKBONE_CA_PATH` and `BACKBONE_TLS_SERVERNAME`; technical and user guides updated (Spanish, with
+  Mermaid diagrams).
+
 ### Added
 - Session: automatic renewal (`refresh` with `renew` fallback) shortly before the token expires, token validation at startup, and email login next to alias login. Refreshed tokens are now persisted so the interceptor never sends a stale one.
 - Applications: delete (with confirmation), filter by IDs, profile image upload and reference.
@@ -19,8 +40,6 @@
 - Contacts: `GET /contacts/list-all` and `ContactService.getAll` removed in favour of the paginated directory.
 - `api.yaml` re-synced with `backbone-rest`.
 
-### Known issues
-- `server.js` requires `helmet`, which is neither in `package.json` nor installed.
 
 ## [0.0.0] - 2026-07-05
 ### System Info

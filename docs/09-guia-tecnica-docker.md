@@ -49,11 +49,53 @@ Se leen del entorno del shell o de un archivo `.env` junto al compose (Compose l
 | `STRATUM_VERSION` | `0.0.1` | Tag de la imagen `lamata/stratum`. |
 | `BACKBONE_BASE_URL` | `https://backbone.umdc-qa.tst` | URL base del API backbone-rest que proxea el BFF. Ajustar al host/puerto reales (p. ej. `:8084`). |
 | `NG_ALLOWED_HOSTS` | `stratum.umdc-qa.tst` | Hosts permitidos por el SSR de Angular. Si no coincide con el `Host` de la petición, el SSR rechaza la solicitud. |
-| `CORS_ORIGIN` | `https://stratum.umdc-qa.tst` | Origen permitido por CORS. |
+| `CORS_ORIGIN` | `https://stratum.umdc-qa.tst` | Orígenes permitidos por CORS, separados por comas. **En producción no admite `*`** (el BFF no arranca). Vacío = sin CORS (solo mismo origen). |
+| `BACKBONE_CA_PATH` | vacía | PEM de la CA que firmó el certificado de backbone (puede tener varios certificados), p. ej. `/app/ssl/prx-internal-ca.crt`. Con ella el BFF **verifica** el certificado. Vacía = no se verifica y se avisa en el log. |
+| `BACKBONE_TLS_SERVERNAME` | vacía | Nombre contra el que se verifica el certificado, si backbone se alcanza por otro nombre (p. ej. `backbone-rest`). |
+| `BACKBONE_TLS_INSECURE` | `false` | `true` desactiva a propósito la verificación (solo desarrollo; se registra un aviso). |
 
 Fijas en el compose: `NODE_ENV=production`, `PORT=7008`, `TRUST_PROXY=1` (Express confía en un salto de proxy, el nginx, para `X-Forwarded-For`; sin esto `express-rate-limit` lanza `ERR_ERL_UNEXPECTED_X_FORWARDED_FOR`), `NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for` (Angular SSR acepta esas cabeceras de nginx), `SSL_CERT_PATH`/`SSL_KEY_PATH` apuntando a `/app/ssl/...`.
 
-Si backbone usa una CA privada, descomentar `NODE_EXTRA_CA_CERTS` en el compose y colocar el `ca.crt` en `./ssl/`.
+### Verificación TLS hacia backbone
+
+```mermaid
+flowchart TD
+    A[Arranque del BFF] --> B{"BACKBONE_TLS_INSECURE=true?"}
+    B -- sí --> I["Sin verificar<br/>aviso en el log"]
+    B -- no --> C{"BACKBONE_CA_PATH definido?"}
+    C -- sí --> V["Verifica el certificado contra esa CA<br/>y contra BACKBONE_TLS_SERVERNAME si existe"]
+    C -- no --> L["Sin verificar (comportamiento anterior)<br/>aviso: definir BACKBONE_CA_PATH"]
+```
+
+Para activarla: copiar la CA que firmó backbone (p. ej. `prx-internal-ca.crt`) a `./ssl/` y definir
+`BACKBONE_CA_PATH=/app/ssl/prx-internal-ca.crt` en el `.env`. Si falta el archivo el BFF no arranca (`ENOENT`); si el
+certificado no es de esa CA o su nombre no coincide, las llamadas a backbone responden `502 Backend unavailable`.
+Implementado en `server/config/tls.js`.
+
+### Origen real del cliente en la auditoría
+
+El BFF envía a backbone, en cada llamada, la dirección de quien llama y su navegador, para que la auditoría registre a la
+persona y no al propio BFF:
+
+```mermaid
+sequenceDiagram
+    participant N as Navegador
+    participant B as BFF (Stratum)
+    participant R as backbone-rest
+    N->>B: POST /api/v1/session (User-Agent: Safari…)
+    B->>R: X-Forwarded-For: IP resuelta por Express<br/>X-Forwarded-User-Agent: Safari…
+    R->>R: ¿el BFF está en umdc.audit.trusted-proxies?
+    R-->>B: audita IP y navegador de la persona
+```
+
+`X-Forwarded-For` se **sobrescribe** siempre con la dirección que resuelve Express (respeta `TRUST_PROXY`), nunca se copia
+de la petición. Backbone solo hace caso de estas cabeceras si la dirección del BFF está en `UMDC_AUDIT_TRUSTED_PROXIES`.
+Implementado en `server/shared/client-origin.js`.
+
+### Sonda de salud
+
+`GET /healthz` responde `{"status":"UP"}` sin tocar ninguna dependencia (una caída de backbone no reinicia el BFF) y no
+cuenta para el límite de peticiones.
 
 ## Operación
 
@@ -109,7 +151,9 @@ Stratum **no levanta Redis**: usa el Redis en la nube indicado en `REDIS_URL` pa
 | `EACCES ... wildcard.umdc-qa.tst.key` al arrancar | La llave es `0600` de otro usuario y el contenedor corre como `node` (uid 1000) | `chown 1000 ssl/wildcard.umdc-qa.tst.key` (o `chmod 640` con grupo 1000). |
 | `network nginx_umdc-net declared as external, but could not be found` | La red no se ha creado | Ejecutar el comando de creación de red de *Prerrequisitos*. |
 | 502/timeouts hacia el API | `BACKBONE_BASE_URL` incorrecto o sin resolución desde el contenedor | Revisar `extra_hosts` y la URL; probar `docker compose exec stratum wget -qO- --no-check-certificate $BACKBONE_BASE_URL`. |
-| Error de certificado hacia backbone (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) | Backbone usa una CA privada | Configurar `NODE_EXTRA_CA_CERTS`. |
+| `502 Backend unavailable` con `BACKBONE_CA_PATH` definido; el log dice `unable to verify`, `self-signed` o `altname` | El certificado de backbone no es de esa CA, o el nombre no coincide | Usar la CA correcta; si se llega por otro nombre, definir `BACKBONE_TLS_SERVERNAME`. |
+| El BFF no arranca: `CORS_ORIGIN='*' is not allowed in production` | `CORS_ORIGIN=*` en producción | Listar los orígenes permitidos o dejarla vacía (solo mismo origen). |
+| El log avisa `The certificate of backbone-rest is NOT verified` | No hay `BACKBONE_CA_PATH` | Definirlo (ver *Verificación TLS hacia backbone*). |
 | Página de error del SSR / host no permitido | `NG_ALLOWED_HOSTS` no coincide con el host solicitado | Ajustar la variable. |
 
 ## Notas
