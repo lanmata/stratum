@@ -159,18 +159,30 @@ export function lastDays(days: number, today: Date = new Date()): { from: string
             <section class="usage-card rounded-2xl border border-slate-700/60 bg-slate-900/70 p-4 lg:col-span-7">
               <h2 class="text-base font-semibold">Accesos por hora del día</h2>
               <p class="mb-2 text-xs text-slate-400">Suma del periodo; la barra ámbar es la hora pico.</p>
-              <app-usage-hour-columns [data]="set.hours" />
+              @defer (on viewport) {
+                <app-usage-hour-columns [data]="set.hours" />
+              } @placeholder {
+                <div class="h-48" aria-hidden="true"></div>
+              }
             </section>
             <section class="usage-card rounded-2xl border border-slate-700/60 bg-slate-900/70 p-4 lg:col-span-5">
               <h2 class="text-base font-semibold">Día de la semana y franja</h2>
               <p class="mb-2 text-xs text-slate-400">Franjas de cuatro horas.</p>
-              <app-usage-heatmap [data]="set.heatmap" />
+              @defer (on viewport) {
+                <app-usage-heatmap [data]="set.heatmap" />
+              } @placeholder {
+                <div class="h-48" aria-hidden="true"></div>
+              }
             </section>
 
             <section class="usage-card rounded-2xl border border-slate-700/60 bg-slate-900/70 p-4 lg:col-span-5">
               <h2 class="text-base font-semibold">Accesos por mes</h2>
               <p class="mb-2 text-xs text-slate-400">El mes en curso puede estar incompleto.</p>
-              <app-usage-column-chart [points]="set.monthly" />
+              @defer (on viewport) {
+                <app-usage-column-chart [points]="set.monthly" />
+              } @placeholder {
+                <div class="h-48" aria-hidden="true"></div>
+              }
             </section>
             <section class="usage-card rounded-2xl border border-slate-700/60 bg-slate-900/70 p-4 lg:col-span-7">
               <h2 class="text-base font-semibold">Alcance por aplicación</h2>
