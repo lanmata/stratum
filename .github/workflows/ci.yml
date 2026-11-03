@@ -27,6 +27,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Generated API types match api.yaml
+        run: pnpm run api:check
       - name: Lint (TypeScript, templates, accessibility, BFF)
         run: pnpm run lint
       - name: BFF tests (node:test, 85 % gate)

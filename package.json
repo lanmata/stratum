@@ -16,7 +16,10 @@
     "test:headless": "ng test --no-watch --browsers=ChromeHeadlessNoSandbox --code-coverage",
     "test:server": "node --test --experimental-test-coverage --test-coverage-include=\"server/**/*.js\" --test-coverage-exclude=\"server/test/**\" --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 \"server/test/*.test.js\"",
     "test:all": "pnpm run test:headless && pnpm run test:server",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "api:types": "openapi-typescript api.yaml -o src/app/shared/api/backbone.d.ts",
+    "api:check": "pnpm run api:types && git diff --exit-code -- src/app/shared/api/backbone.d.ts",
+    "api:sync": "scripts/sync-api.sh"
   },
   "prettier": {
     "printWidth": 100,
@@ -91,6 +94,7 @@
     "karma-coverage": "~2.2.1",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.3.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.1"
   },
