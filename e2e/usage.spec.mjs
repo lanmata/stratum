@@ -25,6 +25,10 @@ test('the usage page draws the tiles and every chart from the reports', async ({
   await expect(page).toHaveURL(/\/usage/);
   await expect(page.locator('.usage-tile')).toHaveCount(4);
   await expect(page.locator('.usage-tile').first()).toContainText('363');
+  // The lower charts load when their card scrolls into view (@defer on viewport).
+  for (const heading of ['Accesos por hora del día', 'Día de la semana y franja', 'Accesos por mes']) {
+    await page.getByRole('heading', { name: heading }).scrollIntoViewIfNeeded();
+  }
   for (const chart of ['app-usage-area-chart', 'app-usage-donut-chart', 'app-usage-bar-list', 'app-usage-hour-columns', 'app-usage-heatmap', 'app-usage-column-chart']) {
     await expect(page.locator(`${chart} svg, ${chart} ul`).first()).toBeVisible();
   }

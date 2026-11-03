@@ -5,6 +5,13 @@
 - Roles list: excluding inactive roles now filters the application's own roles locally instead of intersecting with a second request for roles by status.
 
 ### Changed
+- **Zoneless change detection**: `provideZonelessChangeDetection()` replaces the zone-based provider and `zone.js` is no longer a
+  polyfill of the production build. `zone.js` stays only as a polyfill of the unit tests, because ~30 of them use `fakeAsync`.
+  506 unit tests and the 5 e2e flows (also with `SESSION_COOKIE=true`) pass.
+- **`@defer (on viewport)`** for the three lower charts of the usage page (hours, heatmap, months): they load when they scroll into view.
+  The unit spec renders the deferred blocks explicitly and the e2e scrolls to them.
+
+### Changed
 - **`OnPush` change detection in every component** (36 of 44 were on the default strategy; `roles-list` is untouched until its pending
   change lands). The 506 Angular tests, lint, SSR build and the 5 e2e flows pass; the mutable fields left in components are not bound
   in templates. Zoneless (`provideZonelessChangeDetection`) is the next step and is not enabled yet.

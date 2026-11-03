@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockBehavior, DeferBlockState, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { Dom } from '@app/testing/dom';
 import { ApplicationService } from '@core/services/application.service';
@@ -72,6 +72,8 @@ describe('UsageReportsComponent', () => {
     applications = jasmine.createSpyObj('ApplicationService', ['getAll']);
     applications.getAll.and.returnValue(apps as never);
     TestBed.configureTestingModule({
+      // The lower charts sit in @defer (on viewport) blocks: render them so every chart can be checked.
+      deferBlockBehavior: DeferBlockBehavior.Manual,
       providers: [
         { provide: UsageReportService, useValue: reports },
         { provide: ApplicationService, useValue: applications },
@@ -80,6 +82,8 @@ describe('UsageReportsComponent', () => {
     const fixture = TestBed.createComponent(UsageReportsComponent);
     fixture.detectChanges();
     const dom = new Dom(fixture);
+    await dom.stable();
+    for (const block of await fixture.getDeferBlocks()) await block.render(DeferBlockState.Complete);
     await dom.stable();
     return dom;
   }

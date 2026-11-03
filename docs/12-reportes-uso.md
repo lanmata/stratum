@@ -79,3 +79,7 @@ Decisiones:
 Contrato: los modelos se comprueban en compilación contra los tipos generados del OpenAPI de backbone (`pnpm run api:types`, `src/app/shared/api/backbone.d.ts`; `pnpm run api:sync` los refresca desde un backbone en marcha y la CI verifica que no haya deriva con `pnpm run api:check`).
 
 Contrato de las respuestas: `docs/api/iam-audit-reports.md` en backbone-rest.
+
+## Rendimiento
+
+La aplicación usa detección de cambios **sin zona** (`provideZonelessChangeDetection`) y las tres gráficas inferiores (horas, mapa de calor y meses) se cargan con `@defer (on viewport)` al acercarse a la pantalla. Los componentes son `OnPush`; el estado que se muestra debe estar en *signals* u observables con `async`, no en campos que cambian en callbacks.
