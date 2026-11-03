@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- Roles list: excluding inactive roles now filters the application's own roles locally instead of intersecting with a second request for roles by status.
+
 ### Changed
 - **`OnPush` change detection in every component** (36 of 44 were on the default strategy; `roles-list` is untouched until its pending
   change lands). The 506 Angular tests, lint, SSR build and the 5 e2e flows pass; the mutable fields left in components are not bound

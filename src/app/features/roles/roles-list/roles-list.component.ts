@@ -305,9 +305,7 @@ export class RolesListComponent implements OnInit {
     } else if (include) {
       source$ = applicationRoles$;
     } else {
-      source$ = forkJoin([applicationRoles$, this.roleService.getByStatus(false)]).pipe(
-        map(([own, active]) => intersectById(active, own)),
-      );
+      source$ = applicationRoles$.pipe(map((own) => own.filter((r) => r.active)));
     }
 
     source$.subscribe({
