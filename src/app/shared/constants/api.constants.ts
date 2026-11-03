@@ -59,6 +59,14 @@ export const API = {
   AUDIT: {
     EVENTS: '/v1/iam/audit/events',
     EXPORT: '/v1/iam/audit/export',
+    REPORTS: {
+      SUMMARY: '/v1/iam/audit/reports/summary',
+      TIMESERIES: '/v1/iam/audit/reports/timeseries',
+      HOURS: '/v1/iam/audit/reports/hours',
+      HEATMAP: '/v1/iam/audit/reports/heatmap',
+      APPLICATIONS: '/v1/iam/audit/reports/applications',
+      CLIENTS: '/v1/iam/audit/reports/clients',
+    },
   },
   CONTACT_TYPES: {
     ROOT: '/v1/contact-types',
