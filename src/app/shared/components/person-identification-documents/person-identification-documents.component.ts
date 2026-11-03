@@ -102,8 +102,8 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
               }
             </div>
             <div>
-              <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">Fecha de vencimiento</label>
-              <input
+              <label for="person-identification-documents-expirationDate" class="mb-1 block text-xs text-gray-500 dark:text-gray-400">Fecha de vencimiento</label>
+              <input id="person-identification-documents-expirationDate"
                 formControlName="expirationDate"
                 type="date"
                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"

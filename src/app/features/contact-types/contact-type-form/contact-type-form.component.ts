@@ -23,10 +23,10 @@ import { ContactTypeRequest } from '@shared/models/contact.model';
         } @else {
           <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="contact-type-form-name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Nombre <span class="text-red-500">*</span>
               </label>
-              <input
+              <input id="contact-type-form-name"
                 formControlName="name"
                 type="text"
                 maxlength="128"
@@ -39,8 +39,8 @@ import { ContactTypeRequest } from '@shared/models/contact.model';
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
-              <textarea
+              <label for="contact-type-form-description" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
+              <textarea id="contact-type-form-description"
                 formControlName="description"
                 rows="3"
                 maxlength="512"

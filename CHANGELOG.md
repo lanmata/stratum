@@ -1,6 +1,24 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **CI**: `.github/workflows/ci.yml` runs on pull requests and on pushes to `develop`: a `quality` job (ESLint, BFF tests with the
+  85 % gate, `pnpm audit --audit-level high`) and a `web` job (Karma in headless Chrome with the 85 % gate, production SSR build,
+  coverage artifact).
+- **ESLint** (`eslint.config.js`, `pnpm run lint`): typescript-eslint, angular-eslint and the template accessibility rules, plus the
+  BFF. It found 37 real problems, all fixed.
+- `README.md` rewritten (it was the Angular CLI template) and `CLAUDE.md` brought to Angular 22 / NgRx 22 / TypeScript 6.
+- `docs/11-guia-tecnica-ci.md` (technical guide, Mermaid).
+
+### Fixed
+- **Accessibility:** 32 form labels had no associated control; each `<label>` now has `for` and its control an `id`, so clicking a
+  label focuses the field and screen readers announce it. The two dialog backdrops carry `role="presentation"`.
+
+### Security
+- **Dependencies:** `pnpm audit` went from 65 vulnerabilities (1 critical, 38 high) to 1 moderate, development only. Updated within
+  the ranges (`pnpm update`), aligned `@angular/router` and `@angular/ssr` with the rest of Angular (`^22.2.1`) and removed
+  `toml`, declared twice and never used. Verified with lint, the production build, 138 BFF tests and 450 Angular tests.
+
 ### Security
 - **The BFF can verify the TLS certificate of backbone-rest.** `proxy.js` created its agent with `rejectUnauthorized: false`, so
   anyone between the BFF and backbone could read the session token. With `BACKBONE_CA_PATH` (PEM of the CA that signed backbone's

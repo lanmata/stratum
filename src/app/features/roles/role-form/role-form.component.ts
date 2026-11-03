@@ -39,10 +39,10 @@ interface FeatureEntry {
               <div class="space-y-5">
 
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label for="role-form-name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Nombre <span class="text-red-500">*</span>
                   </label>
-                  <input
+                  <input id="role-form-name"
                     formControlName="name"
                     type="text"
                     maxlength="128"
@@ -56,8 +56,8 @@ interface FeatureEntry {
                 </div>
 
                 <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
-                  <textarea
+                  <label for="role-form-description" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
+                  <textarea id="role-form-description"
                     formControlName="description"
                     rows="2"
                     maxlength="512"

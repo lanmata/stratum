@@ -48,10 +48,10 @@ type LoginMode = 'alias' | 'email';
 
         <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label for="login-identifier" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ mode() === 'alias' ? 'Alias' : 'Email' }}
             </label>
-            <input
+            <input id="login-identifier"
               formControlName="identifier"
               [type]="mode() === 'alias' ? 'text' : 'email'"
               [attr.autocomplete]="mode() === 'alias' ? 'username' : 'email'"
@@ -61,8 +61,8 @@ type LoginMode = 'alias' | 'email';
           </div>
 
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-            <input
+            <label for="login-password" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+            <input id="login-password"
               formControlName="password"
               type="password"
               class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"

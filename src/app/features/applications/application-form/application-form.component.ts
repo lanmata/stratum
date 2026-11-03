@@ -34,10 +34,10 @@ function formatLocalDate(d: Date): string {
         <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="application-form-name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Nombre <span class="text-red-500">*</span>
               </label>
-              <input
+              <input id="application-form-name"
                 formControlName="name"
                 type="text"
                 maxlength="128"
@@ -51,10 +51,10 @@ function formatLocalDate(d: Date): string {
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="application-form-description" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Descripción
               </label>
-              <textarea
+              <textarea id="application-form-description"
                 formControlName="description"
                 rows="3"
                 maxlength="512"
@@ -64,13 +64,13 @@ function formatLocalDate(d: Date): string {
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="application-form-serviceTypeId" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Tipo de Servicio <span class="text-red-500">*</span>
               </label>
               @if (loadingServiceTypes()) {
                 <p class="text-xs text-gray-400 dark:text-gray-500">Cargando tipos de servicio…</p>
               } @else {
-                <select
+                <select id="application-form-serviceTypeId"
                   formControlName="serviceTypeId"
                   class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                   [class.border-red-400]="form.controls.serviceTypeId.invalid && form.controls.serviceTypeId.touched"

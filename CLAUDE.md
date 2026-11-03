@@ -3,21 +3,21 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What This Project Is
-Angular 20 + Express.js BFF frontend for the backbone-rest backoffice API.
+Angular 22 + Express.js BFF frontend for the backbone-rest backoffice API.
 Manages users, roles, people, contacts, features, and audit events via a
 proxy layer over `https://backbone:8443/api/v1/`.
 
 ## Stack
 | Layer | Tech |
 |-------|------|
-| Framework | Angular 20 (standalone components, new control flow) |
-| State | NgRx 20 (global) + Signals (local) |
+| Framework | Angular 22 (standalone components, new control flow) |
+| State | NgRx 22 (global) + Signals (local) |
 | Styling | Tailwind CSS v4 |
 | BFF | Express.js (`server.js` + `server/`) |
 | Session | Redis with in-memory fallback |
 | Auth | Session JWT via `session-token` header |
 | i18n | `@ngx-translate` — default language `es` |
-| Language | TypeScript 5.9 strict mode |
+| Language | TypeScript 6.0 strict mode |
 
 ## Build & Run
 

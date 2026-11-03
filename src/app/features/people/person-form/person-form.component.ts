@@ -32,10 +32,10 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
         } @else {
           <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="person-form-firstName" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Nombre <span class="text-red-500">*</span>
               </label>
-              <input
+              <input id="person-form-firstName"
                 formControlName="firstName"
                 type="text"
                 maxlength="128"
@@ -48,10 +48,10 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="person-form-middleName" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Segundo nombre
               </label>
-              <input
+              <input id="person-form-middleName"
                 formControlName="middleName"
                 type="text"
                 maxlength="128"
@@ -60,10 +60,10 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="person-form-lastName" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Apellido <span class="text-red-500">*</span>
               </label>
-              <input
+              <input id="person-form-lastName"
                 formControlName="lastName"
                 type="text"
                 maxlength="128"
@@ -76,8 +76,8 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Género</label>
-              <input
+              <label for="person-form-gender" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Género</label>
+              <input id="person-form-gender"
                 formControlName="gender"
                 type="text"
                 maxlength="32"
@@ -86,10 +86,10 @@ import { PersonIdentificationDocumentsComponent } from '@shared/components/perso
             </div>
 
             <div>
-              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label for="person-form-birthdate" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Fecha de nacimiento
               </label>
-              <input
+              <input id="person-form-birthdate"
                 formControlName="birthdate"
                 type="date"
                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
