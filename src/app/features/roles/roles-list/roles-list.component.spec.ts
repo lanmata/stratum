@@ -74,7 +74,7 @@ describe('RolesListComponent', () => {
   it('shows only active roles when inactive ones are excluded, limited to this application', async () => {
     const dom = await create();
     dom.check('input[type=checkbox]', false);
-    expect(service.getByStatus).toHaveBeenCalledWith(false);
+    expect(service.getByStatus).not.toHaveBeenCalled();
     expect(dom.text).not.toContain('Lector');
     expect(dom.text).toContain('Admin');
 
