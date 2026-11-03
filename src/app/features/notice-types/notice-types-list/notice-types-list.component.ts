@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NoticeTypeService } from '@core/services/notice-type.service';
 import { ToastService } from '@core/services/toast.service';
@@ -6,6 +6,7 @@ import { NoticeType } from '@shared/models/notice-type.model';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-notice-types-list',
   standalone: true,
   imports: [RouterLink, ConfirmDialogComponent],

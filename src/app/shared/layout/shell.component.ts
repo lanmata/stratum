@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, computed, DestroyRef, effect, HostListener, inject, PLATFORM_ID, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, HostListener, inject, PLATFORM_ID, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -22,6 +22,7 @@ const LINK_IDLE = LINK_BASE + 'text-gray-600 hover:bg-gray-100 hover:text-gray-9
 const LINK_ACTIVE = LINK_BASE + 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-shell',
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, BreadcrumbsComponent, CommandPaletteComponent],

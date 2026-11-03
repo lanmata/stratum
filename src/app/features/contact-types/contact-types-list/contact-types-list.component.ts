@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ContactTypeService } from '@core/services/contact-type.service';
@@ -8,6 +8,7 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
 import { parseIds } from '@shared/utils/ids.util';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-contact-types-list',
   standalone: true,
   imports: [RouterLink, FormsModule, ConfirmDialogComponent],

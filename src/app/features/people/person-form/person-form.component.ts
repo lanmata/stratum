@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PersonService } from '@core/services/person.service';
@@ -9,6 +9,7 @@ import { PersonAddressesComponent } from '@shared/components/person-addresses/pe
 import { PersonIdentificationDocumentsComponent } from '@shared/components/person-identification-documents/person-identification-documents.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-person-form',
   standalone: true,
   imports: [

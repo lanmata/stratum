@@ -1,4 +1,4 @@
-import { Component, inject, input, OnChanges, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, OnChanges, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ContactService } from '@core/services/contact.service';
 import { ContactTypeService } from '@core/services/contact-type.service';
@@ -8,6 +8,7 @@ import { contactContentValidator, notBlankValidator } from '@shared/utils/contac
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-person-contacts',
   standalone: true,
   host: { class: 'block' },

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LoadingService } from '@core/services/loading.service';
 import { SessionKeepAliveService } from '@core/services/session-keepalive.service';
@@ -6,6 +6,7 @@ import { ThemeService } from '@core/services/theme.service';
 import { ToastComponent } from '@shared/components/toast/toast.component';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, ToastComponent],

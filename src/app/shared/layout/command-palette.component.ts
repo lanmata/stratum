@@ -1,4 +1,4 @@
-import { afterNextRender, Component, computed, ElementRef, inject, output, signal, viewChild } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, ElementRef, inject, output, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { IconComponent, IconName } from '@shared/components/icon/icon.component';
 import { NAV_ITEMS, QUICK_ACTIONS } from './nav-items';
@@ -19,6 +19,7 @@ const ENTRIES: PaletteEntry[] = [
 ];
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-command-palette',
   standalone: true,
   imports: [IconComponent],

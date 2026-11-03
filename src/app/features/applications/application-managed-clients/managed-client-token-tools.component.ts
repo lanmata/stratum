@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ManagedClientService } from '@core/services/managed-client.service';
@@ -33,6 +33,7 @@ export function issueErrorMessage(status: number): string {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-managed-client-token-tools',
   standalone: true,
   imports: [ReactiveFormsModule],

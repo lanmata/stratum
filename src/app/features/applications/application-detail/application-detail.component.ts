@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ApplicationDirectoryService } from '@core/services/application-directory.service';
 import { ServiceTypeService } from '@core/services/service-type.service';
@@ -7,6 +7,7 @@ import { BreadcrumbService } from '@core/services/breadcrumb.service';
 import { Application } from '@shared/models/application.model';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-application-detail',
   standalone: true,
   imports: [RouterLink, RouterLinkActive, RouterOutlet],

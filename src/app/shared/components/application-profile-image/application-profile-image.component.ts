@@ -1,10 +1,11 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
 import { ProfileImageService } from '@core/services/profile-image.service';
 import { ToastService } from '@core/services/toast.service';
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-application-profile-image',
   standalone: true,
   template: `

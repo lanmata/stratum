@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApplicationService } from '@core/services/application.service';
@@ -19,6 +19,7 @@ function formatLocalDate(d: Date): string {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-application-form',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, ApplicationProfileImageComponent],

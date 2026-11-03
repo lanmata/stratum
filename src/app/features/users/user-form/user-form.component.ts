@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import {
   AbstractControl,
   AsyncValidatorFn,
@@ -37,6 +37,7 @@ function createErrorMessage(status: number): string {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-user-form',
   standalone: true,
   imports: [

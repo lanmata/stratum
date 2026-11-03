@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, inject, PLATFORM_ID, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '@core/services/report.service';
 import { ToastService } from '@core/services/toast.service';
@@ -11,6 +11,7 @@ const INPUT_CLASS =
 export const DOCX_EXTENSION = '.docx';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-reports',
   standalone: true,
   imports: [FormsModule],

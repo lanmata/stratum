@@ -1,9 +1,10 @@
-import { Component, inject, PLATFORM_ID, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ToastService } from '@core/services/toast.service';
 import { Toast } from '@shared/models/toast.model';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-toast',
   standalone: true,
   template: `

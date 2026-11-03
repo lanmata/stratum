@@ -1,6 +1,11 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **`OnPush` change detection in every component** (36 of 44 were on the default strategy; `roles-list` is untouched until its pending
+  change lands). The 506 Angular tests, lint, SSR build and the 5 e2e flows pass; the mutable fields left in components are not bound
+  in templates. Zoneless (`provideZonelessChangeDetection`) is the next step and is not enabled yet.
+
 ### Added
 - **Server-side sessions** (`SESSION_COOKIE=true`, off by default): the BFF keeps the real session and refresh tokens (Redis, memory
   fallback) and hands the browser an opaque `HttpOnly; SameSite=Strict` cookie plus unsigned copies of the tokens, so injected script can
