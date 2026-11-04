@@ -5,6 +5,10 @@
 - Roles list: excluding inactive roles now filters the application's own roles locally instead of intersecting with a second request for roles by status.
 
 ### Changed
+- **Dependencies updated**: tailwindcss and @tailwindcss/postcss 4.3.4, express-rate-limit 8.7.3, ESLint 10 with @eslint/js 10 (two spec
+  lines flagged by the new `no-useless-assignment`/`prefer-const` rules cleaned up), and the unused, deprecated `crypto-js` removed.
+  Angular 22, NgRx and the rest were already at their latest. Held back on purpose: TypeScript 7 (Angular 22's compiler requires
+  `<6.1`) and Jasmine 7 / `@types/jasmine` 7 (jasmine-core 7 breaks `zone.js/testing`, which the unit tests still load).
 - **Zoneless change detection**: `provideZonelessChangeDetection()` replaces the zone-based provider and `zone.js` is no longer a
   polyfill of the production build. `zone.js` stays only as a polyfill of the unit tests, because ~30 of them use `fakeAsync`.
   506 unit tests and the 5 e2e flows (also with `SESSION_COOKIE=true`) pass.
