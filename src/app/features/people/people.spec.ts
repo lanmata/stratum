@@ -132,7 +132,7 @@ describe('PersonFormComponent', () => {
   });
 
   it('reports save and load errors', () => {
-    let dom = create(null);
+    const dom = create(null);
     service.create.and.returnValue(throwError(() => new Error('x')));
     dom.type('input[formControlName=firstName]', 'A');
     dom.type('input[formControlName=lastName]', 'B');
@@ -157,6 +157,5 @@ describe('PersonFormComponent', () => {
     TestBed.createComponent(PersonFormComponent).detectChanges();
     expect(toast.error).toHaveBeenCalledWith('Error al cargar la persona');
     expect(router.navigate).toHaveBeenCalledWith(['/people']);
-    dom = undefined as never;
   });
 });

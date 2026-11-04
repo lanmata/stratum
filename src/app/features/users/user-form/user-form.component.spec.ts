@@ -314,7 +314,7 @@ describe('UserFormComponent', () => {
     it('falls back to the roles embedded in the user when the roles lookup is empty or fails', () => {
       create('u1');
       TestBed.resetTestingModule();
-      let dom = (() => {
+      const dom = (() => {
         const d = create('u1');
         return d;
       })();
@@ -345,7 +345,6 @@ describe('UserFormComponent', () => {
         return new Dom(fixture);
       })();
       expect(d2.qa<HTMLInputElement>('input[type=checkbox]').map((c) => c.checked)).toEqual([true, false]);
-      dom = undefined as never;
     });
 
     it('goes back to the list when the user cannot be loaded', () => {
