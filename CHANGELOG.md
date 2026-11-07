@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Fixed
+- Roles: when a feature is not created because it already exists (backend answers 406 with the reason in the `Warning` header), the role form now shows that reason to the user instead of a generic error or silence. Covers role creation (inline features) and feature saving while editing a role. New helper `warningMessage()` in `shared/utils/warning.util.ts`.
 - Roles list: excluding inactive roles now filters the application's own roles locally instead of intersecting with a second request for roles by status.
 
 ### Changed

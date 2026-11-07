@@ -7,6 +7,7 @@ import { FeatureService } from '@core/services/feature.service';
 import { ToastService } from '@core/services/toast.service';
 import { FeatureSummary } from '@shared/models/feature.model';
 import { environment } from '@env/environment';
+import { warningMessage } from '@shared/utils/warning.util';
 
 interface FeatureEntry {
   id: string;
@@ -404,8 +405,10 @@ export class RoleFormComponent implements OnInit {
           this.toast.success('Rol creado correctamente');
           this.router.navigate(['/applications', this.applicationId, 'roles']);
         },
-        error: () => {
-          this.toast.error('Error al crear el rol');
+        error: (err) => {
+          const reason = warningMessage(err);
+          if (reason) this.toast.warning(reason);
+          else this.toast.error('Error al crear el rol');
           this.saving.set(false);
         },
       });
@@ -433,8 +436,10 @@ export class RoleFormComponent implements OnInit {
         this.toast.success('Rol actualizado correctamente');
         this.router.navigate(['/applications', this.applicationId, 'roles']);
       },
-      error: () => {
-        this.toast.error('El rol se guardó, pero hubo un error al guardar sus funcionalidades');
+      error: (err) => {
+        const reason = warningMessage(err);
+        if (reason) this.toast.warning(`El rol se guardó, pero la funcionalidad no se creó: ${reason}`);
+        else this.toast.error('El rol se guardó, pero hubo un error al guardar sus funcionalidades');
         this.saving.set(false);
       },
     });
