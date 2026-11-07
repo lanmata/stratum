@@ -20,3 +20,25 @@ El catálogo ya no se lista completo: `GET /features/?q=&active=&page=&size=` (m
 y el selector "Reutilizar una funcionalidad existente" del formulario de rol (solo al crear; las features con `id`
 se envían como referencia). `GET /features/{id}/roles` muestra qué roles y aplicaciones usan cada feature.
 `GET /features/{includeInactive}` está deprecado.
+
+## Aviso de funcionalidad duplicada
+
+### Guía de usuario
+Si al crear un rol (o al agregar una funcionalidad nueva editando un rol) la funcionalidad **ya existe**, el sistema no la crea y muestra un aviso amarillo con el motivo que informa el servicio (p. ej. «Feature already exists»). Al editar, el aviso indica además que el rol sí se guardó. Para reutilizarla, búscala en «Reutilizar una funcionalidad existente» y agrégala desde el catálogo.
+
+### Guía técnica
+El backend responde `406 Not Acceptable` y deja el motivo en la cabecera `Warning`; el BFF la reenvía (`server/shared/proxy.js`). `warningMessage(err)` (`src/app/shared/utils/warning.util.ts`) la extrae, quita el prefijo RFC 7234 y duplicados, y `RoleFormComponent` la muestra con `ToastService.warning`. Sin cabecera se conserva el error genérico.
+
+```mermaid
+sequenceDiagram
+  participant U as Usuario
+  participant F as RoleFormComponent
+  participant B as BFF
+  participant API as backbone-rest
+  U->>F: Crear rol / guardar funcionalidades
+  F->>B: POST /roles/ o /features/
+  B->>API: proxy
+  API-->>B: 406 + Warning: motivo
+  B-->>F: 406 + Warning
+  F->>U: toast.warning(warningMessage(err))
+```

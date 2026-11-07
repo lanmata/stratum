@@ -1,3 +1,4 @@
+import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -28,7 +29,7 @@ describe('RoleFormComponent', () => {
   function create(roleId: string | null) {
     roles = jasmine.createSpyObj('RoleService', ['getById', 'create', 'update']);
     features = jasmine.createSpyObj('FeatureService', ['create', 'update', 'search']);
-    toast = jasmine.createSpyObj('ToastService', ['success', 'error']);
+    toast = jasmine.createSpyObj('ToastService', ['success', 'error', 'warning']);
     roles.getById.and.returnValue(of(role));
     roles.create.and.returnValue(of(role));
     roles.update.and.returnValue(of(role));
@@ -126,6 +127,18 @@ describe('RoleFormComponent', () => {
     expect(toast.error).toHaveBeenCalledWith('Error al buscar en el catálogo de funcionalidades');
   });
 
+  it('shows the backend reason when a duplicate feature rejects the role creation', () => {
+    const dom = create(null);
+    roles.create.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 406, headers: new HttpHeaders({ Warning: 'Feature already exists' }) })),
+    );
+    dom.type('input[formControlName=name]', 'Editor');
+    dom.type(featureName(dom, 0), 'Ver');
+    dom.clickByText('button', 'Crear rol');
+    expect(toast.warning).toHaveBeenCalledWith('Feature already exists');
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
   it('reports create errors', () => {
     const dom = create(null);
     roles.create.and.returnValue(throwError(() => new Error('x')));
@@ -218,6 +231,16 @@ describe('RoleFormComponent', () => {
     dom.clickByText('button', 'Guardar cambios');
     expect(toast.error).toHaveBeenCalledWith('Error al actualizar el rol');
     expect(features.update).not.toHaveBeenCalled();
+  });
+
+  it('shows the backend reason when a feature is not created because it already exists', () => {
+    const dom = create('r1');
+    features.update.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 406, headers: new HttpHeaders({ Warning: 'Feature already exists' }) })),
+    );
+    dom.clickByText('button', 'Guardar cambios');
+    expect(toast.warning).toHaveBeenCalledWith('El rol se guardó, pero la funcionalidad no se creó: Feature already exists');
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
   it('reports feature save errors after the role was saved', () => {
