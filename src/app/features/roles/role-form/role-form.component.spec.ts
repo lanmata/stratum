@@ -164,7 +164,7 @@ describe('RoleFormComponent', () => {
     expect(dom.q<HTMLInputElement>('input[formControlName=name]')!.value).toBe('Admin');
     expect(featureName(dom, 0).value).toBe('Crear');
     expect(featureName(dom, 1).value).toBe('Borrar');
-    expect(dom.qa('button[title=Desactivar]').length).toBe(2);
+    expect(dom.qa('button[title="Quitar del rol"]').length).toBe(2);
   });
 
   it('keeps the default empty feature when the role has none', () => {
@@ -227,15 +227,15 @@ describe('RoleFormComponent', () => {
     expect(features.create).not.toHaveBeenCalled();
   });
 
-  it('removes a catalog feature not yet saved instead of deactivating it', () => {
+  it('removes a catalog feature not yet saved from the list', () => {
     const dom = create('r1');
     features.search.and.returnValue(
       of({ content: [{ id: 'f9', name: 'Exportar', active: true }], page: 0, size: 10, totalElements: 1, totalPages: 1 }),
     );
     dom.submitByText('Buscar');
     dom.click('li button');
-    expect(dom.qa('button[title=Eliminar]').length).toBe(1);
-    dom.click('button[title=Eliminar]');
+    expect(dom.qa('button[title="Quitar del rol"]').length).toBe(3);
+    dom.click(dom.qa('button[title="Quitar del rol"]')[2]);
     expect(dom.qa('input[placeholder="Nombre *"]').length).toBe(2);
   });
 
@@ -257,15 +257,22 @@ describe('RoleFormComponent', () => {
     expect(toast.warning).toHaveBeenCalledWith(jasmine.stringContaining('ya existe'));
   });
 
-  it('deactivates (never deletes) persisted features', () => {
+  it('removing a persisted feature only unlinks it from the role, never deactivates it globally', () => {
     const dom = create('r1');
-    dom.click('button[title=Desactivar]');
-    expect(dom.qa('input[placeholder="Nombre *"]').length).toBe(2);
-    const [first, second] = dom.qa<HTMLButtonElement>('button[title=Desactivar]');
-    expect(first.disabled).toBeTrue();
-    expect(second.disabled).toBeFalse();
+    dom.click(dom.qa('button[title="Quitar del rol"]')[0]);
+    expect(dom.qa('input[placeholder="Nombre *"]').length).toBe(1);
     dom.clickByText('button', 'Guardar cambios');
-    expect(features.update.calls.first().args[1].feature.active).toBeFalse();
+    const req = roles.update.calls.mostRecent().args[1];
+    expect(req.role.features!.map((f) => f.id)).toEqual(['f2']);
+    expect(features.update.calls.allArgs().map((a) => a[0])).toEqual(['f2']);
+    expect(features.update.calls.mostRecent().args[1].feature.active).toBeTrue();
+  });
+
+  it('does not let the role form switch the global state of an existing feature', () => {
+    const dom = create('r1');
+    const toggles = dom.qa<HTMLButtonElement>('button[role=switch]').slice(1);
+    expect(toggles.length).toBe(2);
+    expect(toggles.every((t) => t.disabled)).toBeTrue();
   });
 
   it('refuses to remove the last remaining feature', () => {

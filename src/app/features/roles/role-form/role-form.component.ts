@@ -160,8 +160,8 @@ interface FeatureEntry {
                     <button
                       type="button"
                       (click)="removeFeature(i)"
-                      [disabled]="featureEntries().length === 1 || (isPersisted(entry) && !entry.active)"
-                      [title]="isPersisted(entry) ? 'Desactivar' : 'Eliminar'"
+                      [disabled]="featureEntries().length === 1"
+                      [title]="entry.backendId ? 'Quitar del rol' : 'Eliminar'"
                       class="rounded p-0.5 text-red-400 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-red-900/20"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -198,8 +198,10 @@ interface FeatureEntry {
                     <div class="flex items-center gap-2">
                       <button
                         type="button"
+                        [disabled]="!!entry.backendId"
+                        [title]="entry.backendId ? 'Estado global de la funcionalidad: no se cambia desde el rol' : ''"
                         (click)="updateFeature(i, 'active', !entry.active)"
-                        class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none"
+                        class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                         [class]="entry.active ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'"
                         role="switch"
                         [attr.aria-checked]="entry.active"
@@ -305,14 +307,9 @@ export class RoleFormComponent implements OnInit {
 
   protected removeFeature(index: number): void {
     if (this.featureEntries().length === 1) return;
-    const entry = this.featureEntries()[index];
-    // The API has no DELETE for features — an already-persisted feature can
-    // only be deactivated, not removed, or it would silently reappear the
-    // next time this role is loaded (GET still returns inactive features).
-    if (this.isPersisted(entry)) {
-      this.updateFeature(index, 'active', false);
-      return;
-    }
+    // A feature is shared by every role and application: it is only dropped from
+    // this role's list (PUT /roles replaces the role's feature set), never
+    // deactivated or deleted globally.
     this.featureEntries.update((list) => list.filter((_, i) => i !== index));
   }
 
@@ -326,10 +323,6 @@ export class RoleFormComponent implements OnInit {
       },
       error: () => this.toast.error('Error al buscar en el catálogo de funcionalidades'),
     });
-  }
-
-  protected isPersisted(entry: FeatureEntry): boolean {
-    return this.isEdit() && !!entry.backendId && !entry.linked;
   }
 
   protected isSelected(featureId: string): boolean {

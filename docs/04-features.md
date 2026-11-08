@@ -12,7 +12,7 @@ El dashboard siempre documentó las features como algo "de cada rol" ("Aplicacio
 
 ## Restricción de API (sigue vigente)
 
-`DELETE /api/v1/features/{featureId}` no existe. Una feature ya persistida en un rol solo puede desactivarse, no eliminarse — si se elimina del array sin desactivar, la próxima carga del rol la trae de vuelta activa.
+`DELETE /api/v1/features/{featureId}` no existe, y una feature es **compartida** por todos los roles y aplicaciones. Por eso, en el formulario de rol, quitar una funcionalidad solo la **desvincula de ese rol** (ver «Quitar una funcionalidad de un rol»); nunca se desactiva ni se elimina globalmente.
 
 ## Catálogo paginado (backbone T-79)
 
@@ -62,4 +62,20 @@ sequenceDiagram
   F->>API: PUT /roles/{id} (features: ids)
   F->>API: PUT /features/{id} (solo no vinculadas)
   F->>API: POST /features/ (nuevas, roleIds)
+```
+
+## Quitar una funcionalidad de un rol
+
+### Guía de usuario
+En «Editar rol», el icono de papelera («Quitar del rol») retira la funcionalidad **solo de ese rol**; las demás aplicaciones y roles que la usan no se ven afectados. El interruptor Activa/Inactiva de una funcionalidad existente es de solo lectura, porque es el estado global y no se cambia desde un rol. Los cambios se aplican al pulsar **Guardar cambios**.
+
+### Guía técnica
+`PUT /roles/{id}` reemplaza el conjunto de funcionalidades del rol, así que omitir una de `role.features` la desvincula solo de ese rol. `RoleFormComponent.removeFeature` ya no marca `active=false` ni dispara `PUT /features/{id}` con ese cambio: las entradas quitadas desaparecen de la lista y por tanto de la petición. Las entradas existentes se actualizan con su `active` original (nunca modificado desde el formulario).
+
+```mermaid
+flowchart LR
+  A[Quitar del rol] --> B[Entrada fuera de featureEntries]
+  B --> C[PUT /roles/id con features restantes]
+  C --> D[Backend reemplaza vínculos del rol]
+  D --> E[Feature sigue activa para otros roles y apps]
 ```
