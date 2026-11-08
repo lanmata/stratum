@@ -208,6 +208,55 @@ describe('RoleFormComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/applications', 'a1', 'roles']);
   });
 
+  it('searches the catalog while editing and links the chosen feature to the role', () => {
+    const dom = create('r1');
+    features.search.and.returnValue(
+      of({ content: [{ id: 'f9', name: 'Exportar', active: true }], page: 0, size: 10, totalElements: 1, totalPages: 1 }),
+    );
+    dom.type('input[aria-label="Buscar funcionalidad existente"]', 'exp');
+    dom.submitByText('Buscar');
+    expect(features.search).toHaveBeenCalledWith({ q: 'exp', active: true, size: 10 });
+    dom.click('li button');
+    expect(dom.text).toContain('Agregada');
+    expect(dom.qa('input[placeholder="Nombre *"]').length).toBe(3);
+    expect(featureName(dom, 2).disabled).toBeTrue();
+    dom.clickByText('button', 'Guardar cambios');
+    const req = roles.update.calls.mostRecent().args[1];
+    expect(req.role.features!.map((f) => f.id)).toEqual(['f1', 'f2', 'f9']);
+    expect(features.update.calls.allArgs().map((a) => a[0])).toEqual(['f1', 'f2']);
+    expect(features.create).not.toHaveBeenCalled();
+  });
+
+  it('removes a catalog feature not yet saved instead of deactivating it', () => {
+    const dom = create('r1');
+    features.search.and.returnValue(
+      of({ content: [{ id: 'f9', name: 'Exportar', active: true }], page: 0, size: 10, totalElements: 1, totalPages: 1 }),
+    );
+    dom.submitByText('Buscar');
+    dom.click('li button');
+    expect(dom.qa('button[title=Eliminar]').length).toBe(1);
+    dom.click('button[title=Eliminar]');
+    expect(dom.qa('input[placeholder="Nombre *"]').length).toBe(2);
+  });
+
+  it('shows the backend reason when the role update is rejected with a Warning', () => {
+    const dom = create('r1');
+    roles.update.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 409, headers: new HttpHeaders({ Warning: 'Role name taken' }) })),
+    );
+    dom.clickByText('button', 'Guardar cambios');
+    expect(toast.warning).toHaveBeenCalledWith('Role name taken');
+  });
+
+  it('tells the user a feature already exists when the backend rejects it without a reason', () => {
+    const dom = create('r1');
+    dom.clickByText('button', 'Agregar funcionalidad');
+    dom.type(featureName(dom, 2), 'Crear');
+    features.create.and.returnValue(throwError(() => new HttpErrorResponse({ status: 406 })));
+    dom.clickByText('button', 'Guardar cambios');
+    expect(toast.warning).toHaveBeenCalledWith(jasmine.stringContaining('ya existe'));
+  });
+
   it('deactivates (never deletes) persisted features', () => {
     const dom = create('r1');
     dom.click('button[title=Desactivar]');
