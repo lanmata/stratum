@@ -7,7 +7,7 @@ import { FeatureService } from '@core/services/feature.service';
 import { ToastService } from '@core/services/toast.service';
 import { FeatureSummary } from '@shared/models/feature.model';
 import { environment } from '@env/environment';
-import { warningMessage } from '@shared/utils/warning.util';
+import { featureConflictMessage, warningMessage } from '@shared/utils/warning.util';
 
 interface FeatureEntry {
   id: string;
@@ -15,6 +15,7 @@ interface FeatureEntry {
   name: string;
   description: string;
   active: boolean;
+  linked?: boolean;
 }
 
 @Component({
@@ -106,8 +107,7 @@ interface FeatureEntry {
               </button>
             </div>
 
-            @if (!isEdit()) {
-              <form class="mb-4 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600" (submit)="$event.preventDefault(); searchCatalog()">
+            <form class="mb-4 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600" (submit)="$event.preventDefault(); searchCatalog()">
                 <p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">Reutilizar una funcionalidad existente</p>
                 <div class="flex gap-2">
                   <input
@@ -150,8 +150,7 @@ interface FeatureEntry {
                     }
                   </ul>
                 }
-              </form>
-            }
+            </form>
 
             <div class="space-y-3">
               @for (entry of featureEntries(); track entry.id; let i = $index) {
@@ -161,8 +160,8 @@ interface FeatureEntry {
                     <button
                       type="button"
                       (click)="removeFeature(i)"
-                      [disabled]="featureEntries().length === 1 || (isEdit() && entry.backendId && !entry.active)"
-                      [title]="isEdit() && entry.backendId ? 'Desactivar' : 'Eliminar'"
+                      [disabled]="featureEntries().length === 1 || (isPersisted(entry) && !entry.active)"
+                      [title]="isPersisted(entry) ? 'Desactivar' : 'Eliminar'"
                       class="rounded p-0.5 text-red-400 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-red-900/20"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -178,7 +177,7 @@ interface FeatureEntry {
                         maxlength="128"
                         placeholder="Nombre *"
                         [value]="entry.name"
-                        [disabled]="!isEdit() && !!entry.backendId"
+                        [disabled]="!!entry.linked"
                         (input)="updateFeature(i, 'name', $any($event.target).value)"
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                         [class.border-red-400]="submitted() && !entry.name.trim()"
@@ -192,7 +191,7 @@ interface FeatureEntry {
                       maxlength="512"
                       placeholder="Descripción (opcional)"
                       [value]="entry.description"
-                      [disabled]="!isEdit() && !!entry.backendId"
+                      [disabled]="!!entry.linked"
                       (input)="updateFeature(i, 'description', $any($event.target).value)"
                       class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                     />
@@ -310,7 +309,7 @@ export class RoleFormComponent implements OnInit {
     // The API has no DELETE for features — an already-persisted feature can
     // only be deactivated, not removed, or it would silently reappear the
     // next time this role is loaded (GET still returns inactive features).
-    if (entry.backendId && this.isEdit()) {
+    if (this.isPersisted(entry)) {
       this.updateFeature(index, 'active', false);
       return;
     }
@@ -329,6 +328,10 @@ export class RoleFormComponent implements OnInit {
     });
   }
 
+  protected isPersisted(entry: FeatureEntry): boolean {
+    return this.isEdit() && !!entry.backendId && !entry.linked;
+  }
+
   protected isSelected(featureId: string): boolean {
     return this.featureEntries().some((e) => e.backendId === featureId);
   }
@@ -341,6 +344,7 @@ export class RoleFormComponent implements OnInit {
       name: item.name,
       description: item.description ?? '',
       active: item.active,
+      linked: true,
     };
     this.featureEntries.update((list) => {
       const blank = list.length === 1 && !list[0].backendId && !list[0].name.trim() && !list[0].description.trim();
@@ -368,15 +372,26 @@ export class RoleFormComponent implements OnInit {
 
     if (this.isEdit() && this.roleId) {
       const req = {
-        role: { id: this.roleId, name, description, applicationId: this.applicationId, active },
+        role: {
+          id: this.roleId,
+          name,
+          description,
+          applicationId: this.applicationId,
+          active,
+          features: entries
+            .filter((e) => e.backendId)
+            .map((e) => ({ id: e.backendId, name: e.name.trim(), active: e.active })),
+        },
         dateTime,
         appName: environment.appName,
         appToken: null,
       };
       this.roleService.update(this.roleId, req).subscribe({
         next: () => this.saveFeaturesForEdit(this.roleId!),
-        error: () => {
-          this.toast.error('Error al actualizar el rol');
+        error: (err) => {
+          const reason = warningMessage(err);
+          if (reason) this.toast.warning(reason);
+          else this.toast.error('Error al actualizar el rol');
           this.saving.set(false);
         },
       });
@@ -406,7 +421,7 @@ export class RoleFormComponent implements OnInit {
           this.router.navigate(['/applications', this.applicationId, 'roles']);
         },
         error: (err) => {
-          const reason = warningMessage(err);
+          const reason = featureConflictMessage(err);
           if (reason) this.toast.warning(reason);
           else this.toast.error('Error al crear el rol');
           this.saving.set(false);
@@ -416,7 +431,9 @@ export class RoleFormComponent implements OnInit {
   }
 
   private saveFeaturesForEdit(roleId: string): void {
-    const requests: Observable<unknown>[] = this.featureEntries().map((e) => {
+    const requests: Observable<unknown>[] = this.featureEntries()
+      .filter((e) => !e.linked)
+      .map((e) => {
       const base = {
         name: e.name.trim(),
         description: e.description.trim() || undefined,
@@ -437,7 +454,7 @@ export class RoleFormComponent implements OnInit {
         this.router.navigate(['/applications', this.applicationId, 'roles']);
       },
       error: (err) => {
-        const reason = warningMessage(err);
+        const reason = featureConflictMessage(err);
         if (reason) this.toast.warning(`El rol se guardó, pero la funcionalidad no se creó: ${reason}`);
         else this.toast.error('El rol se guardó, pero hubo un error al guardar sus funcionalidades');
         this.saving.set(false);

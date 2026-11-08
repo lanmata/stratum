@@ -17,7 +17,7 @@ El dashboard siempre documentó las features como algo "de cada rol" ("Aplicacio
 ## Catálogo paginado (backbone T-79)
 
 El catálogo ya no se lista completo: `GET /features/?q=&active=&page=&size=` (máx. 50) alimenta la vista de Features
-y el selector "Reutilizar una funcionalidad existente" del formulario de rol (solo al crear; las features con `id`
+y el selector "Reutilizar una funcionalidad existente" del formulario de rol (al crear y al editar; las features con `id`
 se envían como referencia). `GET /features/{id}/roles` muestra qué roles y aplicaciones usan cada feature.
 `GET /features/{includeInactive}` está deprecado.
 
@@ -41,4 +41,25 @@ sequenceDiagram
   API-->>B: 406 + Warning: motivo
   B-->>F: 406 + Warning
   F->>U: toast.warning(warningMessage(err))
+```
+
+## Reutilizar funcionalidades al editar un rol
+
+### Guía de usuario
+En «Editar rol» aparece el mismo cuadro «Reutilizar una funcionalidad existente»: escribe parte del nombre, pulsa **Buscar** y **Agregar** sobre la que quieras. La funcionalidad aparece en la lista (solo lectura, porque es compartida con otros roles) y queda asociada al rol al pulsar **Guardar cambios**. Si te equivocas antes de guardar, usa el icono de papelera para quitarla. Una funcionalidad ya guardada en el rol solo puede **desactivarse**. Si intentas crear una funcionalidad con un nombre que ya existe, verás un aviso indicándolo.
+
+### Guía técnica
+`PUT /roles/{id}` **reemplaza** el conjunto de funcionalidades del rol (`RoleFeatureLinkService.replaceRoleFeatures`), por lo que `RoleFormComponent` envía en `role.features` el `id` de todas las entradas con `backendId` (las cargadas y las del catálogo). Las entradas del catálogo llevan `linked: true`: no se editan y se omiten del `PUT /features/{id}`. Las nuevas siguen creándose con `POST /features/` y `roleIds: [roleId]`. Un duplicado sin cabecera `Warning` (406 en `/features`, 409 en `/roles`) se informa con `featureConflictMessage()`.
+
+```mermaid
+sequenceDiagram
+  participant U as Usuario
+  participant F as RoleFormComponent
+  participant API as backbone-rest
+  U->>F: Buscar + Agregar (catálogo)
+  F->>API: GET /features/?q=
+  U->>F: Guardar cambios
+  F->>API: PUT /roles/{id} (features: ids)
+  F->>API: PUT /features/{id} (solo no vinculadas)
+  F->>API: POST /features/ (nuevas, roleIds)
 ```
