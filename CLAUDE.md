@@ -77,7 +77,7 @@ src/app/
     └── models/          session · user · role · person · contact · feature · application · audit
 
 server/
-├── config/             constants.js · logger.js (Winston)
+├── config/             constants.js · logger.js (Winston) · banner.js (startup banner with Node/Angular/Tailwind/… versions)
 ├── routes/             session · users · roles · features · people · contacts · audit
 └── shared/             proxy.js · redis-session-store.js
 ```

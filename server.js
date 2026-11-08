@@ -19,6 +19,7 @@ const https = require('node:https');
 const { readFileSync } = require('node:fs');
 
 const logger = require('./server/config/logger');
+const { printBanner } = require('./server/config/banner');
 const { resolveCorsOrigin } = require('./server/config/cors');
 const { connectRedis } = require('./server/shared/redis-session-store');
 const {
@@ -153,6 +154,7 @@ const sslOptions = {
 
 connectRedis().finally(() => {
   https.createServer(sslOptions, app).listen(PORT, () => {
+    printBanner();
     logger.info(`front-backbone-rest BFF running on https://localhost:${PORT} [${NODE_ENV}]`);
   });
 });
