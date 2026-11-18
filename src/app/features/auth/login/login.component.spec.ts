@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { Dom } from '@app/testing/dom';
 import { AuthService } from '@core/services/auth.service';
+import { FederationService } from '@core/services/federation.service';
+import { FederationProvider } from '@shared/models/federation.model';
 import { API } from '@shared/constants/api.constants';
 import { LoginComponent } from './login.component';
 import { signal } from '@angular/core';
@@ -11,7 +13,11 @@ describe('LoginComponent', () => {
   let auth: jasmine.SpyObj<AuthService> & { isLoading: ReturnType<typeof signal<boolean>> };
   let router: jasmine.SpyObj<Router>;
 
-  function create() {
+  let federation: jasmine.SpyObj<FederationService>;
+
+  function create(options: { providers?: FederationProvider[]; error?: string; providersError?: boolean } = {}) {
+    federation = jasmine.createSpyObj<FederationService>('FederationService', ['loadProviders', 'signIn']);
+    federation.loadProviders.and.returnValue(options.providersError ? throwError(() => new Error('x')) : of(options.providers ?? []));
     auth = Object.assign(jasmine.createSpyObj<AuthService>('AuthService', ['loginWithAlias', 'loginWithEmail']), {
       isLoading: signal(false),
     }) as never;
@@ -20,9 +26,11 @@ describe('LoginComponent', () => {
       providers: [
         { provide: AuthService, useValue: auth },
         { provide: Router, useValue: router },
+        { provide: FederationService, useValue: federation },
       ],
     });
     const fixture = TestBed.createComponent(LoginComponent);
+    if (options.error !== undefined) fixture.componentRef.setInput('error', options.error);
     fixture.detectChanges();
     return new Dom(fixture);
   }
@@ -101,5 +109,36 @@ describe('LoginComponent', () => {
     dom.fixture.detectChanges();
     expect(dom.q('button[type=submit]')!.textContent).toContain('Signing in');
     expect(new Subject()).toBeTruthy();
+  });
+
+  describe('acceso con proveedores', () => {
+    const PROVIDERS: FederationProvider[] = [{ provider: 'google', displayName: 'Google' }, { provider: 'github', displayName: 'GitHub' }];
+
+    it('sin proveedores no muestra la sección y los pide al abrir', () => {
+      const dom = create();
+      expect(federation.loadProviders).toHaveBeenCalled();
+      expect(dom.q('[data-testid=federation]')).toBeNull();
+    });
+
+    it('muestra un botón por proveedor y al pulsarlo navega al BFF', () => {
+      const dom = create({ providers: PROVIDERS });
+      expect(dom.qa('[data-testid=federation] button').map((b) => b.textContent!.trim())).toEqual(['Continuar con Google', 'Continuar con GitHub']);
+      dom.click('[data-provider=github]');
+      expect(federation.signIn).toHaveBeenCalledOnceWith('github', '/dashboard');
+    });
+
+    it('si el BFF no responde, el acceso por contraseña sigue sin proveedores', () => {
+      const dom = create({ providersError: true });
+      expect(dom.q('[data-testid=federation]')).toBeNull();
+      expect(dom.q('form')).not.toBeNull();
+    });
+
+    it('el código de error del BFF se muestra como mensaje', () => {
+      expect(create({ error: 'not_registered' }).text).toContain('no está registrada');
+    });
+
+    it('un código desconocido muestra el mensaje genérico', () => {
+      expect(create({ error: 'raro' }).text).toContain('No pudimos verificar');
+    });
   });
 });

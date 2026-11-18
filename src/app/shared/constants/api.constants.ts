@@ -78,6 +78,12 @@ export const API = {
     ROOT: '/v1/applications',
     BY_ID: (id: string) => `/v1/applications/${id}`,
   },
+  FEDERATION: {
+    PROVIDERS: '/v1/federation/admin/providers',
+    PROVIDER: (id: string) => `/v1/federation/admin/providers/${id}`,
+    IDENTITIES: (userId: string) => `/v1/users/${userId}/federated-identities`,
+    IDENTITY: (userId: string, identityId: string) => `/v1/users/${userId}/federated-identities/${identityId}`,
+  },
   SERVICE_TYPES: {
     ROOT: '/v1/service-types',
     LIST_ALL: '/v1/service-types/list-all',

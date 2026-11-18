@@ -187,3 +187,25 @@ describe('AuthService', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login']);
   });
 });
+
+describe('AuthService · acceso con proveedor social', () => {
+  it('guarda la sesión como tras un login normal, con el usuario del token', () => {
+    const http = createHttpSpy();
+    const store = Object.assign(jasmine.createSpyObj('SessionStoreService', ['save', 'refresh', 'clear']), {
+      token$: new BehaviorSubject<string | null>(null),
+      refreshToken$: new BehaviorSubject<string | null>(null),
+    });
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpSpy(http),
+        { provide: SessionStoreService, useValue: store },
+        { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) },
+      ],
+    });
+    const token = jwt({ sub: 'ana', uid: 'u1' });
+
+    TestBed.inject(AuthService).startFederatedSession({ token, refreshToken: 'r' });
+
+    expect(store.save).toHaveBeenCalledOnceWith(token, 'r', jasmine.objectContaining({}));
+  });
+});

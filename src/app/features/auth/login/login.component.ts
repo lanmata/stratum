@@ -1,7 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
+import { FederationService } from '@core/services/federation.service';
+import { FederationProvider, federationMessage } from '@shared/models/federation.model';
 import {API} from "@shared/constants/api.constants";
 
 type LoginMode = 'alias' | 'email';
@@ -70,8 +73,8 @@ type LoginMode = 'alias' | 'email';
             />
           </div>
 
-          @if (error()) {
-            <p class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{{ error() }}</p>
+          @if (error() ?? federationError()) {
+            <p class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{{ error() ?? federationError() }}</p>
           }
 
           <button
@@ -82,16 +85,46 @@ type LoginMode = 'alias' | 'email';
             @if (auth.isLoading()) { Signing in… } @else { Sign in }
           </button>
         </form>
+
+        @if (providers().length > 0) {
+          <div class="mt-6" data-testid="federation">
+            <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400" role="separator">
+              <span class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></span>
+              <span>o continúa con</span>
+              <span class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></span>
+            </div>
+            <ul class="mt-4 space-y-2">
+              @for (provider of providers(); track provider.provider) {
+                <li>
+                  <button
+                    type="button"
+                    [attr.data-provider]="provider.provider"
+                    (click)="signInWith(provider.provider)"
+                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                  >
+                    Continuar con {{ provider.displayName }}
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
       </div>
     </div>
   `,
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   protected readonly auth = inject(AuthService);
+  private readonly federation = inject(FederationService);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly applicationId = API.APPLICATION.ID;
 
+  /** Código que deja el BFF en `?error=` cuando el acceso con un proveedor no se completó. */
+  readonly errorCode = input<string>(undefined, { alias: 'error' });
+  protected readonly federationError = computed(() => federationMessage(this.errorCode()));
+  protected readonly providers = signal<FederationProvider[]>([]);
   protected readonly error = signal<string | null>(null);
   protected readonly mode = signal<LoginMode>('alias');
 
@@ -102,6 +135,19 @@ export class LoginComponent {
     identifier: ['', Validators.required],
     password: ['', Validators.required],
   });
+
+  ngOnInit(): void {
+    if (!this.isBrowser) return;
+    this.federation.loadProviders().subscribe({
+      next: (providers) => this.providers.set(providers),
+      error: () => this.providers.set([]), // el acceso por contraseña sigue
+    });
+  }
+
+  /** Empieza el acceso con el proveedor: navega al BFF, que redirige. */
+  protected signInWith(provider: string): void {
+    this.federation.signIn(provider, '/dashboard');
+  }
 
   protected setMode(mode: LoginMode): void {
     if (this.mode() === mode) return;

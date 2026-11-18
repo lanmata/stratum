@@ -7,6 +7,7 @@ import { Dom } from '@app/testing/dom';
 import { RoleService } from '@core/services/role.service';
 import { ToastService } from '@core/services/toast.service';
 import { UserService } from '@core/services/user.service';
+import { LinkedIdentitiesComponent } from '@shared/components/linked-identities/linked-identities.component';
 import { PersonAddressesComponent } from '@shared/components/person-addresses/person-addresses.component';
 import { PersonContactsComponent } from '@shared/components/person-contacts/person-contacts.component';
 import { PersonIdentificationDocumentsComponent } from '@shared/components/person-identification-documents/person-identification-documents.component';
@@ -25,6 +26,11 @@ class FakeAddresses {
 @Component({ selector: 'app-person-identification-documents', standalone: true, template: 'docs' })
 class FakeDocs {
   personId = input<string>();
+}
+
+@Component({ selector: 'app-linked-identities', standalone: true, template: 'identities' })
+class FakeIdentities {
+  userId = input<string>();
 }
 
 const adminRole: Role = { id: 'r1', name: 'Admin', active: true };
@@ -78,8 +84,8 @@ describe('UserFormComponent', () => {
       ],
     });
     TestBed.overrideComponent(UserFormComponent, {
-      remove: { imports: [PersonContactsComponent, PersonAddressesComponent, PersonIdentificationDocumentsComponent] },
-      add: { imports: [FakeContacts, FakeAddresses, FakeDocs] },
+      remove: { imports: [PersonContactsComponent, PersonAddressesComponent, PersonIdentificationDocumentsComponent, LinkedIdentitiesComponent] },
+      add: { imports: [FakeContacts, FakeAddresses, FakeDocs, FakeIdentities] },
     });
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.resolveTo(true);
