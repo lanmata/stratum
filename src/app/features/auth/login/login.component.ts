@@ -73,8 +73,8 @@ type LoginMode = 'alias' | 'email';
             />
           </div>
 
-          @if (error() ?? federationError()) {
-            <p class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{{ error() ?? federationError() }}</p>
+          @if (failure() ?? federationError()) {
+            <p class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{{ failure() ?? federationError() }}</p>
           }
 
           <button
@@ -122,10 +122,10 @@ export class LoginComponent implements OnInit {
   private readonly applicationId = API.APPLICATION.ID;
 
   /** Código que deja el BFF en `?error=` cuando el acceso con un proveedor no se completó. */
-  readonly errorCode = input<string>(undefined, { alias: 'error' });
-  protected readonly federationError = computed(() => federationMessage(this.errorCode()));
+  readonly error = input<string>();
+  protected readonly federationError = computed(() => federationMessage(this.error()));
   protected readonly providers = signal<FederationProvider[]>([]);
-  protected readonly error = signal<string | null>(null);
+  protected readonly failure = signal<string | null>(null);
   protected readonly mode = signal<LoginMode>('alias');
 
   protected readonly tabIdle = 'rounded-md px-3 py-1.5 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200';
@@ -152,7 +152,7 @@ export class LoginComponent implements OnInit {
   protected setMode(mode: LoginMode): void {
     if (this.mode() === mode) return;
     this.mode.set(mode);
-    this.error.set(null);
+    this.failure.set(null);
     this.form.controls.identifier.reset('');
     this.form.controls.identifier.setValidators(
       mode === 'email' ? [Validators.required, Validators.email] : [Validators.required],
@@ -162,7 +162,7 @@ export class LoginComponent implements OnInit {
 
   protected submit(): void {
     if (this.form.invalid) return;
-    this.error.set(null);
+    this.failure.set(null);
     const { identifier, password } = this.form.getRawValue();
     const login$ =
       this.mode() === 'alias'
@@ -172,7 +172,7 @@ export class LoginComponent implements OnInit {
       if (ok) {
         this.router.navigate(['/dashboard']);
       } else {
-        this.error.set('Invalid credentials. Please try again.');
+        this.failure.set('Invalid credentials. Please try again.');
       }
     });
   }
