@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Social federation design** (docs/15-federacion-social.md): Stratum as consumer (administrators sign in with Google, Microsoft, Apple, GitHub or Meta through Backbone) and as the administration console for providers and linked identities. Documentation only; no code change yet.
+
 ### Fixed
 - Roles: removing a feature while editing a role now only unlinks it from that role (the role update sends the role's remaining feature ids, which the backend uses to replace its feature set). It no longer deactivates the feature globally, which affected every role and managed application. The trash button is now "Quitar del rol" (docs/03-roles.md wording updated), and the active switch of an existing feature is read-only in the role form.
 - Roles: the "reuse an existing feature" catalog search is now available when editing a role, not only when creating one. Features picked from the catalog are linked to the role on save (the role update now sends the ids of its features, which the backend uses to replace the role's feature set) and are read-only, like in creation; a not-yet-saved catalog feature can be removed, a persisted one is still only deactivated.
