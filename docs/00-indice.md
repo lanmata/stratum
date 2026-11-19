@@ -93,3 +93,4 @@ La API real también expone `profile/image/*` (logo por aplicación) y `report/*
 - `report/*` es funcionalidad legacy que el propio backend ya no expone en su `api.yaml` actual más allá de lo documentado como tal.
 
 Si se necesitan en el futuro, no requieren cambios arquitectónicos — siguen el mismo patrón BFF-proxy + servicio Angular + componente que el resto de los módulos.
+- [15 · Federación social (diseño)](15-federacion-social.md): login con Google, Microsoft, Apple, GitHub y Meta, y administración de proveedores.

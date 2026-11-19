@@ -105,6 +105,13 @@ export const NAV_GROUPS: NavGroup[] = [
         accent: 'from-slate-600 to-gray-800',
       },
       {
+        path: '/federation',
+        label: 'Federación',
+        description: 'Proveedores de acceso social (Google, Microsoft, Apple, GitHub, Meta) por aplicación',
+        icon: 'shield',
+        accent: 'from-indigo-500 to-blue-700',
+      },
+      {
         path: '/usage',
         label: 'Uso y accesos',
         description: 'Cuántas personas usan la plataforma, cuándo y desde dónde',

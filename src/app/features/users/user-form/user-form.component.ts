@@ -16,6 +16,7 @@ import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
 import { Role } from '@shared/models/role.model';
 import { UserTO } from '@shared/models/user.model';
+import { LinkedIdentitiesComponent } from '@shared/components/linked-identities/linked-identities.component';
 import { PersonContactsComponent } from '@shared/components/person-contacts/person-contacts.component';
 import { PersonAddressesComponent } from '@shared/components/person-addresses/person-addresses.component';
 import { PersonIdentificationDocumentsComponent } from '@shared/components/person-identification-documents/person-identification-documents.component';
@@ -46,6 +47,7 @@ function createErrorMessage(status: number): string {
     PersonContactsComponent,
     PersonAddressesComponent,
     PersonIdentificationDocumentsComponent,
+    LinkedIdentitiesComponent,
   ],
   template: `
     <div>
@@ -397,6 +399,11 @@ function createErrorMessage(status: number): string {
             <app-person-identification-documents [personId]="pid" />
           }
 
+          @if (isEdit()) {
+            <!-- Cuentas externas enlazadas (acceso social) -->
+            <app-linked-identities [userId]="editedUserId" />
+          }
+
           <!-- Acciones -->
           <div class="flex justify-end gap-3">
             <a
@@ -443,6 +450,11 @@ export class UserFormComponent implements OnInit {
   private loadedUser: UserTO | null = null;
 
   protected readonly isEdit = signal(false);
+
+  /** El usuario que se edita (solo se lee en modo edición). */
+  protected get editedUserId(): string {
+    return this.userId ?? '';
+  }
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly showPassword = signal(false);

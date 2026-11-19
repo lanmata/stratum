@@ -32,6 +32,13 @@ module.exports = {
   SESSION_COOKIE: process.env['SESSION_COOKIE'] === 'true',
   SESSION_COOKIE_NAME: process.env['SESSION_COOKIE_NAME'] || 'stratum_sid',
   SESSION_MAX_AGE_SECONDS: parseInt(process.env['SESSION_MAX_AGE_SECONDS'] || '28800', 10),
+  // Social sign-in (Google, Microsoft, Apple, GitHub, Meta) through backbone-rest. Off unless FEDERATION_ENABLED=true.
+  // FEDERATION_CALLBACK_URL must be EXACTLY the redirect URI of the provider setting in backbone:
+  // https://<host>/bff/federation/callback. FEDERATION_APPLICATION_ID is the application Stratum signs people into.
+  FEDERATION_ENABLED: process.env['FEDERATION_ENABLED'] === 'true',
+  FEDERATION_CALLBACK_URL: process.env['FEDERATION_CALLBACK_URL'] || '',
+  FEDERATION_APPLICATION_ID: process.env['FEDERATION_APPLICATION_ID'] || '',
+  FEDERATION_STATE_COOKIE: 'stratum_fed_state',
   RATE_LIMIT_WINDOW_MS: 15 * 60 * 1000,
   RATE_LIMIT_MAX: parseInt(process.env['RATE_LIMIT_MAX'] || '1000', 10),
   REDIS_URL: process.env['REDIS_URL'] || 'redis://localhost:6379',

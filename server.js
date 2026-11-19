@@ -53,6 +53,9 @@ const noticesRoutes = require('./server/routes/notices.routes');
 const iamRoutes = require('./server/routes/iam.routes');
 const profileImageRoutes = require('./server/routes/profile-image.routes');
 const reportRoutes = require('./server/routes/report.routes');
+const federationRoutes = require('./server/routes/federation.routes');
+const federationAdminRoutes = require('./server/routes/federation-admin.routes');
+const federatedIdentitiesRoutes = require('./server/routes/federated-identities.routes');
 
 const app = express();
 app.disable('x-powered-by');
@@ -100,8 +103,14 @@ app.use((req, res, next) => {
 // Server-side sessions (SESSION_COOKIE): loads the session of the cookie and applies the CSRF header rule.
 app.use('/api', cookieSession());
 
+// Social sign-in flow (browser navigations and the ticket exchange): outside /api on purpose, so the session-cookie CSRF rule and the
+// API rate limit do not apply to the provider's redirects; the flow has its own state cookie. Off unless FEDERATION_ENABLED=true.
+app.use('/bff/federation', federationRoutes);
+
 // ── API Routes (BFF proxy layer) ────────────────────────────────────────────
+app.use('/api/v1/federation/admin', federationAdminRoutes);
 app.use('/api/v1/session', sessionRoutes);
+app.use('/api/v1/users/:userId/federated-identities', federatedIdentitiesRoutes);
 app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/roles', rolesRoutes);
 app.use('/api/v1/features', featuresRoutes);

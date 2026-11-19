@@ -41,6 +41,14 @@ export class AuthService {
     );
   }
 
+  /**
+   * Guarda la sesión de un acceso con proveedor social (el BFF ya la entregó a cambio del ticket de un solo uso): queda
+   * exactamente igual que tras un login normal.
+   */
+  startFederatedSession(res: SessionResponse): void {
+    this.handleSessionResponse(res);
+  }
+
   refresh(req: SessionRefreshRequest): Observable<boolean> {
     return this.http.post<SessionResponse>(API.SESSION.REFRESH, req).pipe(
       tap((res) => this.store.refresh(res.token, res.refreshToken)),

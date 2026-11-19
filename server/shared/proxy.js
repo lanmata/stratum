@@ -130,4 +130,22 @@ async function proxyMultipart(req, res, backendPath, options = {}) {
   }
 }
 
-module.exports = { proxyToBackbone, proxyMultipart };
+/**
+ * A call the BFF makes for itself (not on behalf of a browser request): the social sign-in talks to backbone-rest here.
+ * Never throws for an HTTP status; a network failure rejects.
+ * @param {{method?: string, path: string, data?: unknown, headers?: Record<string,string>}} call
+ */
+function callBackbone({ method = 'GET', path, data, headers = {} }) {
+  const url = `${BACKBONE_BASE_URL}${path}`;
+  const { host } = new URL(url);
+  return axios({
+    method,
+    url,
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json', host, ...headers },
+    data,
+    validateStatus: () => true,
+    httpsAgent,
+  });
+}
+
+module.exports = { proxyToBackbone, proxyMultipart, callBackbone };

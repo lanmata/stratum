@@ -73,6 +73,12 @@ export const routes: Routes = [
           import('./features/applications/applications.routes').then((m) => m.applicationsRoutes),
       },
       {
+        path: 'federation',
+        data: { breadcrumb: 'Federación' },
+        loadChildren: () =>
+          import('./features/federation/federation.routes').then((m) => m.federationRoutes),
+      },
+      {
         path: 'service-types',
         data: { breadcrumb: 'Tipos de Servicio' },
         loadChildren: () =>
